@@ -789,8 +789,8 @@
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-slate-400 mb-1">KONTAK / WHATSAPP ORANG TUA</label>
-                    <input type="text" id="form-siswa-ortu" placeholder="081234567890" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition" required>
+                    <label class="block font-semibold text-slate-400 mb-1">KONTAK / WHATSAPP ORANG TUA (OPSIONAL)</label>
+                    <input type="text" id="form-siswa-ortu" placeholder="081234567890" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition">
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2">
@@ -1784,7 +1784,7 @@
             const gender = document.getElementById('form-siswa-gender')?.value;
             const rawIpk = document.getElementById('form-siswa-ipk')?.value;
             const ipk = rawIpk !== "" && rawIpk !== null && !isNaN(rawIpk) ? parseFloat(rawIpk).toFixed(2) : "0.00";
-            const ortu = document.getElementById('form-siswa-ortu')?.value;
+            const ortu = document.getElementById('form-siswa-ortu')?.value?.trim() || "-";
 
             if (editId) {
                 const idx = appData.siswaList.findIndex(s => s.id === editId);
