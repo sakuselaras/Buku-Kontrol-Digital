@@ -1768,7 +1768,23 @@
 
         function generateShareLink() {
             const kCode = window.appData.activeKelasCode || 'DEFAULT';
-            return `${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(kCode)}`;
+            
+            // Build full payload containing class profile, student list, and teacher mapel list
+            const payload = {
+                profile: window.appData.guruProfile,
+                siswa: window.appData.siswaList,
+                guruMapel: window.appData.guruMapelList
+            };
+
+            try {
+                const jsonStr = JSON.stringify(payload);
+                // Safe base64 encoding for URL parameter
+                const encoded = btoa(encodeURIComponent(jsonStr));
+                return `${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(kCode)}&d=${encoded}`;
+            } catch (e) {
+                console.error("Link payload encoding failed, fallback to code only:", e);
+                return `${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(kCode)}`;
+            }
         }
 
         function openModalShareLink() {
@@ -1989,110 +2005,77 @@
             const catatanDropdown = document.getElementById('catatan-siswa-id');
             const filterDropdown = document.getElementById('filter-bimbingan-siswa');
             const loginSelect = document.getElementById('login-siswa-select');
-            const targetAbsenSelect = document.getElementById('siswa-target-absen-id');
+            const siswaTargetAbsenDropdown = document.getElementById('siswa-target-absen-id');
 
             let optionsHtml = '';
-            if (window.appData.siswaList.length === 0) {
-                optionsHtml = '<option value="" disabled selected>-- Belum ada data siswa terdaftar pada kelas ini --</option>';
-                if (quickDropdown) quickDropdown.innerHTML = optionsHtml;
-                if (catatanDropdown) catatanDropdown.innerHTML = optionsHtml;
-                if (loginSelect) loginSelect.innerHTML = optionsHtml;
-                if (targetAbsenSelect) targetAbsenSelect.innerHTML = optionsHtml;
-                if (filterDropdown) filterDropdown.innerHTML = '<option value="ALL">Semua Siswa</option>';
+            if (!window.appData.siswaList || window.appData.siswaList.length === 0) {
+                optionsHtml = '<option value="" disabled selected>-- Belum Ada Siswa Terdaftar --</option>';
             } else {
-                optionsHtml = window.appData.siswaList.map(s => `<option value="${s.id}">${s.nis} - ${s.nama}</option>`).join('');
-                if (quickDropdown) quickDropdown.innerHTML = '<option value="" disabled selected>-- Pilih Siswa --</option>' + optionsHtml;
-                if (catatanDropdown) catatanDropdown.innerHTML = '<option value="" disabled selected>-- Pilih Siswa --</option>' + optionsHtml;
-                if (loginSelect) loginSelect.innerHTML = '<option value="" disabled selected>-- Pilih Nama Siswa --</option>' + optionsHtml;
-                if (targetAbsenSelect) targetAbsenSelect.innerHTML = '<option value="" disabled selected>-- Pilih Siswa yang Absen --</option>' + optionsHtml;
-                if (filterDropdown) filterDropdown.innerHTML = '<option value="ALL">Semua Siswa</option>' + optionsHtml;
+                optionsHtml = '<option value="" disabled selected>-- Pilih Siswa --</option>' +
+                    window.appData.siswaList.map(s => `<option value="${s.id}">${s.nis} - ${s.nama}</option>`).join('');
+            }
+
+            if (quickDropdown) quickDropdown.innerHTML = optionsHtml;
+            if (catatanDropdown) catatanDropdown.innerHTML = optionsHtml;
+            if (loginSelect) loginSelect.innerHTML = optionsHtml;
+            if (siswaTargetAbsenDropdown) siswaTargetAbsenDropdown.innerHTML = optionsHtml;
+
+            if (filterDropdown) {
+                filterDropdown.innerHTML = '<option value="ALL">Semua Siswa</option>' +
+                    window.appData.siswaList.map(s => `<option value="${s.id}">${s.nama}</option>`).join('');
             }
         }
 
-        function renderSiswaPortal() {
-            const activeSiswa = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
-            if (!activeSiswa) return;
+        function populateWaliKelasDropdowns() {
+            const waliSelect = document.getElementById('login-wali-kelas-select');
+            const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
 
-            const elNama = document.getElementById('siswa-portal-nama');
-            const elNis = document.getElementById('siswa-portal-nis');
-            const elIpk = document.getElementById('siswa-portal-ipk');
-            const elReporter = document.getElementById('siswa-reporter-badge');
-            const elGuruNama = document.getElementById('siswa-portal-guru-nama');
-            const elKelasBadge = document.getElementById('siswa-portal-kelas-badge');
-
-            if (elNama) elNama.innerText = `Selamat Datang, ${activeSiswa.nama}`;
-            if (elNis) elNis.innerText = `NIS: ${activeSiswa.nis} | Kelas: ${activeSiswa.kelas || '-'} ${activeSiswa.jurusan || ''} | SMK Negeri 1 Marisa`;
-            if (elIpk) elIpk.innerText = activeSiswa.ipk || '0.00';
-            if (elReporter) elReporter.innerText = activeSiswa.nama;
-            if (elGuruNama) elGuruNama.innerText = window.appData.guruProfile?.nama || 'Belum Ditentukan';
-            if (elKelasBadge) elKelasBadge.innerText = `KELAS: ${window.appData.guruProfile?.kelas || '-'}`;
-
-            toggleAlasanField();
-
-            const listContainer = document.getElementById('siswa-portal-bimbingan-list');
-            if (listContainer) {
-                const myCatatan = window.appData.catatanList.filter(c => c.siswaId === activeSiswa.id);
-                if (myCatatan.length === 0) {
-                    listContainer.innerHTML = `<p class="text-xs text-slate-500 py-4 text-center">Belum ada catatan bimbingan perwalian dari Guru Perwalian.</p>`;
-                } else {
-                    listContainer.innerHTML = myCatatan.map(c => `
-                        <div class="p-3 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-1 text-xs">
-                            <div class="flex justify-between items-center text-slate-400">
-                                <span class="font-bold text-cyan-400">${c.kategori}</span>
-                                <span class="font-mono text-[10px]">${c.tanggal}</span>
-                            </div>
-                            <div class="font-semibold text-white mt-1">${c.topik}</div>
-                            <div class="text-emerald-400 text-[11px] bg-emerald-500/10 p-2 rounded-lg mt-1 border border-emerald-500/20">
-                                <strong>Action Plan:</strong> ${c.solusi}
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            }
-        }
-
-        function toggleAlasanField() {
-            const kat = document.getElementById('siswa-self-kategori')?.value;
-            const container = document.getElementById('container-siswa-self-alasan');
-            const txt = document.getElementById('siswa-self-alasan');
-
-            if (kat === 'Ijin' || kat === 'Alpa') {
-                if (container) container.classList.remove('hidden');
-                if (txt) txt.required = true;
+            let optionsHtml = '';
+            if (window.appData.allKelasProfiles.length === 0) {
+                optionsHtml = '<option value="" disabled selected>-- Belum Ada Kelompok (Klik Buat Kelompok Baru) --</option>';
             } else {
-                if (container) container.classList.add('hidden');
-                if (txt) {
-                    txt.required = false;
-                    txt.value = '';
+                optionsHtml = '<option value="" disabled selected>-- Pilih Kelompok Perwalian / Kelas --</option>' +
+                    window.appData.allKelasProfiles.map(k => `<option value="${k.id}">${k.kelas} - ${k.nama}</option>`).join('');
+            }
+
+            if (waliSelect) waliSelect.innerHTML = optionsHtml;
+            if (siswaKelasSelect) siswaKelasSelect.innerHTML = optionsHtml;
+
+            // Preselect active class if set and trigger student list populator
+            if (window.appData.activeKelasCode) {
+                if (waliSelect) waliSelect.value = window.appData.activeKelasCode;
+                if (siswaKelasSelect) {
+                    siswaKelasSelect.value = window.appData.activeKelasCode;
+                    handleSiswaKelasChange();
                 }
             }
         }
 
         function handleSiswaLaporAbsen(e) {
             e.preventDefault();
-            const reporterSiswa = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
-            if (!reporterSiswa) return;
-
             const targetSiswaId = document.getElementById('siswa-target-absen-id')?.value;
-            const kat = document.getElementById('siswa-self-kategori')?.value;
+            const kat = document.getElementById('siswa-self-kategori')?.value || 'Sakit';
             const tgl = document.getElementById('siswa-self-tanggal')?.value;
-            const alasan = document.getElementById('siswa-self-alasan')?.value;
+            const alasan = document.getElementById('siswa-self-alasan')?.value || (kat === 'Sakit' ? 'Sakit' : 'Tanpa Keterangan');
 
             if (!targetSiswaId || !tgl) {
-                if (typeof window.showToast === 'function') window.showToast('Pilih nama siswa & tanggal!', 'error');
+                if (typeof window.showToast === 'function') window.showToast('Pilih siswa dan tanggal!', 'error');
                 return;
             }
 
             const targetSiswa = window.appData.siswaList.find(s => s.id === targetSiswaId);
             const targetNama = targetSiswa ? targetSiswa.nama : 'Siswa';
 
+            const activeSiswa = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
+            const reporterNama = activeSiswa ? activeSiswa.nama : 'Siswa (Teman)';
+
             const newAbsen = {
                 id: 'abs-' + Date.now(),
                 siswaId: targetSiswaId,
                 kategori: kat,
                 tanggal: tgl,
-                alasan: kat === 'Sakit' ? 'Sakit' : (alasan || 'Tanpa Keterangan'),
-                pelapor: `Siswa (${reporterSiswa.nama})`,
+                alasan: alasan,
+                pelapor: `Siswa (${reporterNama})`,
                 status: 'Pending'
             };
 
