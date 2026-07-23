@@ -92,6 +92,10 @@
                     </button>
                 </div>
 
+                <button id="btn-share-link" onclick="openModalShareLink()" class="hidden px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white flex items-center gap-1.5 transition shadow-lg shadow-emerald-600/20">
+                    <i data-lucide="share-2" class="w-3.5 h-3.5"></i> Bagikan Link Ke Siswa
+                </button>
+
                 <button id="btn-export-csv" onclick="exportCSV()" class="hidden px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center gap-1.5 transition">
                     <i data-lucide="download" class="w-3.5 h-3.5 text-slate-400"></i> Export CSV
                 </button>
@@ -110,151 +114,8 @@
                 </div>
                 <h2 class="text-xl font-black text-white tracking-tight uppercase">PORTAL MASUK PERWALIAN</h2>
                 <p class="text-xs text-slate-400">Silakan pilih peran dan masukkan kredensial untuk mengakses sistem • SMK Negeri 1 Marisa</p>
-            </div>
-
-            <!-- Role Selector Tabs -->
-            <div class="grid grid-cols-2 gap-2 p-1 bg-[#0b0f19] rounded-xl border border-slate-800 text-xs font-semibold">
-                <button id="tab-login-wali" onclick="switchLoginTab('WALI')" class="py-2.5 rounded-lg transition bg-rose-600 text-white shadow-md">
-                    Guru / Wali Kelas
-                </button>
-                <button id="tab-login-siswa" onclick="switchLoginTab('SISWA')" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition">
-                    Siswa Perwalian
-                </button>
-            </div>
-
-            <!-- Form Login Wali Kelas -->
-            <form id="form-login-wali" onsubmit="handleLoginWali(event)" class="space-y-4 text-xs">
-                <div class="p-3.5 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-1">
-                    <div class="text-[10px] uppercase font-bold text-slate-500">GURU / WALI KELAS TERDAFTAR</div>
-                    <div id="login-guru-info" class="font-bold text-white text-sm">-</div>
-                </div>
-
-                <div>
-                    <label class="block font-semibold text-slate-300 mb-1">MASUKKAN PIN KEAMANAN</label>
-                    <input type="password" id="input-login-pin" placeholder="****" maxlength="8" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-4 py-3 text-white text-center font-mono text-xl tracking-widest focus:outline-none focus:border-rose-500 transition" required>
-                    <p class="text-[11px] text-slate-500 mt-1">Default PIN: <span class="font-mono text-rose-400">808015</span> (Dapat diganti di profil)</p>
-                </div>
-
-                <div id="error-login-wali" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium">
-                    PIN Keamanan salah!
-                </div>
-
-                <button type="submit" class="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-500 font-bold text-white shadow-lg shadow-rose-600/20 transition uppercase tracking-wider text-xs">
-                    Masuk Portal Wali Kelas
-                </button>
-            </form>
-
-            <!-- Form Login Siswa -->
-            <form id="form-login-siswa" onsubmit="handleLoginSiswa(event)" class="hidden space-y-4 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-300 mb-1">PILIH NAMA SISWA</label>
-                    <select id="login-siswa-select" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition">
-                        <option value="" disabled selected>-- Belum ada data siswa --</option>
-                    </select>
-                </div>
-
-                <div class="relative flex items-center justify-center my-2">
-                    <div class="border-t border-slate-800 w-full"></div>
-                    <span class="bg-[#131b2e] px-2 text-[10px] text-slate-500 uppercase font-bold absolute">ATAU MASUK DENGAN NIS</span>
-                </div>
-
-                <div>
-                    <label class="block font-semibold text-slate-300 mb-1">MASUKKAN NIS (NOMOR INDUK SISWA)</label>
-                    <input type="text" id="input-login-nis" placeholder="Contoh: 2026101" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition">
-                </div>
-
-                <div id="error-login-siswa" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium">
-                    Data siswa tidak ditemukan! Pastikan Wali Kelas telah mendaftarkan NIS Anda.
-                </div>
-
-                <button type="submit" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white shadow-lg shadow-emerald-600/20 transition uppercase tracking-wider text-xs">
-                    Masuk Portal Siswa
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- MAIN DASHBOARD CONTENT (Shown when logged in) -->
-    <main id="main-app-content" class="hidden flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
-
-        <!-- Hero Status Banner -->
-        <div id="hero-banner" class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 flex flex-wrap items-center justify-between gap-4 shadow-lg">
-            <div class="space-y-1">
-                <div class="flex items-center gap-2">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase tracking-wider">
-                        PERWALIAN TUNTAS 2026
-                    </span>
-                </div>
-                <h2 class="text-xl font-extrabold text-white tracking-wide uppercase">
-                    MONITORING KETUNTASAN & <span class="text-emerald-400">PRESENSI PERWALIAN</span>
-                </h2>
-                <p class="text-xs text-slate-400 max-w-2xl">
-                    Ruang kontrol terpadu untuk Guru Perwalian / Wali Kelas dalam memantau perkembangan IPK, ketidakhadiran siswa, dan tindak lanjut permasalahan belajar.
-                </p>
-            </div>
-
-            <div class="flex items-center gap-3 bg-[#0b0f19] p-3 rounded-xl border border-slate-800">
-                <div class="p-2.5 rounded-lg bg-slate-800 text-emerald-400">
-                    <i data-lucide="user-check" class="w-5 h-5"></i>
-                </div>
-                <div>
-                    <div class="text-[10px] font-bold text-slate-500 uppercase">GURU / WALI KELAS</div>
-                    <div id="hero-guru-nama" class="text-xs font-bold text-white">-</div>
-                </div>
-                <button id="btn-edit-guru" onclick="openModalEditGuru()" class="ml-2 p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Edit Profil Wali Kelas">
-                    <i data-lucide="settings" class="w-4 h-4"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- VIEW FOR WALI KELAS -->
-        <div id="view-wali-kelas" class="space-y-6">
-            
-            <!-- Dashboard Metric Cards Row -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-2 hover:border-emerald-500/40 transition">
-                    <div class="flex items-center justify-between text-slate-400">
-                        <span class="text-[11px] font-bold uppercase tracking-wider">TOTAL SISWA</span>
-                        <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
-                    </div>
-                    <div id="stat-total-siswa" class="text-2xl font-black text-white">0</div>
-                    <div class="text-[10px] font-medium text-emerald-400">Terdaftar di sistem</div>
-                </div>
-
-                <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-2 hover:border-cyan-500/40 transition">
-                    <div class="flex items-center justify-between text-slate-400">
-                        <span class="text-[11px] font-bold uppercase tracking-wider">RATA-RATA IPK</span>
-                        <i data-lucide="award" class="w-4 h-4 text-cyan-400"></i>
-                    </div>
-                    <div id="stat-rata-ipk" class="text-2xl font-black text-white">0.00</div>
-                    <div id="stat-rata-kat" class="text-[10px] font-medium text-cyan-400">Progres Akademik</div>
-                </div>
-
-                <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-2 hover:border-rose-500/40 transition">
-                    <div class="flex items-center justify-between text-slate-400">
-                        <span class="text-[11px] font-bold uppercase tracking-wider">SISWA TIDAK HADIR</span>
-                        <i data-lucide="user-x" class="w-4 h-4 text-rose-400"></i>
-                    </div>
-                    <div id="stat-absen-siswa" class="text-2xl font-black text-white">0</div>
-                    <div id="stat-absen-detail" class="text-[10px] font-medium text-rose-400">S:0 | I:0 | A:0</div>
-                </div>
-
-                <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-2 hover:border-amber-500/40 transition">
-                    <div class="flex items-center justify-between text-slate-400">
-                        <span class="text-[11px] font-bold uppercase tracking-wider">GURU TIDAK HADIR</span>
-                        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i>
-                    </div>
-                    <div id="stat-absen-guru" class="text-2xl font-black text-white">0</div>
-                    <div class="text-[10px] font-medium text-amber-400">Laporan Jam Pelajaran</div>
-                </div>
-
-                <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-2 hover:border-purple-500/40 transition">
-                    <div class="flex items-center justify-between text-slate-400">
-                        <span class="text-[11px] font-bold uppercase tracking-wider">CATATAN PERWALIAN</span>
-                        <i data-lucide="file-text" class="w-4 h-4 text-purple-400"></i>
-                    </div>
-                    <div id="stat-total-catatan" class="text-2xl font-black text-white">0</div>
-                    <div class="text-[10px] font-medium text-purple-400">Selesai Dibimbing</div>
+                <div id="import-notice" class="hidden p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+                    <i data-lucide="check-circle-2" class="inline-block w-4 h-4 mr-1 align-sub"></i> Data perwalian dari Wali Kelas berhasil dimuat secara otomatis!
                 </div>
             </div>
 
@@ -796,39 +657,39 @@
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" onclick="closeModalSiswa()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold">Batal</button>
                     <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md shadow-emerald-600/20">Simpan Data Siswa</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL TAMBAH / EDIT GURU MAPEL -->
-    <div id="modal-guru-mapel" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <!-- MODAL BAGIKAN LINK KE SISWA -->
+    <div id="modal-share-link" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="max-w-md w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 id="modal-guru-mapel-title" class="text-sm font-bold text-white uppercase flex items-center gap-2">
-                    <i data-lucide="user-plus" class="w-4 h-4 text-amber-400"></i> Tambah Data Guru Mapel
+                <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
+                    <i data-lucide="share-2" class="w-4 h-4 text-emerald-400"></i> Bagikan Link Portal Siswa
                 </h3>
-                <button onclick="closeModalGuruMapel()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeModalShareLink()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
-            <form onsubmit="handleSaveGuruMapel(event)" class="space-y-3 text-xs">
-                <input type="hidden" id="edit-guru-mapel-id">
+            <div class="space-y-3 text-xs">
+                <p class="text-slate-300">
+                    Kirimkan link ini ke grup WhatsApp siswa. Saat dibuka, siswa akan <strong>langsung masuk ke Halaman Login Siswa</strong> dan nama-nama siswa serta guru mapel yang sudah Anda input akan <strong>otomatis tersedia</strong>.
+                </p>
 
                 <div>
-                    <label class="block font-semibold text-slate-400 mb-1">NAMA GURU & GELAR</label>
-                    <input type="text" id="form-guru-nama" placeholder="Contoh: Bpk. Ahmad, S.Pd" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition" required>
+                    <label class="block font-semibold text-slate-400 mb-1">LINK AKSES PORTAL SISWA</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="share-link-input" readonly class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-emerald-400 font-mono text-[11px] focus:outline-none">
+                        <button onclick="copyGeneratedLink()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-xl whitespace-nowrap transition flex items-center gap-1">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i> Salin Link
+                        </button>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block font-semibold text-slate-400 mb-1">MATA PELAJARAN</label>
-                    <input type="text" id="form-guru-mapel-nama" placeholder="Contoh: Matematika, Bahasa Indonesia..." class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition" required>
+                <div id="share-copied-msg" class="hidden p-2.5 rounded-xl bg-emerald-500/20 text-emerald-300 text-center font-semibold text-xs border border-emerald-500/30">
+                    Link berhasil disalin! Tinggal tempel (paste) di WhatsApp grup siswa.
                 </div>
+            </div>
 
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeModalGuruMapel()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold">Batal</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold shadow-md shadow-amber-600/20">Simpan Guru Mapel</button>
-                </div>
-            </form>
+            <div class="flex justify-end pt-2">
+                <button type="button" onclick="closeModalShareLink()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs">Tutup</button>
+            </div>
         </div>
     </div>
 
@@ -1248,6 +1109,9 @@
         window.onload = function() {
             if (typeof lucide !== 'undefined') lucide.createIcons();
 
+            // Auto-check for shared data payload in URL query parameters
+            checkAndImportUrlData();
+
             const today = new Date().toISOString().split('T')[0];
             const elQuickTgl = document.getElementById('quick-tanggal');
             const elGuruTgl = document.getElementById('guru-tanggal');
@@ -1268,81 +1132,90 @@
             }
         };
 
-        function switchLoginTab(role) {
-            const btnWali = document.getElementById('tab-login-wali');
-            const btnSiswa = document.getElementById('tab-login-siswa');
-            const formWali = document.getElementById('form-login-wali');
-            const formSiswa = document.getElementById('form-login-siswa');
+        // Check and import URL share payload
+        function checkAndImportUrlData() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const encodedData = urlParams.get('data');
+                const roleParam = urlParams.get('role');
 
-            if (role === 'WALI') {
-                if (btnWali) btnWali.className = 'py-2.5 rounded-lg transition bg-rose-600 text-white shadow-md';
-                if (btnSiswa) btnSiswa.className = 'py-2.5 rounded-lg text-slate-400 hover:text-white transition';
-                if (formWali) formWali.classList.remove('hidden');
-                if (formSiswa) formSiswa.classList.add('hidden');
-            } else {
-                if (btnSiswa) btnSiswa.className = 'py-2.5 rounded-lg transition bg-emerald-600 text-white shadow-md';
-                if (btnWali) btnWali.className = 'py-2.5 rounded-lg text-slate-400 hover:text-white transition';
-                if (formSiswa) formSiswa.classList.remove('hidden');
-                if (formWali) formWali.classList.add('hidden');
-            }
-        }
+                if (encodedData) {
+                    const decodedJson = JSON.parse(decodeURIComponent(atob(encodedData)));
+                    if (decodedJson && typeof decodedJson === 'object') {
+                        if (decodedJson.guruProfile) appData.guruProfile = decodedJson.guruProfile;
+                        if (Array.isArray(decodedJson.siswaList) && decodedJson.siswaList.length > 0) {
+                            appData.siswaList = decodedJson.siswaList;
+                        }
+                        if (Array.isArray(decodedJson.guruMapelList) && decodedJson.guruMapelList.length > 0) {
+                            appData.guruMapelList = decodedJson.guruMapelList;
+                        }
+                        
+                        saveToStorage();
 
-        function handleLoginWali(e) {
-            e.preventDefault();
-            const inputPin = document.getElementById('input-login-pin')?.value;
-            const errEl = document.getElementById('error-login-wali');
-
-            if (inputPin === appData.guruProfile.pin) {
-                if (errEl) errEl.classList.add('hidden');
-                appData.isLoggedIn = true;
-                appData.currentRole = 'WALI';
-                saveToStorage();
-                showMainApp();
-            } else {
-                if (errEl) errEl.classList.remove('hidden');
-            }
-        }
-
-        function handleLoginSiswa(e) {
-            e.preventDefault();
-            const selectedId = document.getElementById('login-siswa-select')?.value;
-            const inputNis = document.getElementById('input-login-nis')?.value?.trim();
-            const errEl = document.getElementById('error-login-siswa');
-
-            let targetSiswa = null;
-            if (inputNis) {
-                targetSiswa = appData.siswaList.find(s => s.nis === inputNis);
-            } else if (selectedId) {
-                targetSiswa = appData.siswaList.find(s => s.id === selectedId);
-            }
-
-            if (targetSiswa) {
-                if (errEl) errEl.classList.add('hidden');
-                appData.isLoggedIn = true;
-                appData.currentRole = 'SISWA';
-                appData.activeSiswaId = targetSiswa.id;
-                saveToStorage();
-                showMainApp();
-            } else {
-                if (errEl) {
-                    errEl.innerText = appData.siswaList.length === 0 
-                        ? "Belum ada data siswa terdaftar. Minta Wali Kelas untuk menginputkan data Anda terlebih dahulu."
-                        : "Siswa dengan NIS tersebut tidak ditemukan!";
-                    errEl.classList.remove('hidden');
+                        const notice = document.getElementById('import-notice');
+                        if (notice) notice.classList.remove('hidden');
+                    }
                 }
+
+                if (roleParam === 'siswa' || encodedData) {
+                    setTimeout(() => {
+                        switchLoginTab('SISWA');
+                    }, 100);
+                }
+            } catch (err) {
+                console.log('URL share import handled');
             }
         }
 
-        function logout() {
-            appData.isLoggedIn = false;
-            saveToStorage();
-            showLoginScreen();
+        function generateShareLink() {
+            const payload = {
+                guruProfile: appData.guruProfile,
+                siswaList: appData.siswaList,
+                guruMapelList: appData.guruMapelList
+            };
+            const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
+            const baseUrl = window.location.origin + window.location.pathname;
+            return `${baseUrl}?data=${encoded}&role=siswa`;
+        }
+
+        function openModalShareLink() {
+            const linkInput = document.getElementById('share-link-input');
+            const msg = document.getElementById('share-copied-msg');
+            if (msg) msg.classList.add('hidden');
+            
+            if (linkInput) {
+                linkInput.value = generateShareLink();
+            }
+            
+            document.getElementById('modal-share-link')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeModalShareLink() {
+            document.getElementById('modal-share-link')?.classList.add('hidden');
+        }
+
+        function copyGeneratedLink() {
+            const linkInput = document.getElementById('share-link-input');
+            if (!linkInput) return;
+
+            linkInput.select();
+            linkInput.setSelectionRange(0, 99999);
+
+            try {
+                document.execCommand('copy');
+                const msg = document.getElementById('share-copied-msg');
+                if (msg) msg.classList.remove('hidden');
+            } catch (err) {
+                alert('Silakan salin link manual secara langsung dari kolom.');
+            }
         }
 
         function showLoginScreen() {
             document.getElementById('login-screen')?.classList.remove('hidden');
             document.getElementById('main-app-content')?.classList.add('hidden');
             document.getElementById('user-badge-container')?.classList.add('hidden');
+            document.getElementById('btn-share-link')?.classList.add('hidden');
             document.getElementById('btn-export-csv')?.classList.add('hidden');
 
             const loginGuruInfo = document.getElementById('login-guru-info');
@@ -1358,6 +1231,12 @@
             document.getElementById('main-app-content')?.classList.remove('hidden');
             document.getElementById('user-badge-container')?.classList.remove('hidden');
             document.getElementById('btn-export-csv')?.classList.remove('hidden');
+
+            if (appData.currentRole === 'WALI') {
+                document.getElementById('btn-share-link')?.classList.remove('hidden');
+            } else {
+                document.getElementById('btn-share-link')?.classList.add('hidden');
+            }
 
             updateHeaderInfo();
             updateMetrics();
