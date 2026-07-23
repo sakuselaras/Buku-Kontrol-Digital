@@ -65,7 +65,7 @@
     </style>
 
     <script>
-        // Define global handleLogoError in head
+        // Global Logo Error Handler in Head
         window.handleLogoError = function(imgElement) {
             const step = parseInt(imgElement.getAttribute('data-try-step') || '0', 10);
             const sources = ['tutwuri.png', 'tutwuri_handayani.png', 'tutwuri.svg', 'logo_tutwuri.png', 'tutwuri.jpg'];
@@ -99,12 +99,12 @@
             }
         };
 
-        // Initialize Global defaultState Object
         window.defaultState = {
             isLoggedIn: false,
             currentRole: 'WALI',
             activeKelasCode: '',
             activeSiswaId: '',
+            cloudBlobId: '',
             guruProfile: {
                 nama: "Guru Perwalian",
                 nip: "-",
@@ -987,15 +987,14 @@
         </div>
     </div>
 
-    <!-- FIREBASE REALTIME CLOUD INTEGRATION -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <!-- APPLICATION JAVASCRIPT LOGIC -->
+    <script>
+        // Universal REST Cloud Engine
+        const CLOUD_API_BASE = 'https://api.npoint.io/';
+        const KVDB_API_BASE = 'https://kvdb.io/A84N8eX93vJ7xW1L9Z2/';
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'catatan-perwalian-marisa';
-        let db = null;
-        let auth = null;
+        let absensiChart = null;
+        let ipkChart = null;
 
         // Custom Toast Notification System
         window.showToast = function(message, type = 'info') {
@@ -1018,192 +1017,15 @@
             }, 4000);
         };
 
-        // Initialize Cloud Realtime Database
-        async function initCloudDatabase() {
-            try {
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-                    apiKey: "AIzaSyDummyKeyForFallback",
-                    authDomain: "perwalian-smk.firebaseapp.com",
-                    projectId: "perwalian-smk",
-                    storageBucket: "perwalian-smk.appspot.com",
-                    messagingSenderId: "123456789",
-                    appId: "1:123456789:web:abcdef"
-                };
+        // Upload Class Dataset to Multi-Cloud
+        async function uploadClassToCloud(kelasCode) {
+            if (!kelasCode) return null;
 
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
+            const currentProfile = (window.appData.allKelasProfiles || []).find(k => k.id === kelasCode || k.kelasCode === kelasCode) || window.appData.guruProfile;
 
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                console.log("Cloud Database authenticated successfully.");
-                setupRealtimeListeners();
-            } catch (err) {
-                console.warn("Cloud Sync running in standard local mode:", err);
-            }
-        }
-
-        // Realtime Snapshot Listeners
-        function setupRealtimeListeners() {
-            if (!db || !auth?.currentUser) return;
-
-            // 1. Class List Listener
-            const kelasCol = collection(db, 'artifacts', appId, 'public', 'data', 'kelasProfiles');
-            onSnapshot(kelasCol, (snap) => {
-                if (!window.appData) window.appData = Object.assign({}, window.defaultState);
-                window.appData.allKelasProfiles = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                if (typeof window.populateWaliKelasDropdowns === 'function') window.populateWaliKelasDropdowns();
-            }, (err) => console.error("Kelas profiles sync error:", err));
-
-            // 2. Student List Listener
-            const siswaCol = collection(db, 'artifacts', appId, 'public', 'data', 'siswaList');
-            onSnapshot(siswaCol, (snap) => {
-                if (!window.appData) window.appData = Object.assign({}, window.defaultState);
-                window.appData.allSiswaList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                if (typeof window.syncFilteredData === 'function') window.syncFilteredData();
-            }, (err) => console.error("Siswa sync error:", err));
-
-            // 3. Subject Teachers Listener
-            const guruMapelCol = collection(db, 'artifacts', appId, 'public', 'data', 'guruMapelList');
-            onSnapshot(guruMapelCol, (snap) => {
-                if (!window.appData) window.appData = Object.assign({}, window.defaultState);
-                window.appData.allGuruMapelList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                if (typeof window.syncFilteredData === 'function') window.syncFilteredData();
-            }, (err) => console.error("Guru mapel sync error:", err));
-
-            // 4. Notes Listener
-            const catatanCol = collection(db, 'artifacts', appId, 'public', 'data', 'catatanList');
-            onSnapshot(catatanCol, (snap) => {
-                if (!window.appData) window.appData = Object.assign({}, window.defaultState);
-                window.appData.allCatatanList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                if (typeof window.syncFilteredData === 'function') window.syncFilteredData();
-            }, (err) => console.error("Catatan sync error:", err));
-
-            // 5. Absensi Listener
-            const absensiCol = collection(db, 'artifacts', appId, 'public', 'data', 'absensiList');
-            onSnapshot(absensiCol, (snap) => {
-                if (!window.appData) window.appData = Object.assign({}, window.defaultState);
-                window.appData.allAbsensiList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                if (typeof window.syncFilteredData === 'function') window.syncFilteredData();
-            }, (err) => console.error("Absensi sync error:", err));
-
-            // 6. Guru Absensi Listener
-            const guruAbsensiCol = collection(db, 'artifacts', appId, 'public', 'data', 'guruAbsensiList');
-            onSnapshot(guruAbsensiCol, (snap) => {
-                if (!window.appData) window.appData = Object.assign({}, window.defaultState);
-                window.appData.allGuruAbsensiList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                if (typeof window.syncFilteredData === 'function') window.syncFilteredData();
-            }, (err) => console.error("Guru absensi sync error:", err));
-        }
-
-        // Global DB Write Action Handlers
-        window.cloudSaveKelasProfile = async function(kelasCode, profileData) {
-            if (!db || !auth?.currentUser) return;
-            try {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'kelasProfiles', kelasCode), profileData);
-            } catch (e) { console.error("Cloud write failed:", e); }
-        };
-
-        window.cloudSaveSiswa = async function(id, siswaData) {
-            if (!db || !auth?.currentUser) return;
-            try {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'siswaList', id), { ...siswaData, kelasCode: window.appData.activeKelasCode });
-            } catch (e) { console.error("Cloud write failed:", e); }
-        };
-
-        window.cloudDeleteSiswa = async function(id) {
-            if (!db || !auth?.currentUser) return;
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'siswaList', id));
-            } catch (e) { console.error("Cloud delete failed:", e); }
-        };
-
-        window.cloudSaveGuruMapel = async function(id, data) {
-            if (!db || !auth?.currentUser) return;
-            try {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'guruMapelList', id), { ...data, kelasCode: window.appData.activeKelasCode });
-            } catch (e) { console.error("Cloud write failed:", e); }
-        };
-
-        window.cloudDeleteGuruMapel = async function(id) {
-            if (!db || !auth?.currentUser) return;
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'guruMapelList', id));
-            } catch (e) { console.error("Cloud delete failed:", e); }
-        };
-
-        window.cloudAddCatatan = async function(data) {
-            if (!db || !auth?.currentUser) return;
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'catatanList', data.id);
-                await setDoc(docRef, { ...data, kelasCode: window.appData.activeKelasCode, timestamp: Date.now() });
-            } catch (e) { console.error("Cloud write failed:", e); }
-        };
-
-        window.cloudDeleteCatatan = async function(id) {
-            if (!db || !auth?.currentUser) return;
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'catatanList', id));
-            } catch (e) { console.error("Cloud delete failed:", e); }
-        };
-
-        window.cloudAddAbsensi = async function(data) {
-            if (!db || !auth?.currentUser) return;
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'absensiList', data.id);
-                await setDoc(docRef, { ...data, kelasCode: window.appData.activeKelasCode, timestamp: Date.now() });
-            } catch (e) { console.error("Cloud write failed:", e); }
-        };
-
-        window.cloudUpdateAbsensiStatus = async function(id, status) {
-            if (!db || !auth?.currentUser) return;
-            try {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'absensiList', id), { status: status });
-            } catch (e) { console.error("Cloud update failed:", e); }
-        };
-
-        window.cloudDeleteAbsensi = async function(id) {
-            if (!db || !auth?.currentUser) return;
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'absensiList', id));
-            } catch (e) { console.error("Cloud delete failed:", e); }
-        };
-
-        window.cloudAddGuruAbsensi = async function(data) {
-            if (!db || !auth?.currentUser) return;
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'guruAbsensiList', data.id);
-                await setDoc(docRef, { ...data, kelasCode: window.appData.activeKelasCode, timestamp: Date.now() });
-            } catch (e) { console.error("Cloud write failed:", e); }
-        };
-
-        window.cloudDeleteGuruAbsensi = async function(id) {
-            if (!db || !auth?.currentUser) return;
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'guruAbsensiList', id));
-            } catch (e) { console.error("Cloud delete failed:", e); }
-        };
-
-        // Start Cloud Initialization
-        initCloudDatabase();
-    </script>
-
-    <!-- APPLICATION JAVASCRIPT LOGIC -->
-    <script>
-        const CLOUD_API_BASE = 'https://kvdb.io/A84N8eX93vJ7xW1L9Z2/';
-
-        let absensiChart = null;
-        let ipkChart = null;
-
-        // Save class dataset to Cloud Relay
-        async function syncClassToCloud(kelasCode) {
-            if (!kelasCode) return;
             const payload = {
-                profile: (window.appData.allKelasProfiles || []).find(k => k.id === kelasCode || k.kelasCode === kelasCode) || window.appData.guruProfile,
+                kelasCode: kelasCode,
+                profile: currentProfile,
                 siswa: (window.appData.allSiswaList || []).filter(s => s.kelasCode === kelasCode),
                 guruMapel: (window.appData.allGuruMapelList || []).filter(g => g.kelasCode === kelasCode),
                 catatan: (window.appData.allCatatanList || []).filter(c => c.kelasCode === kelasCode),
@@ -1212,67 +1034,133 @@
                 updatedAt: Date.now()
             };
 
+            // 1. Primary Sync: NPoint Endpoint
             try {
-                await fetch(`${CLOUD_API_BASE}class_${kelasCode}`, {
+                let blobId = window.appData.cloudBlobId;
+                let res;
+                if (blobId) {
+                    res = await fetch(`${CLOUD_API_BASE}${blobId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    res = await fetch(CLOUD_API_BASE, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (res.ok) {
+                        const jsonRes = await res.json();
+                        if (jsonRes && jsonRes.id) {
+                            blobId = jsonRes.id;
+                            window.appData.cloudBlobId = blobId;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("NPoint upload notice:", e);
+            }
+
+            // 2. Secondary Sync: KVDB Endpoint
+            try {
+                await fetch(`${KVDB_API_BASE}class_${kelasCode}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                console.log("Class synced to Cloud Relay successfully.");
-            } catch (err) {
-                console.warn("Cloud Relay POST error:", err);
+            } catch (e) {
+                console.warn("KVDB upload notice:", e);
             }
+
+            return window.appData.cloudBlobId || '';
         }
 
-        // Fetch class dataset from Cloud Relay
-        async function loadClassFromCloud(kelasCode) {
+        // Fetch Class Dataset from Multi-Cloud
+        async function fetchClassFromCloud(kelasCode, blobId) {
+            if (!kelasCode && !blobId) return;
+
             const loadingBanner = document.getElementById('cloud-loading-banner');
             const loadingText = document.getElementById('cloud-loading-text');
 
             if (loadingBanner) loadingBanner.classList.remove('hidden');
-            if (loadingText) loadingText.innerText = `Menghubungkan & mengunduh data kelas (${kelasCode})...`;
+            if (loadingText) loadingText.innerText = `Menghubungkan & mengunduh data kelas dari Cloud...`;
 
-            try {
-                const res = await fetch(`${CLOUD_API_BASE}class_${kelasCode}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.profile) {
-                        const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === kelasCode);
-                        if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = data.profile;
-                        else window.appData.allKelasProfiles.push(data.profile);
+            let fetchedData = null;
 
-                        if (Array.isArray(data.siswa)) {
-                            window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== kelasCode).concat(data.siswa);
-                        }
-
-                        if (Array.isArray(data.guruMapel)) {
-                            window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== kelasCode).concat(data.guruMapel);
-                        }
-
-                        if (Array.isArray(data.catatan)) window.appData.allCatatanList = data.catatan;
-                        if (Array.isArray(data.absensi)) window.appData.allAbsensiList = data.absensi;
-                        if (Array.isArray(data.guruAbsensi)) window.appData.allGuruAbsensiList = data.guruAbsensi;
-
-                        window.appData.activeKelasCode = kelasCode;
-                        window.syncFilteredData();
-
-                        if (typeof window.showToast === 'function') {
-                            window.showToast(`Data kelas (${data.profile.kelas || kelasCode}) berhasil dimuat!`, 'success');
-                        }
+            // Try NPoint First if blobId is supplied
+            if (blobId) {
+                try {
+                    const res = await fetch(`${CLOUD_API_BASE}${blobId}`);
+                    if (res.ok) {
+                        fetchedData = await res.json();
                     }
+                } catch (err) {
+                    console.warn("NPoint fetch notice:", err);
                 }
-            } catch (err) {
-                console.warn("Cloud Relay GET error:", err);
-            } finally {
-                if (loadingBanner) loadingBanner.classList.add('hidden');
             }
+
+            // Fallback to KVDB if fetch failed or no blobId
+            if (!fetchedData && kelasCode) {
+                try {
+                    const res = await fetch(`${KVDB_API_BASE}class_${kelasCode}`);
+                    if (res.ok) {
+                        fetchedData = await res.json();
+                    }
+                } catch (err) {
+                    console.warn("KVDB fetch notice:", err);
+                }
+            }
+
+            if (fetchedData && fetchedData.profile) {
+                const targetCode = fetchedData.kelasCode || kelasCode;
+                const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === targetCode);
+                
+                if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = fetchedData.profile;
+                else window.appData.allKelasProfiles.push(fetchedData.profile);
+
+                if (Array.isArray(fetchedData.siswa)) {
+                    window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== targetCode).concat(fetchedData.siswa);
+                }
+
+                if (Array.isArray(fetchedData.guruMapel)) {
+                    window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== targetCode).concat(fetchedData.guruMapel);
+                }
+
+                if (Array.isArray(fetchedData.catatan)) {
+                    window.appData.allCatatanList = (window.appData.allCatatanList || []).filter(c => c.kelasCode !== targetCode).concat(fetchedData.catatan);
+                }
+
+                if (Array.isArray(fetchedData.absensi)) {
+                    window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== targetCode).concat(fetchedData.absensi);
+                }
+
+                if (Array.isArray(fetchedData.guruAbsensi)) {
+                    window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== targetCode).concat(fetchedData.guruAbsensi);
+                }
+
+                window.appData.activeKelasCode = targetCode;
+                if (blobId) window.appData.cloudBlobId = blobId;
+
+                window.syncFilteredData();
+
+                if (typeof window.showToast === 'function') {
+                    window.showToast(`Data kelas (${fetchedData.profile.kelas || targetCode}) berhasil dimuat!`, 'success');
+                }
+            }
+
+            if (loadingBanner) loadingBanner.classList.add('hidden');
         }
 
-        // Generate Short link for WhatsApp sharing
-        function generateShareLink() {
+        // Generate Short Link for WhatsApp Sharing
+        async function generateShareLink() {
             const kCode = window.appData.activeKelasCode || 'DEFAULT';
-            syncClassToCloud(kCode);
-            return `${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(kCode)}`;
+            const bId = await uploadClassToCloud(kCode);
+            
+            let queryStr = `code=${encodeURIComponent(kCode)}`;
+            if (bId) queryStr += `&b=${encodeURIComponent(bId)}`;
+
+            return `${window.location.origin}${window.location.pathname}?${queryStr}`;
         }
 
         window.syncFilteredData = function() {
@@ -1303,7 +1191,8 @@
                     isLoggedIn: window.appData.isLoggedIn,
                     currentRole: window.appData.currentRole,
                     activeKelasCode: window.appData.activeKelasCode,
-                    activeSiswaId: window.appData.activeSiswaId
+                    activeSiswaId: window.appData.activeSiswaId,
+                    cloudBlobId: window.appData.cloudBlobId
                 }));
             }
             updateMetrics();
@@ -1318,7 +1207,7 @@
             renderCharts();
 
             if (window.appData.activeKelasCode) {
-                syncClassToCloud(window.appData.activeKelasCode);
+                uploadClassToCloud(window.appData.activeKelasCode);
             }
         };
 
@@ -1340,13 +1229,16 @@
 
             const urlParams = new URLSearchParams(window.location.search);
             const linkClassCode = urlParams.get('code') || urlParams.get('kelas');
+            const linkBlobId = urlParams.get('b') || urlParams.get('blob');
 
-            if (linkClassCode) {
-                window.appData.activeKelasCode = linkClassCode;
+            if (linkClassCode || linkBlobId) {
+                if (linkClassCode) window.appData.activeKelasCode = linkClassCode;
+                if (linkBlobId) window.appData.cloudBlobId = linkBlobId;
+
                 switchLoginTab('SISWA');
-                await loadClassFromCloud(linkClassCode);
+                await fetchClassFromCloud(linkClassCode, linkBlobId);
             } else if (window.appData.activeKelasCode) {
-                loadClassFromCloud(window.appData.activeKelasCode);
+                fetchClassFromCloud(window.appData.activeKelasCode, window.appData.cloudBlobId);
             }
 
             if (window.appData.isLoggedIn) {
@@ -1356,11 +1248,12 @@
                 showLoginScreen();
             }
 
+            // Periodic live refresh every 4 seconds
             setInterval(() => {
                 if (window.appData.activeKelasCode) {
-                    loadClassFromCloud(window.appData.activeKelasCode);
+                    fetchClassFromCloud(window.appData.activeKelasCode, window.appData.cloudBlobId);
                 }
-            }, 5000);
+            }, 4000);
         };
 
         function switchLoginTab(role) {
@@ -1439,10 +1332,7 @@
 
             window.appData.activeKelasCode = kelasCode;
             window.appData.guruProfile = profileData;
-
-            if (typeof window.cloudSaveKelasProfile === 'function') {
-                window.cloudSaveKelasProfile(kelasCode, profileData);
-            }
+            window.appData.allKelasProfiles.push(profileData);
 
             window.appData.isLoggedIn = true;
             window.appData.currentRole = 'WALI';
@@ -1779,11 +1669,13 @@
                 tanggal: tanggal,
                 alasan: alasan,
                 pelapor: 'GURU KELAS',
-                status: 'Disetujui'
+                status: 'Disetujui',
+                kelasCode: window.appData.activeKelasCode,
+                timestamp: Date.now()
             };
 
             window.appData.absensiList.unshift(newAbsen);
-            if (typeof window.cloudAddAbsensi === 'function') window.cloudAddAbsensi(newAbsen);
+            window.appData.allAbsensiList.unshift(newAbsen);
 
             saveToStorage();
             document.getElementById('quick-alasan').value = '';
@@ -1804,11 +1696,13 @@
                 guruMapel: guruMapel,
                 jamKe: jamKe || 'Jam KBM',
                 tanggal: tanggal,
-                keterangan: keterangan
+                keterangan: keterangan,
+                kelasCode: window.appData.activeKelasCode,
+                timestamp: Date.now()
             };
 
             window.appData.guruAbsensiList.unshift(newGuruAbsen);
-            if (typeof window.cloudAddGuruAbsensi === 'function') window.cloudAddGuruAbsensi(newGuruAbsen);
+            window.appData.allGuruAbsensiList.unshift(newGuruAbsen);
 
             saveToStorage();
             document.getElementById('guru-nama-mapel').value = '';
@@ -1833,11 +1727,13 @@
                 tanggal: tanggal,
                 kategori: kategori,
                 topik: topik,
-                solusi: solusi
+                solusi: solusi,
+                kelasCode: window.appData.activeKelasCode,
+                timestamp: Date.now()
             };
 
             window.appData.catatanList.unshift(newCatatan);
-            if (typeof window.cloudAddCatatan === 'function') window.cloudAddCatatan(newCatatan);
+            window.appData.allCatatanList.unshift(newCatatan);
 
             saveToStorage();
             document.getElementById('catatan-topik').value = '';
@@ -1845,7 +1741,7 @@
             if (typeof window.showToast === 'function') window.showToast('Catatan perwalian berhasil disimpan!', 'success');
         }
 
-        function openModalShareLink() {
+        async function openModalShareLink() {
             const linkInput = document.getElementById('share-link-input');
             const msg = document.getElementById('share-copied-msg');
             const codeLabel = document.getElementById('modal-share-code-label');
@@ -1854,7 +1750,9 @@
             if (codeLabel) codeLabel.innerText = window.appData.guruProfile?.kelas || window.appData.activeKelasCode;
             
             if (linkInput) {
-                linkInput.value = generateShareLink();
+                linkInput.value = "Menggenerasi link...";
+                const generated = await generateShareLink();
+                linkInput.value = generated;
             }
             
             document.getElementById('modal-share-link')?.classList.remove('hidden');
@@ -2162,11 +2060,13 @@
                 tanggal: tgl,
                 alasan: alasan,
                 pelapor: `Siswa (${reporterNama})`,
-                status: 'Pending'
+                status: 'Pending',
+                kelasCode: window.appData.activeKelasCode,
+                timestamp: Date.now()
             };
 
             window.appData.absensiList.unshift(newAbsen);
-            if (typeof window.cloudAddAbsensi === 'function') window.cloudAddAbsensi(newAbsen);
+            window.appData.allAbsensiList.unshift(newAbsen);
 
             saveToStorage();
             
@@ -2190,11 +2090,13 @@
                 guruMapel: guruMapel,
                 jamKe: jamKe || 'Jam KBM',
                 tanggal: tgl,
-                keterangan: ket
+                keterangan: ket,
+                kelasCode: window.appData.activeKelasCode,
+                timestamp: Date.now()
             };
 
             window.appData.guruAbsensiList.unshift(newGuruAbsen);
-            if (typeof window.cloudAddGuruAbsensi === 'function') window.cloudAddGuruAbsensi(newGuruAbsen);
+            window.appData.allGuruAbsensiList.unshift(newGuruAbsen);
 
             saveToStorage();
 
@@ -2230,19 +2132,23 @@
             const ortu = document.getElementById('form-siswa-ortu')?.value || '-';
 
             const siswaData = {
-                nis, nama, kelas, jurusan, gender, ipk, ortu
+                nis, nama, kelas, jurusan, gender, ipk, ortu, kelasCode: window.appData.activeKelasCode
             };
 
             if (editId) {
                 const idx = window.appData.siswaList.findIndex(s => s.id === editId);
                 if (idx !== -1) {
                     window.appData.siswaList[idx] = { id: editId, ...siswaData };
-                    if (typeof window.cloudSaveSiswa === 'function') window.cloudSaveSiswa(editId, siswaData);
+                }
+                const allIdx = window.appData.allSiswaList.findIndex(s => s.id === editId);
+                if (allIdx !== -1) {
+                    window.appData.allSiswaList[allIdx] = { id: editId, ...siswaData };
                 }
             } else {
                 const newId = 'sis-' + Date.now();
-                window.appData.siswaList.push({ id: newId, ...siswaData });
-                if (typeof window.cloudSaveSiswa === 'function') window.cloudSaveSiswa(newId, siswaData);
+                const newObj = { id: newId, ...siswaData };
+                window.appData.siswaList.push(newObj);
+                window.appData.allSiswaList.push(newObj);
             }
 
             saveToStorage();
@@ -2267,7 +2173,7 @@
 
         function deleteSiswa(id) {
             window.appData.siswaList = window.appData.siswaList.filter(s => s.id !== id);
-            if (typeof window.cloudDeleteSiswa === 'function') window.cloudDeleteSiswa(id);
+            window.appData.allSiswaList = window.appData.allSiswaList.filter(s => s.id !== id);
             saveToStorage();
             if (typeof window.showToast === 'function') window.showToast('Data siswa telah dihapus.', 'info');
         }
@@ -2290,18 +2196,22 @@
             const nama = document.getElementById('form-guru-nama')?.value;
             const mapel = document.getElementById('form-guru-mapel-nama')?.value;
 
-            const guruData = { nama, mapel };
+            const guruData = { nama, mapel, kelasCode: window.appData.activeKelasCode };
 
             if (editId) {
                 const idx = window.appData.guruMapelList.findIndex(g => g.id === editId);
                 if (idx !== -1) {
                     window.appData.guruMapelList[idx] = { id: editId, ...guruData };
-                    if (typeof window.cloudSaveGuruMapel === 'function') window.cloudSaveGuruMapel(editId, guruData);
+                }
+                const allIdx = window.appData.allGuruMapelList.findIndex(g => g.id === editId);
+                if (allIdx !== -1) {
+                    window.appData.allGuruMapelList[allIdx] = { id: editId, ...guruData };
                 }
             } else {
                 const newId = 'gmap-' + Date.now();
-                window.appData.guruMapelList.push({ id: newId, ...guruData });
-                if (typeof window.cloudSaveGuruMapel === 'function') window.cloudSaveGuruMapel(newId, guruData);
+                const newObj = { id: newId, ...guruData };
+                window.appData.guruMapelList.push(newObj);
+                window.appData.allGuruMapelList.push(newObj);
             }
 
             saveToStorage();
@@ -2321,7 +2231,7 @@
 
         function deleteGuruMapel(id) {
             window.appData.guruMapelList = window.appData.guruMapelList.filter(g => g.id !== id);
-            if (typeof window.cloudDeleteGuruMapel === 'function') window.cloudDeleteGuruMapel(id);
+            window.appData.allGuruMapelList = window.appData.allGuruMapelList.filter(g => g.id !== id);
             saveToStorage();
             if (typeof window.showToast === 'function') window.showToast('Data guru mapel dihapus.');
         }
@@ -2351,9 +2261,9 @@
 
             window.appData.guruProfile = updatedProfile;
 
-            if (typeof window.cloudSaveKelasProfile === 'function') {
-                window.cloudSaveKelasProfile(window.appData.activeKelasCode, updatedProfile);
-            }
+            const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === window.appData.activeKelasCode);
+            if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = updatedProfile;
+            else window.appData.allKelasProfiles.push(updatedProfile);
 
             saveToStorage();
             closeModalEditGuru();
@@ -2365,39 +2275,45 @@
             const idx = window.appData.absensiList.findIndex(a => a.id === id);
             if (idx !== -1) {
                 window.appData.absensiList[idx].status = 'Disetujui';
-                if (typeof window.cloudUpdateAbsensiStatus === 'function') window.cloudUpdateAbsensiStatus(id, 'Disetujui');
-                saveToStorage();
-                if (typeof window.showToast === 'function') window.showToast('Ketidakhadiran disetujui.', 'success');
             }
+            const allIdx = window.appData.allAbsensiList.findIndex(a => a.id === id);
+            if (allIdx !== -1) {
+                window.appData.allAbsensiList[allIdx].status = 'Disetujui';
+            }
+            saveToStorage();
+            if (typeof window.showToast === 'function') window.showToast('Ketidakhadiran disetujui.', 'success');
         }
 
         function rejectAbsensi(id) {
             const idx = window.appData.absensiList.findIndex(a => a.id === id);
             if (idx !== -1) {
                 window.appData.absensiList[idx].status = 'Ditolak';
-                if (typeof window.cloudUpdateAbsensiStatus === 'function') window.cloudUpdateAbsensiStatus(id, 'Ditolak');
-                saveToStorage();
-                if (typeof window.showToast === 'function') window.showToast('Ketidakhadiran ditolak.');
             }
+            const allIdx = window.appData.allAbsensiList.findIndex(a => a.id === id);
+            if (allIdx !== -1) {
+                window.appData.allAbsensiList[allIdx].status = 'Ditolak';
+            }
+            saveToStorage();
+            if (typeof window.showToast === 'function') window.showToast('Ketidakhadiran ditolak.');
         }
 
         function deleteAbsensi(id) {
             window.appData.absensiList = window.appData.absensiList.filter(a => a.id !== id);
-            if (typeof window.cloudDeleteAbsensi === 'function') window.cloudDeleteAbsensi(id);
+            window.appData.allAbsensiList = window.appData.allAbsensiList.filter(a => a.id !== id);
             saveToStorage();
             if (typeof window.showToast === 'function') window.showToast('Catatan absensi dihapus.');
         }
 
         function deleteGuruAbsensi(id) {
             window.appData.guruAbsensiList = window.appData.guruAbsensiList.filter(g => g.id !== id);
-            if (typeof window.cloudDeleteGuruAbsensi === 'function') window.cloudDeleteGuruAbsensi(id);
+            window.appData.allGuruAbsensiList = window.appData.allGuruAbsensiList.filter(g => g.id !== id);
             saveToStorage();
             if (typeof window.showToast === 'function') window.showToast('Laporan guru dihapus.');
         }
 
         function deleteCatatan(id) {
             window.appData.catatanList = window.appData.catatanList.filter(c => c.id !== id);
-            if (typeof window.cloudDeleteCatatan === 'function') window.cloudDeleteCatatan(id);
+            window.appData.allCatatanList = window.appData.allCatatanList.filter(c => c.id !== id);
             saveToStorage();
             if (typeof window.showToast === 'function') window.showToast('Catatan bimbingan dihapus.');
         }
