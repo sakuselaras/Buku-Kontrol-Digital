@@ -30,6 +30,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- LZString CDN for ultra-fast URL compression -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
     
     <!-- Google Fonts Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -66,7 +68,7 @@
     </style>
 
     <script>
-        // Global Logo Error Handler
+        // Global Logo Error Handler (Fallback to Official Tut Wuri Handayani SVG)
         window.handleLogoError = function(imgElement) {
             const step = parseInt(imgElement.getAttribute('data-try-step') || '0', 10);
             const sources = ['tutwuri.png', 'tutwuri_handayani.png', 'tutwuri.svg', 'logo_tutwuri.png', 'tutwuri.jpg'];
@@ -100,7 +102,7 @@
             }
         };
 
-        // Default Application State
+        // Default Application State Structure
         window.defaultState = {
             isLoggedIn: false,
             currentRole: 'WALI',
@@ -126,7 +128,7 @@
             guruAbsensiList: []
         };
 
-        // Initialize window.appData safely on startup
+        // Safely Initialize window.appData from LocalStorage
         let savedData = null;
         try {
             savedData = localStorage.getItem('PERWALIAN_SMK_MARISA_DATA');
@@ -136,28 +138,44 @@
         }
 
         window.appData = Object.assign({}, window.defaultState, savedData || {});
+
+        // Data Compression Helper (LZString / Base64 Safe Hydration)
+        window.compressDataObj = function(dataObj) {
+            try {
+                const jsonStr = JSON.stringify(dataObj);
+                if (typeof LZString !== 'undefined' && LZString.compressToEncodedURIComponent) {
+                    return LZString.compressToEncodedURIComponent(jsonStr);
+                }
+                return encodeURIComponent(btoa(unescape(encodeURIComponent(jsonStr))));
+            } catch (e) {
+                console.warn("Compression notice:", e);
+                return '';
+            }
+        };
+
+        window.decompressDataObj = function(compressedStr) {
+            if (!compressedStr) return null;
+            try {
+                if (typeof LZString !== 'undefined' && LZString.decompressFromEncodedURIComponent) {
+                    const decomp = LZString.decompressFromEncodedURIComponent(compressedStr);
+                    if (decomp) {
+                        try { return JSON.parse(decomp); } catch(e) {}
+                    }
+                }
+            } catch(e){}
+            try {
+                const jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(compressedStr))));
+                return JSON.parse(jsonStr);
+            } catch (e) {
+                return null;
+            }
+        };
     </script>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-rose-500 selection:text-white relative">
 
-    <!-- Toast Message Container -->
+    <!-- Toast Notification System -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
-
-    <!-- FULL SCREEN CLOUD LOADING OVERLAY (DILAYARKAN SAAT MEMUAT DARI CLOUD) -->
-    <div id="cloud-loading-overlay" class="fixed inset-0 bg-[#0b0f19]/95 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-6 text-center">
-        <div class="p-4 rounded-3xl bg-[#131b2e] border border-cyan-500/30 shadow-2xl max-w-md w-full space-y-4">
-            <div class="w-16 h-16 mx-auto rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center animate-pulse-glow">
-                <i data-lucide="cloud-download" class="w-8 h-8"></i>
-            </div>
-            <div class="space-y-1">
-                <h3 class="text-base font-black text-white uppercase tracking-wide">MENGUNDUH DATA KELAS</h3>
-                <p id="cloud-loading-overlay-desc" class="text-xs text-slate-400">Menghubungkan ke Cloud Server & mengunduh data nama siswa serta guru mapel...</p>
-            </div>
-            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                <div class="bg-gradient-to-r from-cyan-500 to-emerald-500 h-full w-3/4 animate-pulse"></div>
-            </div>
-        </div>
-    </div>
 
     <header class="bg-[#10172a] border-b border-slate-800 sticky top-0 z-30 px-4 py-3 shadow-xl">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
@@ -169,14 +187,14 @@
                     <div class="flex items-center gap-2">
                         <h1 class="font-black text-lg text-white tracking-wide uppercase">CATATAN PERWALIAN</h1>
                         <span id="cloud-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> REST CLOUD SYNC
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> INSTANT HYDRATION SYNC
                         </span>
                     </div>
                     <p id="header-subtitle" class="text-xs text-slate-400">Sistem Informasi Bimbingan Akademik & Presensi Kelompok Perwalian • SMK Negeri 1 Marisa</p>
                 </div>
             </div>
 
-            <!-- Header Actions & User Status -->
+            <!-- Header Actions & User Badges -->
             <div class="flex items-center gap-2 flex-wrap">
                 <div id="user-badge-container" class="hidden items-center gap-2 bg-[#0b0f19] px-3 py-1.5 rounded-xl border border-slate-800">
                     <div id="badge-role-pill" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase">GURU KELAS</div>
@@ -199,7 +217,6 @@
 
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
 
-        <!-- LOGIN SCREEN CONTAINER -->
         <div id="login-screen" class="flex items-center justify-center p-4 my-8">
             <div class="max-w-md w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
                 <div class="absolute -top-12 -right-12 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl pointer-events-none"></div>
@@ -973,11 +990,11 @@
 
             <div class="space-y-3 text-xs">
                 <p class="text-slate-300">
-                    Kirimkan link pendek ini ke grup WhatsApp siswa. Ketika siswa mengklik link ini, HP mereka akan <strong>secara otomatis mendownload data kelas</strong> dari Cloud Server dan langsung membuka portal login kelas Anda!
+                    Kirimkan link instan ini ke WhatsApp grup siswa. Ketika siswa mengklik link ini, HP mereka akan <strong>secara otomatis memuat nama siswa dan guru mapel dalam 0 detik</strong>!
                 </p>
 
                 <div>
-                    <label class="block font-semibold text-slate-400 mb-1">LINK AKSES PORTAL SISWA</label>
+                    <label class="block font-semibold text-slate-400 mb-1">LINK AKSES PORTAL SISWA INSTAN</label>
                     <div class="flex gap-2">
                         <input type="text" id="share-link-input" readonly class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-emerald-400 font-mono text-[11px] focus:outline-none">
                         <button onclick="copyGeneratedLink()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-xl whitespace-nowrap transition flex items-center gap-1">
@@ -997,7 +1014,6 @@
         </div>
     </div>
 
-    <!-- APPLICATION JAVASCRIPT LOGIC -->
     <script>
         // Custom Toast Notification System
         window.showToast = function(message, type = 'info') {
@@ -1020,51 +1036,48 @@
             }, 4000);
         };
 
-        // =========================================================================
-        // ZERO-CONFIG REST CLOUD SYNC ENGINE (SMART MERGE & AUTO RECOVERY)
-        // =========================================================================
+        // REST CLOUD & INSTANT HYDRATION ENGINE WITH TIMEOUT GUARDS
         const CLOUD_API_URL = 'https://api.restful-api.dev/objects';
 
         async function saveClassToCloud(payload) {
             try {
                 let currentCloudId = window.appData.activeCloudId;
-                
                 const cloudData = {
                     name: `PERWALIAN_${payload.kelasCode}`,
                     data: payload
                 };
 
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
+
                 if (currentCloudId) {
-                    // Update existing object on cloud
                     const res = await fetch(`${CLOUD_API_URL}/${currentCloudId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(cloudData)
+                        body: JSON.stringify(cloudData),
+                        signal: controller.signal
                     });
-
-                    if (res.ok) {
-                        return currentCloudId;
-                    }
+                    clearTimeout(timeoutId);
+                    if (res.ok) return currentCloudId;
                 }
 
-                // If no cloudId or PUT failed (e.g. 404 expired), CREATE NEW OBJECT
+                const controllerPost = new AbortController();
+                const timeoutPostId = setTimeout(() => controllerPost.abort(), 3500);
+
                 const res = await fetch(CLOUD_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(cloudData)
+                    body: JSON.stringify(cloudData),
+                    signal: controllerPost.signal
                 });
-                
+                clearTimeout(timeoutPostId);
+
                 if (res.ok) {
                     const resData = await res.json();
                     if (resData && resData.id) {
                         window.appData.activeCloudId = resData.id;
-                        
-                        // Update cloudId in current profile
                         const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === payload.kelasCode);
-                        if (pIdx !== -1) {
-                            window.appData.allKelasProfiles[pIdx].cloudId = resData.id;
-                        }
-                        
+                        if (pIdx !== -1) window.appData.allKelasProfiles[pIdx].cloudId = resData.id;
                         saveToStorage(true, false);
                         return resData.id;
                     }
@@ -1078,12 +1091,13 @@
         async function fetchClassFromCloud(cloudId) {
             if (!cloudId) return null;
             try {
-                const res = await fetch(`${CLOUD_API_URL}/${cloudId}`);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const res = await fetch(`${CLOUD_API_URL}/${cloudId}`, { signal: controller.signal });
+                clearTimeout(timeoutId);
                 if (!res.ok) return null;
                 const json = await res.json();
-                if (json && json.data) {
-                    return json.data;
-                }
+                return json ? json.data : null;
             } catch (err) {
                 console.warn("Cloud fetch notice:", err);
             }
@@ -1120,18 +1134,14 @@
                 timestamp: Date.now()
             };
 
-            // 1. Dapatkan data cloud terbaru terlebih dahulu (Smart Merge)
-            let latestCloudData = null;
-            if (window.appData.activeCloudId) {
-                latestCloudData = await fetchClassFromCloud(window.appData.activeCloudId);
-            }
-
             let mergedAbsensi = window.appData.allAbsensiList || [];
-            if (latestCloudData && Array.isArray(latestCloudData.absensi)) {
-                mergedAbsensi = latestCloudData.absensi;
+            if (window.appData.activeCloudId) {
+                const latestCloudData = await fetchClassFromCloud(window.appData.activeCloudId);
+                if (latestCloudData && Array.isArray(latestCloudData.absensi)) {
+                    mergedAbsensi = latestCloudData.absensi;
+                }
             }
 
-            // Tambahkan laporan baru
             mergedAbsensi.unshift(newAbsen);
 
             window.appData.allAbsensiList = mergedAbsensi;
@@ -1142,7 +1152,7 @@
             document.getElementById('siswa-target-absen-id').value = '';
             document.getElementById('siswa-self-alasan').value = '';
 
-            showToast(`Laporan ${targetNama} (${kat}) berhasil terkirim ke Wali Kelas!`, 'success');
+            showToast(`Laporan ${targetNama} (${kat}) terkirim ke Guru Perwalian!`, 'success');
         }
 
         async function handleSiswaLaporGuru(e) {
@@ -1164,15 +1174,12 @@
                 timestamp: Date.now()
             };
 
-            // 1. Smart Merge dari Cloud
-            let latestCloudData = null;
-            if (window.appData.activeCloudId) {
-                latestCloudData = await fetchClassFromCloud(window.appData.activeCloudId);
-            }
-
             let mergedGuruAbsensi = window.appData.allGuruAbsensiList || [];
-            if (latestCloudData && Array.isArray(latestCloudData.guruAbsensi)) {
-                mergedGuruAbsensi = latestCloudData.guruAbsensi;
+            if (window.appData.activeCloudId) {
+                const latestCloudData = await fetchClassFromCloud(window.appData.activeCloudId);
+                if (latestCloudData && Array.isArray(latestCloudData.guruAbsensi)) {
+                    mergedGuruAbsensi = latestCloudData.guruAbsensi;
+                }
             }
 
             mergedGuruAbsensi.unshift(newGuruAbsen);
@@ -1185,12 +1192,10 @@
             document.getElementById('siswa-guru-nama-mapel').value = '';
             document.getElementById('siswa-guru-jam-ke').value = '';
             document.getElementById('siswa-guru-keterangan').value = '';
-            showToast('Laporan guru tidak hadir berhasil dikirim ke Wali Kelas!', 'success');
+            showToast('Laporan guru tidak hadir terkirim ke Guru Perwalian!', 'success');
         }
 
-        let lastReportCount = 0;
-
-        // Page Load Event Listener
+        // Page Startup Event Listener with Instant URL Hydration
         window.onload = async function() {
             if (typeof lucide !== 'undefined') lucide.createIcons();
 
@@ -1207,11 +1212,44 @@
             if (elSiswaSelfTgl) elSiswaSelfTgl.value = today;
             if (elSiswaGuruTgl) elSiswaGuruTgl.value = today;
 
-            // Read URL Cloud Parameters
             const urlParams = new URLSearchParams(window.location.search);
+            const compressedPayload = urlParams.get('d');
             const cloudIdFromUrl = urlParams.get('c') || urlParams.get('id');
 
-            if (cloudIdFromUrl) {
+            // 1. INSTANT URL DATA HYDRATION (0 SECOND LOAD)
+            if (compressedPayload) {
+                const decomp = window.decompressDataObj(compressedPayload);
+                if (decomp && decomp.kelasCode) {
+                    window.appData.activeKelasCode = decomp.kelasCode;
+                    if (decomp.cloudId) window.appData.activeCloudId = decomp.cloudId;
+
+                    if (decomp.profile) {
+                        window.appData.guruProfile = decomp.profile;
+                        const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === decomp.kelasCode);
+                        if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = decomp.profile;
+                        else window.appData.allKelasProfiles.push(decomp.profile);
+                    }
+
+                    if (Array.isArray(decomp.siswa)) {
+                        window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== decomp.kelasCode).concat(decomp.siswa);
+                    }
+
+                    if (Array.isArray(decomp.guruMapel)) {
+                        window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== decomp.kelasCode).concat(decomp.guruMapel);
+                    }
+
+                    window.syncFilteredData(false);
+                    switchLoginTab('SISWA');
+
+                    const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
+                    if (siswaKelasSelect) {
+                        siswaKelasSelect.value = decomp.kelasCode;
+                        handleSiswaKelasChange();
+                    }
+
+                    showToast(`Data Kelas ${decomp.profile?.kelas || ''} Berhasil Dimuat!`, 'success');
+                }
+            } else if (cloudIdFromUrl) {
                 await initStudentFromCloud(cloudIdFromUrl);
             } else if (window.appData.isLoggedIn) {
                 window.syncFilteredData(false);
@@ -1253,33 +1291,14 @@
             }, 3500);
         };
 
-        async function fetchClassFromCloud(cloudId) {
-            if (!cloudId) return null;
-            try {
-                const res = await fetch(`${CLOUD_API_URL}/${cloudId}`);
-                if (!res.ok) return null;
-                const json = await res.json();
-                if (json && json.data) {
-                    return json.data;
-                }
-            } catch (err) {
-                console.warn("Cloud fetch notice:", err);
-            }
-            return null;
-        }
-
         // Initialize Student Data from Shared Cloud ID
         async function initStudentFromCloud(cloudId) {
-            const overlay = document.getElementById('cloud-loading-overlay');
-            if (overlay) overlay.classList.remove('hidden');
-
             const cloudPayload = await fetchClassFromCloud(cloudId);
 
             if (cloudPayload && cloudPayload.kelasCode) {
                 window.appData.activeKelasCode = cloudPayload.kelasCode;
                 window.appData.activeCloudId = cloudId;
 
-                // Sync remote lists into app state
                 if (cloudPayload.profile) {
                     window.appData.guruProfile = cloudPayload.profile;
                     const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === cloudPayload.kelasCode);
@@ -1310,19 +1329,17 @@
                 window.syncFilteredData(false);
                 switchLoginTab('SISWA');
 
-                // Auto-select class in dropdown
                 const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
                 if (siswaKelasSelect) {
                     siswaKelasSelect.value = cloudPayload.kelasCode;
                     handleSiswaKelasChange();
                 }
 
-                showToast(`Data Kelas ${cloudPayload.profile?.kelas || ''} Berhasil Dimuat dari Cloud!`, 'success');
+                showToast(`Data Kelas ${cloudPayload.profile?.kelas || ''} Dimuat!`, 'success');
             } else {
-                showToast('Gagal memuat data kelas dari Cloud. Pastikan koneksi internet aktif.', 'error');
+                showToast('Koneksi Cloud lambat. Menggunakan data lokal terdaftar.', 'info');
+                switchLoginTab('SISWA');
             }
-
-            if (overlay) overlay.classList.add('hidden');
         }
 
         let absensiChart = null;
@@ -1391,53 +1408,6 @@
                 };
                 saveClassToCloud(payload);
             }
-        };
-
-        // Page Load Event Listener
-        window.onload = async function() {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-
-            const today = new Date().toISOString().split('T')[0];
-            const elQuickTgl = document.getElementById('quick-tanggal');
-            const elGuruTgl = document.getElementById('guru-tanggal');
-            const elCatatanTgl = document.getElementById('catatan-tanggal');
-            const elSiswaSelfTgl = document.getElementById('siswa-self-tanggal');
-            const elSiswaGuruTgl = document.getElementById('siswa-guru-tanggal');
-
-            if (elQuickTgl) elQuickTgl.value = today;
-            if (elGuruTgl) elGuruTgl.value = today;
-            if (elCatatanTgl) elCatatanTgl.value = today;
-            if (elSiswaSelfTgl) elSiswaSelfTgl.value = today;
-            if (elSiswaGuruTgl) elSiswaGuruTgl.value = today;
-
-            // Read URL Cloud Parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            const cloudIdFromUrl = urlParams.get('c') || urlParams.get('id');
-
-            if (cloudIdFromUrl) {
-                await initStudentFromCloud(cloudIdFromUrl);
-            } else if (window.appData.isLoggedIn) {
-                window.syncFilteredData(false);
-                showMainApp();
-            } else {
-                showLoginScreen();
-            }
-
-            // Background Cloud Polling for Wali Kelas (Sync Student Reports)
-            setInterval(async () => {
-                if (window.appData.isLoggedIn && window.appData.currentRole === 'WALI' && window.appData.activeCloudId) {
-                    const remoteData = await fetchClassFromCloud(window.appData.activeCloudId);
-                    if (remoteData) {
-                        if (Array.isArray(remoteData.absensi)) {
-                            window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== window.appData.activeKelasCode).concat(remoteData.absensi);
-                        }
-                        if (Array.isArray(remoteData.guruAbsensi)) {
-                            window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== window.appData.activeKelasCode).concat(remoteData.guruAbsensi);
-                        }
-                        window.syncFilteredData(false);
-                    }
-                }
-            }, 4000);
         };
 
         function switchLoginTab(role) {
@@ -1846,8 +1816,17 @@
 
             if (msg) msg.classList.add('hidden');
             
-            let cloudId = window.appData.activeCloudId;
-            const generated = `${window.location.origin}${window.location.pathname}?c=${encodeURIComponent(cloudId || '')}`;
+            const payload = {
+                kelasCode: window.appData.activeKelasCode,
+                cloudId: window.appData.activeCloudId,
+                profile: window.appData.guruProfile,
+                siswa: window.appData.siswaList,
+                guruMapel: window.appData.guruMapelList
+            };
+
+            const compressed = window.compressDataObj(payload);
+            const generated = `${window.location.origin}${window.location.pathname}?d=${compressed}`;
+            
             if (linkInput) linkInput.value = generated;
             
             document.getElementById('modal-share-link')?.classList.remove('hidden');
@@ -1869,7 +1848,7 @@
                 document.execCommand('copy');
                 const msg = document.getElementById('share-copied-msg');
                 if (msg) msg.classList.remove('hidden');
-                showToast('Link Portal Siswa Kelas berhasil disalin!', 'success');
+                showToast('Link Instan Portal Siswa berhasil disalin!', 'success');
             } catch (err) {
                 showToast('Silakan salin link secara manual.');
             }
@@ -2127,77 +2106,6 @@
                     container.classList.add('hidden');
                 }
             }
-        }
-
-        function handleSiswaLaporAbsen(e) {
-            e.preventDefault();
-            const targetSiswaId = document.getElementById('siswa-target-absen-id')?.value;
-            const kat = document.getElementById('siswa-self-kategori')?.value || 'Sakit';
-            const tgl = document.getElementById('siswa-self-tanggal')?.value;
-            const alasan = document.getElementById('siswa-self-alasan')?.value || (kat === 'Sakit' ? 'Sakit' : 'Tanpa Keterangan');
-
-            if (!targetSiswaId || !tgl) {
-                showToast('Pilih siswa dan tanggal!', 'error');
-                return;
-            }
-
-            const targetSiswa = window.appData.siswaList.find(s => s.id === targetSiswaId);
-            const targetNama = targetSiswa ? targetSiswa.nama : 'Siswa';
-
-            const activeSiswa = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
-            const reporterNama = activeSiswa ? activeSiswa.nama : 'Siswa (Teman)';
-
-            const newAbsen = {
-                id: 'abs-' + Date.now(),
-                siswaId: targetSiswaId,
-                kategori: kat,
-                tanggal: tgl,
-                alasan: alasan,
-                pelapor: `Siswa (${reporterNama})`,
-                status: 'Pending',
-                kelasCode: window.appData.activeKelasCode,
-                timestamp: Date.now()
-            };
-
-            window.appData.absensiList.unshift(newAbsen);
-            window.appData.allAbsensiList.unshift(newAbsen);
-
-            saveToStorage(true, true);
-            
-            document.getElementById('siswa-target-absen-id').value = '';
-            document.getElementById('siswa-self-alasan').value = '';
-
-            showToast(`Laporan ${targetNama} (${kat}) dikirim ke Guru Perwalian!`, 'success');
-        }
-
-        function handleSiswaLaporGuru(e) {
-            e.preventDefault();
-            const guruMapel = document.getElementById('siswa-guru-nama-mapel')?.value;
-            const jamKe = document.getElementById('siswa-guru-jam-ke')?.value;
-            const tgl = document.getElementById('siswa-guru-tanggal')?.value;
-            const ket = document.getElementById('siswa-guru-keterangan')?.value;
-
-            if (!guruMapel || !tgl || !ket) return;
-
-            const newGuruAbsen = {
-                id: 'gabs-' + Date.now(),
-                guruMapel: guruMapel,
-                jamKe: jamKe || 'Jam KBM',
-                tanggal: tgl,
-                keterangan: ket,
-                kelasCode: window.appData.activeKelasCode,
-                timestamp: Date.now()
-            };
-
-            window.appData.guruAbsensiList.unshift(newGuruAbsen);
-            window.appData.allGuruAbsensiList.unshift(newGuruAbsen);
-
-            saveToStorage(true, true);
-
-            document.getElementById('siswa-guru-nama-mapel').value = '';
-            document.getElementById('siswa-guru-jam-ke').value = '';
-            document.getElementById('siswa-guru-keterangan').value = '';
-            showToast('Laporan guru tidak hadir dikirim ke Guru Perwalian!', 'success');
         }
 
         function handleQuickAbsensi(e) {
