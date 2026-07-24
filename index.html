@@ -1517,6 +1517,324 @@
             }
         }
 
+        // Modal Control Functions for Guru Profile, Siswa, and Guru Mapel
+        function openModalEditGuru() {
+            const prof = window.appData.guruProfile || { nama: '', nip: '', kelas: '', pin: '808015' };
+            const elNama = document.getElementById('edit-guru-nama');
+            const elNip = document.getElementById('edit-guru-nip');
+            const elKelas = document.getElementById('edit-guru-kelas');
+            const elPin = document.getElementById('edit-guru-pin');
+
+            if (elNama) elNama.value = prof.nama || '';
+            if (elNip) elNip.value = prof.nip || '';
+            if (elKelas) elKelas.value = prof.kelas || '';
+            if (elPin) elPin.value = prof.pin || '808015';
+
+            document.getElementById('modal-edit-guru')?.classList.remove('hidden');
+        }
+
+        function closeModalEditGuru() {
+            document.getElementById('modal-edit-guru')?.classList.add('hidden');
+        }
+
+        function handleSaveGuruProfile(e) {
+            e.preventDefault();
+            const nama = document.getElementById('edit-guru-nama')?.value.trim();
+            const nip = document.getElementById('edit-guru-nip')?.value.trim();
+            const kelas = document.getElementById('edit-guru-kelas')?.value.trim();
+            const pin = document.getElementById('edit-guru-pin')?.value.trim();
+
+            if (!nama || !kelas) {
+                showToast('Nama guru dan nama kelas wajib diisi!', 'error');
+                return;
+            }
+
+            window.appData.guruProfile.nama = nama;
+            window.appData.guruProfile.nip = nip || '-';
+            window.appData.guruProfile.kelas = kelas;
+            window.appData.guruProfile.pin = pin || '808015';
+
+            const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === window.appData.activeKelasCode);
+            if (pIdx !== -1) {
+                window.appData.allKelasProfiles[pIdx] = Object.assign({}, window.appData.allKelasProfiles[pIdx], window.appData.guruProfile);
+            }
+
+            saveToStorage(true, true);
+            closeModalEditGuru();
+            showToast('Profil Guru Perwalian berhasil diperbarui!', 'success');
+        }
+
+        function openModalTambahSiswa() {
+            document.getElementById('edit-siswa-id').value = '';
+            document.getElementById('form-siswa-nis').value = '';
+            document.getElementById('form-siswa-nama').value = '';
+            document.getElementById('form-siswa-kelas').value = 'X';
+            document.getElementById('form-siswa-jurusan').value = '';
+            document.getElementById('form-siswa-gender').value = 'L';
+            document.getElementById('form-siswa-ipk').value = '';
+            document.getElementById('form-siswa-ortu').value = '';
+
+            const title = document.getElementById('modal-siswa-title');
+            if (title) title.innerHTML = '<i data-lucide="user-plus" class="w-4 h-4 text-emerald-400"></i> Tambah Data Siswa Baru';
+
+            document.getElementById('modal-siswa')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeModalSiswa() {
+            document.getElementById('modal-siswa')?.classList.add('hidden');
+        }
+
+        function editSiswa(id) {
+            const s = (window.appData.allSiswaList || []).find(x => x.id === id);
+            if (!s) return;
+
+            document.getElementById('edit-siswa-id').value = s.id;
+            document.getElementById('form-siswa-nis').value = s.nis || '';
+            document.getElementById('form-siswa-nama').value = s.nama || '';
+            document.getElementById('form-siswa-kelas').value = s.kelas || 'X';
+            document.getElementById('form-siswa-jurusan').value = s.jurusan || '';
+            document.getElementById('form-siswa-gender').value = s.gender || 'L';
+            document.getElementById('form-siswa-ipk').value = s.ipk || '';
+            document.getElementById('form-siswa-ortu').value = s.ortu || '';
+
+            const title = document.getElementById('modal-siswa-title');
+            if (title) title.innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-cyan-400"></i> Edit Data Siswa';
+
+            document.getElementById('modal-siswa')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function deleteSiswa(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus data siswa ini?')) {
+                window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.id !== id);
+                saveToStorage(true, true);
+                showToast('Data siswa berhasil dihapus.', 'info');
+            }
+        }
+
+        function handleSaveSiswa(e) {
+            e.preventDefault();
+            const editId = document.getElementById('edit-siswa-id')?.value;
+            const nis = document.getElementById('form-siswa-nis')?.value.trim();
+            const nama = document.getElementById('form-siswa-nama')?.value.trim();
+            const kelas = document.getElementById('form-siswa-kelas')?.value;
+            const jurusan = document.getElementById('form-siswa-jurusan')?.value.trim();
+            const gender = document.getElementById('form-siswa-gender')?.value;
+            const ipk = document.getElementById('form-siswa-ipk')?.value.trim();
+            const ortu = document.getElementById('form-siswa-ortu')?.value.trim();
+
+            if (!nama) {
+                showToast('Nama siswa wajib diisi!', 'error');
+                return;
+            }
+
+            if (editId) {
+                const idx = (window.appData.allSiswaList || []).findIndex(s => s.id === editId);
+                if (idx !== -1) {
+                    window.appData.allSiswaList[idx] = {
+                        ...window.appData.allSiswaList[idx],
+                        nis, nama, kelas, jurusan, gender, ipk: ipk || '0.00', ortu
+                    };
+                }
+            } else {
+                const newSiswa = {
+                    id: 'siswa-' + Date.now(),
+                    kelasCode: window.appData.activeKelasCode,
+                    nis, nama, kelas, jurusan, gender, ipk: ipk || '0.00', ortu
+                };
+                window.appData.allSiswaList = window.appData.allSiswaList || [];
+                window.appData.allSiswaList.push(newSiswa);
+            }
+
+            saveToStorage(true, true);
+            closeModalSiswa();
+            showToast('Data siswa berhasil disimpan!', 'success');
+        }
+
+        function openModalTambahGuruMapel() {
+            document.getElementById('edit-guru-mapel-id').value = '';
+            document.getElementById('form-guru-nama').value = '';
+            document.getElementById('form-guru-mapel-nama').value = '';
+
+            const title = document.getElementById('modal-guru-mapel-title');
+            if (title) title.innerHTML = '<i data-lucide="user-plus" class="w-4 h-4 text-amber-400"></i> Tambah Data Guru Mapel';
+
+            document.getElementById('modal-guru-mapel')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeModalGuruMapel() {
+            document.getElementById('modal-guru-mapel')?.classList.add('hidden');
+        }
+
+        function editGuruMapel(id) {
+            const g = (window.appData.allGuruMapelList || []).find(x => x.id === id);
+            if (!g) return;
+
+            document.getElementById('edit-guru-mapel-id').value = g.id;
+            document.getElementById('form-guru-nama').value = g.nama || '';
+            document.getElementById('form-guru-mapel-nama').value = g.mapel || '';
+
+            const title = document.getElementById('modal-guru-mapel-title');
+            if (title) title.innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-cyan-400"></i> Edit Data Guru Mapel';
+
+            document.getElementById('modal-guru-mapel')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function deleteGuruMapel(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus data guru mapel ini?')) {
+                window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.id !== id);
+                saveToStorage(true, true);
+                showToast('Data guru mapel berhasil dihapus.', 'info');
+            }
+        }
+
+        function handleSaveGuruMapel(e) {
+            e.preventDefault();
+            const editId = document.getElementById('edit-guru-mapel-id')?.value;
+            const nama = document.getElementById('form-guru-nama')?.value.trim();
+            const mapel = document.getElementById('form-guru-mapel-nama')?.value.trim();
+
+            if (!nama || !mapel) {
+                showToast('Nama guru dan mata pelajaran wajib diisi!', 'error');
+                return;
+            }
+
+            if (editId) {
+                const idx = (window.appData.allGuruMapelList || []).findIndex(g => g.id === editId);
+                if (idx !== -1) {
+                    window.appData.allGuruMapelList[idx] = {
+                        ...window.appData.allGuruMapelList[idx],
+                        nama, mapel
+                    };
+                }
+            } else {
+                const newGuru = {
+                    id: 'gmapel-' + Date.now(),
+                    kelasCode: window.appData.activeKelasCode,
+                    nama, mapel
+                };
+                window.appData.allGuruMapelList = window.appData.allGuruMapelList || [];
+                window.appData.allGuruMapelList.push(newGuru);
+            }
+
+            saveToStorage(true, true);
+            closeModalGuruMapel();
+            showToast('Data guru mapel berhasil disimpan!', 'success');
+        }
+
+        function handleSaveCatatan(e) {
+            e.preventDefault();
+            const siswaId = document.getElementById('catatan-siswa-id')?.value;
+            const tanggal = document.getElementById('catatan-tanggal')?.value;
+            const kategori = document.getElementById('catatan-kategori')?.value;
+            const topik = document.getElementById('catatan-topik')?.value.trim();
+            const solusi = document.getElementById('catatan-solusi')?.value.trim();
+
+            if (!siswaId || !topik || !solusi) {
+                showToast('Mohon lengkapi seluruh field catatan bimbingan!', 'error');
+                return;
+            }
+
+            const newCatatan = {
+                id: 'cat-' + Date.now(),
+                kelasCode: window.appData.activeKelasCode,
+                siswaId, tanggal, kategori, topik, solusi,
+                timestamp: Date.now()
+            };
+
+            window.appData.allCatatanList = window.appData.allCatatanList || [];
+            window.appData.allCatatanList.unshift(newCatatan);
+
+            saveToStorage(true, true);
+            document.getElementById('catatan-topik').value = '';
+            document.getElementById('catatan-solusi').value = '';
+            showToast('Catatan bimbingan berhasil disimpan!', 'success');
+        }
+
+        function deleteCatatan(id) {
+            if (confirm('Hapus catatan bimbingan ini?')) {
+                window.appData.allCatatanList = (window.appData.allCatatanList || []).filter(c => c.id !== id);
+                saveToStorage(true, true);
+                showToast('Catatan bimbingan dihapus.', 'info');
+            }
+        }
+
+        function approveAbsensi(id) {
+            const idx = (window.appData.allAbsensiList || []).findIndex(a => a.id === id);
+            if (idx !== -1) {
+                window.appData.allAbsensiList[idx].status = 'Disetujui';
+                saveToStorage(true, true);
+                showToast('Status presensi disetujui!', 'success');
+            }
+        }
+
+        function rejectAbsensi(id) {
+            const idx = (window.appData.allAbsensiList || []).findIndex(a => a.id === id);
+            if (idx !== -1) {
+                window.appData.allAbsensiList[idx].status = 'Ditolak';
+                saveToStorage(true, true);
+                showToast('Status presensi ditolak.', 'info');
+            }
+        }
+
+        function deleteAbsensi(id) {
+            if (confirm('Hapus entri presensi ini?')) {
+                window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.id !== id);
+                saveToStorage(true, true);
+                showToast('Presensi dihapus.', 'info');
+            }
+        }
+
+        function deleteGuruAbsensi(id) {
+            if (confirm('Hapus laporan ketidakhadiran guru ini?')) {
+                window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.id !== id);
+                saveToStorage(true, true);
+                showToast('Laporan guru dihapus.', 'info');
+            }
+        }
+
+        function toggleAlasanField() {
+            const kat = document.getElementById('siswa-self-kategori')?.value;
+            const container = document.getElementById('container-siswa-self-alasan');
+            if (!container) return;
+
+            if (kat === 'Hadir') {
+                container.classList.add('hidden');
+            } else {
+                container.classList.remove('hidden');
+            }
+        }
+
+        function exportCSV() {
+            let csv = 'NO,TANGGAL,NIS,NAMA SISWA,STATUS PRESENSI,ALASAN/KETERANGAN,PELAPOR,VERIFIKASI\n';
+            const list = window.appData.absensiList || [];
+
+            if (list.length === 0) {
+                showToast('Tidak ada data presensi untuk di-export!', 'error');
+                return;
+            }
+
+            list.forEach((a, i) => {
+                const s = (window.appData.siswaList || []).find(x => x.id === a.siswaId);
+                const nama = s ? s.nama : 'Siswa';
+                const nis = s ? (s.nis || '-') : '-';
+                csv += `"${i + 1}","${a.tanggal}","${nis}","${nama}","${a.kategori}","${a.alasan || '-'}","${a.pelapor || '-'}","${a.status || 'Disetujui'}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Rekap_Presensi_Perwalian_${window.appData.guruProfile?.kelas || 'Kelas'}_${Date.now()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast('Rekap presensi CSV berhasil diunduh!', 'success');
+        }
+
         function renderSiswaTable() {
             const tbody = document.getElementById('siswa-table-body');
             if (!tbody) return;
