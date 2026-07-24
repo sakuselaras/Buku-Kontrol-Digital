@@ -1037,7 +1037,7 @@
             if (!cloudId) return null;
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
                 const res = await fetch(`${CLOUD_API_URL}/${cloudId}`, { signal: controller.signal });
                 clearTimeout(timeoutId);
                 if (!res.ok) return null;
@@ -1049,191 +1049,79 @@
             return null;
         }
 
-        async function handleSiswaLaporAbsen(e) {
-            e.preventDefault();
-            const targetSiswaId = document.getElementById('siswa-target-absen-id')?.value;
-            const kat = document.getElementById('siswa-self-kategori')?.value || 'Hadir';
-            const tgl = document.getElementById('siswa-self-tanggal')?.value;
-            const alasan = document.getElementById('siswa-self-alasan')?.value || (kat === 'Hadir' ? 'Hadir di Kelas' : (kat === 'Sakit' ? 'Sakit' : 'Tanpa Keterangan'));
+        async function openModalShareLink() {
+            const linkInput = document.getElementById('share-link-input');
+            const msg = document.getElementById('share-copied-msg');
 
-            if (!targetSiswaId || !tgl) {
-                showToast('Pilih siswa dan tanggal!', 'error');
-                return;
-            }
-
-            const targetSiswa = window.appData.siswaList.find(s => s.id === targetSiswaId);
-            const targetNama = targetSiswa ? targetSiswa.nama : 'Siswa';
-
-            const activeSiswa = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
-            const reporterNama = activeSiswa ? activeSiswa.nama : 'Perwakilan Siswa';
-
-            const newAbsen = {
-                id: 'abs-' + Date.now(),
-                siswaId: targetSiswaId,
-                kategori: kat,
-                tanggal: tgl,
-                alasan: alasan,
-                pelapor: `Perwakilan (${reporterNama})`,
-                status: 'Disetujui',
-                kelasCode: window.appData.activeKelasCode,
-                timestamp: Date.now()
-            };
-
-            let mergedAbsensi = window.appData.allAbsensiList || [];
-            if (window.appData.activeCloudId) {
-                const latestCloudData = await fetchClassFromCloud(window.appData.activeCloudId);
-                if (latestCloudData && Array.isArray(latestCloudData.absensi)) {
-                    mergedAbsensi = latestCloudData.absensi;
-                }
-            }
-
-            mergedAbsensi.unshift(newAbsen);
-
-            window.appData.allAbsensiList = mergedAbsensi;
-            window.appData.absensiList = mergedAbsensi.filter(a => a.kelasCode === window.appData.activeKelasCode);
-
-            saveToStorage(true, true);
+            if (msg) msg.classList.add('hidden');
             
-            document.getElementById('siswa-target-absen-id').value = '';
-            document.getElementById('siswa-self-alasan').value = '';
+            showToast('Menyiapkan link instan kelas...', 'info');
 
-            showToast(`Presensi ${targetNama} (${kat}) terkirim ke Wali Kelas!`, 'success');
-        }
-
-        async function handleSiswaLaporGuru(e) {
-            e.preventDefault();
-            const guruMapel = document.getElementById('siswa-guru-nama-mapel')?.value;
-            const jamKe = document.getElementById('siswa-guru-jam-ke')?.value;
-            const tgl = document.getElementById('siswa-guru-tanggal')?.value;
-            const ket = document.getElementById('siswa-guru-keterangan')?.value;
-
-            if (!guruMapel || !tgl || !ket) return;
-
-            const newGuruAbsen = {
-                id: 'gabs-' + Date.now(),
-                guruMapel: guruMapel,
-                jamKe: jamKe || 'Jam KBM',
-                tanggal: tgl,
-                keterangan: ket,
+            // Pastikan data kelas sudah tersimpan ke cloud dan mendapatkan Cloud ID
+            let cloudId = window.appData.activeCloudId;
+            const currentProfile = (window.appData.allKelasProfiles || []).find(k => k.id === window.appData.activeKelasCode) || window.appData.guruProfile;
+            
+            const payload = {
                 kelasCode: window.appData.activeKelasCode,
-                timestamp: Date.now()
+                profile: currentProfile,
+                siswa: (window.appData.allSiswaList || []).filter(s => s.kelasCode === window.appData.activeKelasCode),
+                guruMapel: (window.appData.allGuruMapelList || []).filter(g => g.kelasCode === window.appData.activeKelasCode),
+                catatan: (window.appData.allCatatanList || []).filter(c => c.kelasCode === window.appData.activeKelasCode),
+                absensi: (window.appData.allAbsensiList || []).filter(a => a.kelasCode === window.appData.activeKelasCode),
+                guruAbsensi: (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode === window.appData.activeKelasCode),
+                updatedAt: Date.now()
             };
 
-            let mergedGuruAbsensi = window.appData.allGuruAbsensiList || [];
-            if (window.appData.activeCloudId) {
-                const latestCloudData = await fetchClassFromCloud(window.appData.activeCloudId);
-                if (latestCloudData && Array.isArray(latestCloudData.guruAbsensi)) {
-                    mergedGuruAbsensi = latestCloudData.guruAbsensi;
-                }
+            cloudId = await saveClassToCloud(payload);
+
+            let generated = '';
+            if (cloudId) {
+                generated = `${window.location.origin}${window.location.pathname}?c=${cloudId}`;
+            } else {
+                const compressed = window.compressDataObj({
+                    kelasCode: window.appData.activeKelasCode,
+                    profile: window.appData.guruProfile,
+                    siswa: window.appData.siswaList,
+                    guruMapel: window.appData.guruMapelList
+                });
+                generated = `${window.location.origin}${window.location.pathname}?d=${compressed}`;
             }
-
-            mergedGuruAbsensi.unshift(newGuruAbsen);
-
-            window.appData.allGuruAbsensiList = mergedGuruAbsensi;
-            window.appData.guruAbsensiList = mergedGuruAbsensi.filter(g => g.kelasCode === window.appData.activeKelasCode);
-
-            saveToStorage(true, true);
-
-            document.getElementById('siswa-guru-nama-mapel').value = '';
-            document.getElementById('siswa-guru-jam-ke').value = '';
-            document.getElementById('siswa-guru-keterangan').value = '';
-            showToast('Laporan guru tidak hadir terkirim ke Guru Perwalian!', 'success');
+            
+            if (linkInput) linkInput.value = generated;
+            
+            document.getElementById('modal-share-link')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        // Page Startup Event Listener with Instant URL Hydration
-        window.onload = async function() {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+        async function handleSiswaKelasChange() {
+            const selectedKelasCode = document.getElementById('login-siswa-kelas-select')?.value;
+            if (!selectedKelasCode) return;
 
-            const today = new Date().toISOString().split('T')[0];
-            const elCatatanTgl = document.getElementById('catatan-tanggal');
-            const elSiswaSelfTgl = document.getElementById('siswa-self-tanggal');
-            const elSiswaGuruTgl = document.getElementById('siswa-guru-tanggal');
+            window.appData.activeKelasCode = selectedKelasCode;
 
-            if (elCatatanTgl) elCatatanTgl.value = today;
-            if (elSiswaSelfTgl) elSiswaSelfTgl.value = today;
-            if (elSiswaGuruTgl) elSiswaGuruTgl.value = today;
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const compressedPayload = urlParams.get('d');
-            const cloudIdFromUrl = urlParams.get('c') || urlParams.get('id');
-
-            // 1. INSTANT URL DATA HYDRATION (0 SECOND LOAD)
-            if (compressedPayload) {
-                const decomp = window.decompressDataObj(compressedPayload);
-                if (decomp && decomp.kelasCode) {
-                    window.appData.activeKelasCode = decomp.kelasCode;
-                    if (decomp.cloudId) window.appData.activeCloudId = decomp.cloudId;
-
-                    if (decomp.profile) {
-                        window.appData.guruProfile = decomp.profile;
-                        const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === decomp.kelasCode);
-                        if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = decomp.profile;
-                        else window.appData.allKelasProfiles.push(decomp.profile);
+            // Cari profil kelas untuk mendapatkan Cloud ID jika data siswa lokal belum lengkap
+            const kProf = (window.appData.allKelasProfiles || []).find(k => k.id === selectedKelasCode || k.kelasCode === selectedKelasCode);
+            if (kProf && kProf.cloudId) {
+                showToast('Memuat data siswa dari cloud...', 'info');
+                const cloudData = await fetchClassFromCloud(kProf.cloudId);
+                if (cloudData) {
+                    if (Array.isArray(cloudData.siswa)) {
+                        window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== selectedKelasCode).concat(cloudData.siswa);
                     }
-
-                    if (Array.isArray(decomp.siswa)) {
-                        window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== decomp.kelasCode).concat(decomp.siswa);
+                    if (Array.isArray(cloudData.guruMapel)) {
+                        window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== selectedKelasCode).concat(cloudData.guruMapel);
                     }
-
-                    if (Array.isArray(decomp.guruMapel)) {
-                        window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== decomp.kelasCode).concat(decomp.guruMapel);
-                    }
-
-                    window.syncFilteredData(false);
-                    switchLoginTab('SISWA');
-
-                    const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
-                    if (siswaKelasSelect) {
-                        siswaKelasSelect.value = decomp.kelasCode;
-                        handleSiswaKelasChange();
-                    }
-
-                    showToast(`Data Kelas ${decomp.profile?.kelas || ''} Berhasil Dimuat!`, 'success');
                 }
-            } else if (cloudIdFromUrl) {
-                await initStudentFromCloud(cloudIdFromUrl);
-            } else if (window.appData.isLoggedIn) {
-                window.syncFilteredData(false);
-                showMainApp();
-            } else {
-                showLoginScreen();
             }
 
-            // Realtime Background Cloud Polling for Wali Kelas
-            setInterval(async () => {
-                if (window.appData.isLoggedIn && window.appData.currentRole === 'WALI' && window.appData.activeCloudId) {
-                    const remoteData = await fetchClassFromCloud(window.appData.activeCloudId);
-                    if (remoteData) {
-                        let hasNewData = false;
-
-                        if (Array.isArray(remoteData.absensi)) {
-                            const currentCount = (window.appData.absensiList || []).length;
-                            if (remoteData.absensi.length > currentCount) {
-                                hasNewData = true;
-                            }
-                            window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== window.appData.activeKelasCode).concat(remoteData.absensi);
-                        }
-
-                        if (Array.isArray(remoteData.guruAbsensi)) {
-                            const currentGuruCount = (window.appData.guruAbsensiList || []).length;
-                            if (remoteData.guruAbsensi.length > currentGuruCount) {
-                                hasNewData = true;
-                            }
-                            window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== window.appData.activeKelasCode).concat(remoteData.guruAbsensi);
-                        }
-
-                        if (hasNewData) {
-                            showToast('📢 Laporan baru masuk dari portal siswa!', 'success');
-                        }
-
-                        window.syncFilteredData(false);
-                    }
-                }
-            }, 3000);
-        };
+            window.syncFilteredData(false);
+            populateSiswaDropdowns();
+            populateGuruMapelDropdowns();
+        }
 
         // Initialize Student Data from Shared Cloud ID
         async function initStudentFromCloud(cloudId) {
+            showToast('Memuat data kelas dari cloud...', 'info');
             const cloudPayload = await fetchClassFromCloud(cloudId);
 
             if (cloudPayload && cloudPayload.kelasCode) {
@@ -1241,6 +1129,7 @@
                 window.appData.activeCloudId = cloudId;
 
                 if (cloudPayload.profile) {
+                    cloudPayload.profile.cloudId = cloudId;
                     window.appData.guruProfile = cloudPayload.profile;
                     const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === cloudPayload.kelasCode);
                     if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = cloudPayload.profile;
@@ -1270,858 +1159,20 @@
                 window.syncFilteredData(false);
                 switchLoginTab('SISWA');
 
+                populateWaliKelasDropdowns();
+                populateSiswaDropdowns();
+                populateGuruMapelDropdowns();
+
                 const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
                 if (siswaKelasSelect) {
                     siswaKelasSelect.value = cloudPayload.kelasCode;
-                    handleSiswaKelasChange();
                 }
 
-                showToast(`Data Kelas ${cloudPayload.profile?.kelas || ''} Dimuat!`, 'success');
+                showToast(`Data Kelas ${cloudPayload.profile?.kelas || ''} Berhasil Dimuat!`, 'success');
             } else {
-                showToast('Koneksi Cloud lambat. Menggunakan data lokal terdaftar.', 'info');
+                showToast('Koneksi Cloud lambat. Menggunakan data terdaftar.', 'info');
                 switchLoginTab('SISWA');
             }
-        }
-
-        let absensiChart = null;
-        let ipkChart = null;
-
-        window.syncFilteredData = function(pushToRemote = true) {
-            const kCode = window.appData.activeKelasCode;
-
-            const currentKelasProf = (window.appData.allKelasProfiles || []).find(k => k.id === kCode || k.kelasCode === kCode);
-            if (currentKelasProf) {
-                window.appData.guruProfile = {
-                    nama: currentKelasProf.nama || "Guru Perwalian",
-                    nip: currentKelasProf.nip || "-",
-                    kelas: currentKelasProf.kelas || "Kelas -",
-                    pin: currentKelasProf.pin || "808015"
-                };
-            }
-
-            window.appData.siswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode === kCode);
-            window.appData.guruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode === kCode);
-            window.appData.catatanList = (window.appData.allCatatanList || []).filter(c => c.kelasCode === kCode).sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-            window.appData.absensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode === kCode).sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-            window.appData.guruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode === kCode).sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-
-            window.saveToStorage(false, pushToRemote);
-        };
-
-        window.saveToStorage = function(writeToLocal = true, pushToRemote = true) {
-            if (writeToLocal) {
-                localStorage.setItem('PERWALIAN_SMK_MARISA_DATA', JSON.stringify({
-                    isLoggedIn: window.appData.isLoggedIn,
-                    currentRole: window.appData.currentRole,
-                    activeKelasCode: window.appData.activeKelasCode,
-                    activeCloudId: window.appData.activeCloudId,
-                    activeSiswaId: window.appData.activeSiswaId,
-                    allKelasProfiles: window.appData.allKelasProfiles,
-                    allSiswaList: window.appData.allSiswaList,
-                    allGuruMapelList: window.appData.allGuruMapelList,
-                    allCatatanList: window.appData.allCatatanList,
-                    allAbsensiList: window.appData.allAbsensiList,
-                    allGuruAbsensiList: window.appData.allGuruAbsensiList
-                }));
-            }
-            updateMetrics();
-            populateWaliKelasDropdowns();
-            populateGuruMapelDropdowns();
-            populateSiswaDropdowns();
-            renderSiswaTable();
-            renderGuruMapelTable();
-            renderBimbinganList();
-            renderAbsensiTable();
-            renderGuruAbsensiTable();
-            renderDashLaporanSiswa();
-            renderDashLaporanGuru();
-            renderCharts();
-
-            if (pushToRemote && window.appData.activeKelasCode) {
-                const currentProfile = (window.appData.allKelasProfiles || []).find(k => k.id === window.appData.activeKelasCode) || window.appData.guruProfile;
-                const payload = {
-                    kelasCode: window.appData.activeKelasCode,
-                    profile: currentProfile,
-                    siswa: (window.appData.allSiswaList || []).filter(s => s.kelasCode === window.appData.activeKelasCode),
-                    guruMapel: (window.appData.allGuruMapelList || []).filter(g => g.kelasCode === window.appData.activeKelasCode),
-                    catatan: (window.appData.allCatatanList || []).filter(c => c.kelasCode === window.appData.activeKelasCode),
-                    absensi: (window.appData.allAbsensiList || []).filter(a => a.kelasCode === window.appData.activeKelasCode),
-                    guruAbsensi: (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode === window.appData.activeKelasCode),
-                    updatedAt: Date.now()
-                };
-                saveClassToCloud(payload);
-            }
-        };
-
-        function switchLoginTab(role) {
-            const tabWali = document.getElementById('tab-login-wali');
-            const tabSiswa = document.getElementById('tab-login-siswa');
-            const formWali = document.getElementById('form-login-wali');
-            const formSiswa = document.getElementById('form-login-siswa');
-
-            if (role === 'WALI') {
-                if (tabWali) tabWali.className = 'py-2.5 rounded-lg bg-rose-600 text-white shadow transition flex items-center justify-center gap-1.5';
-                if (tabSiswa) tabSiswa.className = 'py-2.5 rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5';
-                if (formWali) formWali.classList.remove('hidden');
-                if (formSiswa) formSiswa.classList.add('hidden');
-            } else {
-                if (tabSiswa) tabSiswa.className = 'py-2.5 rounded-lg bg-emerald-600 text-white shadow transition flex items-center justify-center gap-1.5';
-                if (tabWali) tabWali.className = 'py-2.5 rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5';
-                if (formSiswa) formSiswa.classList.remove('hidden');
-                if (formWali) formWali.classList.add('hidden');
-            }
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function toggleWaliFormMode() {
-            const modeExisting = document.getElementById('wali-mode-existing');
-            const modeNew = document.getElementById('wali-mode-new');
-            const btnToggle = document.getElementById('btn-toggle-wali-mode');
-            const title = document.getElementById('wali-form-mode-title');
-
-            if (modeExisting?.classList.contains('hidden')) {
-                modeExisting.classList.remove('hidden');
-                modeNew?.classList.add('hidden');
-                if (btnToggle) btnToggle.innerText = '+ Buat Kelompok Baru';
-                if (title) title.innerText = 'MASUK KELOMPOK PERWALIAN';
-            } else {
-                modeExisting?.classList.add('hidden');
-                modeNew?.classList.remove('hidden');
-                if (btnToggle) btnToggle.innerText = '← Pilih Kelompok Terdaftar';
-                if (title) title.innerText = 'BUAT KELOMPOK PERWALIAN BARU';
-            }
-        }
-
-        function populateWaliKelasDropdowns() {
-            const waliSelect = document.getElementById('login-wali-kelas-select');
-            const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
-
-            let optionsHtml = '';
-            if (!window.appData.allKelasProfiles || window.appData.allKelasProfiles.length === 0) {
-                optionsHtml = '<option value="" disabled selected>-- Belum Ada Kelompok (Klik Buat Kelompok Baru) --</option>';
-            } else {
-                optionsHtml = '<option value="" disabled selected>-- Pilih Kelompok Perwalian / Kelas --</option>' +
-                    window.appData.allKelasProfiles.map(k => `<option value="${k.id}">${k.kelas} - ${k.nama}</option>`).join('');
-            }
-
-            if (waliSelect) waliSelect.innerHTML = optionsHtml;
-            if (siswaKelasSelect) siswaKelasSelect.innerHTML = optionsHtml;
-
-            if (window.appData.activeKelasCode) {
-                if (waliSelect) waliSelect.value = window.appData.activeKelasCode;
-                if (siswaKelasSelect) siswaKelasSelect.value = window.appData.activeKelasCode;
-            }
-        }
-
-        function createNewKelas() {
-            const nama = document.getElementById('new-guru-nama')?.value.trim();
-            const nip = document.getElementById('new-guru-nip')?.value.trim() || '-';
-            const kelas = document.getElementById('new-guru-kelas')?.value.trim();
-            const pin = document.getElementById('new-guru-pin')?.value.trim() || '808015';
-
-            if (!nama || !kelas) {
-                showToast('Isi nama guru & nama kelas!', 'error');
-                return;
-            }
-
-            const kelasCode = 'KLS-' + Date.now();
-            const profileData = { id: kelasCode, kelasCode, nama, nip, kelas, pin };
-
-            window.appData.activeKelasCode = kelasCode;
-            window.appData.activeCloudId = '';
-            window.appData.guruProfile = profileData;
-            
-            if (!Array.isArray(window.appData.allKelasProfiles)) window.appData.allKelasProfiles = [];
-            window.appData.allKelasProfiles.push(profileData);
-
-            window.appData.isLoggedIn = true;
-            window.appData.currentRole = 'WALI';
-            window.syncFilteredData(true);
-            showMainApp();
-            showToast(`Kelompok Perwalian ${kelas} Berhasil Dibuat!`, 'success');
-        }
-
-        function loginWali() {
-            const selectedKelasId = document.getElementById('login-wali-kelas-select')?.value;
-            const pinInput = document.getElementById('login-pin-input')?.value;
-            const errBox = document.getElementById('login-pin-error');
-
-            if (!selectedKelasId) {
-                showToast('Pilih kelompok perwalian/kelas terlebih dahulu!', 'error');
-                return;
-            }
-
-            const kelasProf = (window.appData.allKelasProfiles || []).find(k => k.id === selectedKelasId);
-            const validPin = kelasProf ? kelasProf.pin : window.appData.guruProfile.pin;
-
-            if (pinInput === validPin) {
-                if (errBox) errBox.classList.add('hidden');
-                window.appData.activeKelasCode = selectedKelasId;
-                window.appData.isLoggedIn = true;
-                window.appData.currentRole = 'WALI';
-                window.syncFilteredData(false);
-                showMainApp();
-                showToast(`Berhasil masuk sebagai Guru Perwalian ${kelasProf?.kelas || ''}!`, 'success');
-            } else {
-                if (errBox) errBox.classList.remove('hidden');
-            }
-        }
-
-        function handleSiswaKelasChange() {
-            const selectedKelasCode = document.getElementById('login-siswa-kelas-select')?.value;
-            if (!selectedKelasCode) return;
-
-            window.appData.activeKelasCode = selectedKelasCode;
-            window.syncFilteredData(false);
-            populateSiswaDropdowns();
-        }
-
-        function loginSiswa() {
-            const selectedKelasCode = document.getElementById('login-siswa-kelas-select')?.value;
-            const selectedId = document.getElementById('login-siswa-select')?.value;
-            const nisInput = document.getElementById('login-siswa-nis')?.value?.trim();
-            const errBox = document.getElementById('login-siswa-error');
-
-            if (!selectedKelasCode) {
-                showToast('Pilih Kelompok Perwalian / Kelas terlebih dahulu!', 'error');
-                return;
-            }
-
-            window.appData.activeKelasCode = selectedKelasCode;
-            window.syncFilteredData(false);
-
-            let matchedSiswa = null;
-
-            if (selectedId) {
-                matchedSiswa = window.appData.siswaList.find(s => s.id === selectedId);
-            } else if (nisInput) {
-                matchedSiswa = window.appData.siswaList.find(s => s.nis === nisInput);
-            }
-
-            if (matchedSiswa) {
-                if (errBox) errBox.classList.add('hidden');
-                window.appData.isLoggedIn = true;
-                window.appData.currentRole = 'SISWA';
-                window.appData.activeSiswaId = matchedSiswa.id;
-                saveToStorage(true, false);
-                showMainApp();
-                showToast(`Selamat datang, ${matchedSiswa.nama}!`, 'success');
-            } else {
-                if (errBox) errBox.classList.remove('hidden');
-            }
-        }
-
-        function logout() {
-            window.appData.isLoggedIn = false;
-            saveToStorage(true, false);
-            showLoginScreen();
-        }
-
-        // RENDER HASIL LAPORAN KETIDAKHADIRAN SISWA PADA DASHBOARD WALI KELAS
-        function renderDashLaporanSiswa() {
-            const container = document.getElementById('dash-laporan-siswa-container');
-            if (!container) return;
-
-            if (!window.appData.absensiList || window.appData.absensiList.length === 0) {
-                container.innerHTML = `
-                    <div class="p-6 text-center text-slate-500 space-y-1">
-                        <i data-lucide="check-circle-2" class="w-8 h-8 mx-auto text-slate-600"></i>
-                        <p class="text-xs font-semibold">Belum ada laporan presensi dari portal siswa.</p>
-                        <p class="text-[10px] text-slate-600">Laporan presensi siswa yang dikirim perwakilan akan langsung muncul di sini.</p>
-                    </div>
-                `;
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-                return;
-            }
-
-            container.innerHTML = window.appData.absensiList.map(a => {
-                const siswa = window.appData.siswaList.find(s => s.id === a.siswaId);
-                const namaSiswa = siswa ? siswa.nama : 'Siswa (Terhapus)';
-
-                let statusBadge = '';
-                if (a.kategori === 'Hadir') statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Hadir</span>';
-                else if (a.kategori === 'Sakit') statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Sakit</span>';
-                else if (a.kategori === 'Ijin') statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Ijin</span>';
-                else statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Alpa</span>';
-
-                let verifBadge = '';
-                if (a.status === 'Disetujui') verifBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Disetujui</span>';
-                else if (a.status === 'Ditolak') verifBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Ditolak</span>';
-                else verifBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Pending</span>';
-
-                return `
-                    <div class="p-3.5 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2 text-xs">
-                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-white">${namaSiswa}</span>
-                                ${statusBadge}
-                            </div>
-                            <span class="font-mono text-[10px] text-slate-400">${a.tanggal}</span>
-                        </div>
-                        <p class="text-slate-300"><strong>Catatan:</strong> ${a.alasan || '-'}</p>
-                        <div class="flex items-center justify-between pt-1 text-[11px]">
-                            <span class="text-slate-500">Pelapor: <strong class="text-slate-400">${a.pelapor || '-'}</strong></span>
-                            <div class="flex items-center gap-1.5">
-                                ${verifBadge}
-                                ${a.status !== 'Disetujui' ? `<button onclick="approveAbsensi('${a.id}')" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 font-bold text-[10px]">Setujui</button>` : ''}
-                                ${a.status !== 'Ditolak' ? `<button onclick="rejectAbsensi('${a.id}')" class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 font-bold text-[10px]">Tolak</button>` : ''}
-                                <button onclick="deleteAbsensi('${a.id}')" class="p-1 text-slate-500 hover:text-rose-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        // RENDER HASIL LAPORAN GURU MAPEL TIDAK HADIR PADA DASHBOARD WALI KELAS
-        function renderDashLaporanGuru() {
-            const container = document.getElementById('dash-laporan-guru-container');
-            if (!container) return;
-
-            if (!window.appData.guruAbsensiList || window.appData.guruAbsensiList.length === 0) {
-                container.innerHTML = `
-                    <div class="p-6 text-center text-slate-500 space-y-1">
-                        <i data-lucide="check-circle-2" class="w-8 h-8 mx-auto text-slate-600"></i>
-                        <p class="text-xs font-semibold">Belum ada laporan guru mapel tidak hadir dari portal siswa.</p>
-                        <p class="text-[10px] text-slate-600">Laporan guru pengajar yang tidak masuk kelas akan langsung muncul di sini.</p>
-                    </div>
-                `;
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-                return;
-            }
-
-            container.innerHTML = window.appData.guruAbsensiList.map(g => {
-                return `
-                    <div class="p-3.5 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2 text-xs">
-                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
-                            <span class="font-bold text-white">${g.guruMapel}</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">${g.jamKe || 'Jam KBM'}</span>
-                        </div>
-                        <p class="text-slate-300"><strong>Keterangan / Tugas:</strong> ${g.keterangan}</p>
-                        <div class="flex items-center justify-between pt-1 text-[11px]">
-                            <span class="font-mono text-[10px] text-slate-400">Tanggal: ${g.tanggal}</span>
-                            <button onclick="deleteGuruAbsensi('${g.id}')" class="px-2 py-1 rounded bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[10px] font-bold flex items-center gap-1">
-                                <i data-lucide="trash-2" class="w-3 h-3"></i> Hapus
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function renderCharts() {
-            if (typeof Chart === 'undefined') return;
-
-            const ctxAbsensi = document.getElementById('chart-absensi-siswa')?.getContext('2d');
-            if (ctxAbsensi) {
-                const cntSakit = window.appData.absensiList.filter(a => a.kategori === 'Sakit').length;
-                const cntIjin = window.appData.absensiList.filter(a => a.kategori === 'Ijin').length;
-                const cntAlpa = window.appData.absensiList.filter(a => a.kategori === 'Alpa').length;
-
-                if (absensiChart) absensiChart.destroy();
-
-                absensiChart = new Chart(ctxAbsensi, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Sakit', 'Ijin', 'Alpa'],
-                        datasets: [{
-                            data: [cntSakit, cntIjin, cntAlpa],
-                            backgroundColor: ['#f59e0b', '#06b6d4', '#f43f5e'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { labels: { color: '#94a3b8', font: { size: 10 } } },
-                            title: { display: true, text: 'Distribusi Ketidakhadiran Siswa Kelas', color: '#f8fafc', font: { size: 11, weight: 'bold' } }
-                        }
-                    }
-                });
-            }
-
-            const ctxIpk = document.getElementById('chart-ipk-siswa')?.getContext('2d');
-            if (ctxIpk) {
-                const labels = window.appData.siswaList.map(s => s.nama);
-                const dataIpk = window.appData.siswaList.map(s => parseFloat(s.ipk || 0));
-
-                if (ipkChart) ipkChart.destroy();
-
-                ipkChart = new Chart(ctxIpk, {
-                    type: 'bar',
-                    data: {
-                        labels: labels.length > 0 ? labels : ['Belum Ada Data'],
-                        datasets: [{
-                            label: 'IPK / IPS',
-                            data: dataIpk.length > 0 ? dataIpk : [0],
-                            backgroundColor: '#10b981',
-                            borderRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: { min: 0, max: 4, ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
-                            x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } }
-                        },
-                        plugins: {
-                            legend: { display: false },
-                            title: { display: true, text: 'IPK / IPS Siswa Kelas', color: '#f8fafc', font: { size: 11, weight: 'bold' } }
-                        }
-                    }
-                });
-            }
-        }
-
-        function renderSiswaTable() {
-            const tbody = document.getElementById('siswa-table-body');
-            if (!tbody) return;
-
-            if (!window.appData.siswaList || window.appData.siswaList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500">Belum ada data siswa terdaftar pada kelas ini. Klik <b>Tambah Siswa Baru</b> untuk menginputkan data.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = window.appData.siswaList.map((s, idx) => `
-                <tr class="hover:bg-slate-800/50 transition">
-                    <td class="p-3 font-bold text-slate-400">${idx + 1}</td>
-                    <td class="p-3 font-mono text-white">${s.nis}</td>
-                    <td class="p-3 font-bold text-white">${s.nama}</td>
-                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">${s.kelas || 'X'} - ${s.jurusan || '-'}</span></td>
-                    <td class="p-3">${s.gender === 'L' ? 'Laki-laki' : 'Perempuan'}</td>
-                    <td class="p-3 font-bold text-emerald-400">${s.ipk || '0.00'}</td>
-                    <td class="p-3 font-mono text-slate-400">${s.ortu || '-'}</td>
-                    <td class="p-3 text-center">
-                        <div class="flex items-center justify-center gap-1">
-                            <button onclick="editSiswa('${s.id}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 transition" title="Edit"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
-                            <button onclick="deleteSiswa('${s.id}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400 transition" title="Hapus"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function renderGuruMapelTable() {
-            const tbody = document.getElementById('guru-mapel-table-body');
-            if (!tbody) return;
-
-            if (!window.appData.guruMapelList || window.appData.guruMapelList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada data guru mata pelajaran terdaftar pada kelas ini. Klik <b>Tambah Guru Mapel</b> untuk memasukkan data.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = window.appData.guruMapelList.map((g, idx) => `
-                <tr class="hover:bg-slate-800/50 transition">
-                    <td class="p-3 font-bold text-slate-400">${idx + 1}</td>
-                    <td class="p-3 font-bold text-white">${g.nama}</td>
-                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">${g.mapel}</span></td>
-                    <td class="p-3 text-center">
-                        <div class="flex items-center justify-center gap-1">
-                            <button onclick="editGuruMapel('${g.id}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 transition" title="Edit"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
-                            <button onclick="deleteGuruMapel('${g.id}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400 transition" title="Hapus"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function renderBimbinganList() {
-            const container = document.getElementById('bimbingan-list-container');
-            if (!container) return;
-
-            const filterVal = document.getElementById('filter-bimbingan-siswa')?.value || 'ALL';
-            let filteredList = window.appData.catatanList || [];
-            if (filterVal !== 'ALL') {
-                filteredList = filteredList.filter(c => c.siswaId === filterVal);
-            }
-
-            if (filteredList.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 py-6 text-center">Belum ada catatan bimbingan perwalian pada kelas ini.</p>`;
-                return;
-            }
-
-            container.innerHTML = filteredList.map(c => {
-                const siswa = window.appData.siswaList.find(s => s.id === c.siswaId);
-                const namaSiswa = siswa ? siswa.nama : 'Siswa';
-                return `
-                    <div class="p-4 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2 text-xs">
-                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/60 pb-2">
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-white text-sm">${namaSiswa}</span>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">${c.kategori}</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="font-mono text-[10px] text-slate-400">${c.tanggal}</span>
-                                <button onclick="deleteCatatan('${c.id}')" class="text-rose-400 hover:text-rose-300"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                            </div>
-                        </div>
-                        <div>
-                            <strong class="text-slate-400 block mb-0.5">Topik / Permasalahan:</strong>
-                            <p class="text-slate-200">${c.topik}</p>
-                        </div>
-                        <div class="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                            <strong class="block mb-0.5 text-[11px] uppercase tracking-wider">Rencana Tindak Lanjut (Action Plan):</strong>
-                            <p class="text-emerald-300 font-medium">${c.solusi}</p>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function renderAbsensiTable() {
-            const tbody = document.getElementById('absensi-table-body');
-            if (!tbody) return;
-
-            const filterPeriode = document.getElementById('filter-presensi-periode')?.value || 'ALL';
-            let listToRender = window.appData.absensiList || [];
-
-            if (filterPeriode === 'MINGGU') {
-                const now = new Date();
-                const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                listToRender = listToRender.filter(a => new Date(a.tanggal) >= oneWeekAgo);
-            } else if (filterPeriode === 'BULAN') {
-                const now = new Date();
-                const currentMonthStr = now.toISOString().slice(0, 7); // YYYY-MM
-                listToRender = listToRender.filter(a => a.tanggal && a.tanggal.startsWith(currentMonthStr));
-            }
-
-            if (!listToRender || listToRender.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Belum ada rekap presensi siswa pada periode ini.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = listToRender.map(a => {
-                const siswa = window.appData.siswaList.find(s => s.id === a.siswaId);
-                const namaSiswa = siswa ? siswa.nama : 'Siswa (Terhapus)';
-                
-                let statusBadge = '';
-                if (a.kategori === 'Hadir') statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Hadir</span>';
-                else if (a.kategori === 'Sakit') statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Sakit</span>';
-                else if (a.kategori === 'Ijin') statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Ijin</span>';
-                else statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Alpa</span>';
-
-                let verifBadge = '';
-                if (a.status === 'Disetujui') verifBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Disetujui</span>';
-                else if (a.status === 'Ditolak') verifBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Ditolak</span>';
-                else verifBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Pending</span>';
-
-                return `
-                    <tr class="hover:bg-slate-800/50 transition">
-                        <td class="p-3 font-mono">${a.tanggal}</td>
-                        <td class="p-3 font-bold text-white">${namaSiswa}</td>
-                        <td class="p-3">${statusBadge}</td>
-                        <td class="p-3 text-slate-300">${a.alasan || '-'}</td>
-                        <td class="p-3 text-slate-400 text-[11px]">${a.pelapor || '-'}</td>
-                        <td class="p-3">${verifBadge}</td>
-                        <td class="p-3 text-center">
-                            <div class="flex items-center justify-center gap-1">
-                                ${a.status !== 'Disetujui' ? `<button onclick="approveAbsensi('${a.id}')" class="p-1 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 text-[10px] font-bold">Setujui</button>` : ''}
-                                ${a.status !== 'Ditolak' ? `<button onclick="rejectAbsensi('${a.id}')" class="p-1 rounded bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[10px] font-bold">Tolak</button>` : ''}
-                                <button onclick="deleteAbsensi('${a.id}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-rose-400 transition" title="Hapus"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function renderGuruAbsensiTable() {
-            const tbody = document.getElementById('guru-absensi-table-body');
-            if (!tbody) return;
-
-            if (!window.appData.guruAbsensiList || window.appData.guruAbsensiList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada laporan guru pengajar tidak hadir pada kelas ini.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = window.appData.guruAbsensiList.map(g => `
-                <tr class="hover:bg-slate-800/50 transition">
-                    <td class="p-3 font-mono">${g.tanggal}</td>
-                    <td class="p-3 font-bold text-white">${g.guruMapel}</td>
-                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">${g.jamKe || 'Jam KBM'}</span></td>
-                    <td class="p-3 text-slate-300">${g.keterangan}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="deleteGuruAbsensi('${g.id}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400 transition" title="Hapus"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function openModalShareLink() {
-            const linkInput = document.getElementById('share-link-input');
-            const msg = document.getElementById('share-copied-msg');
-
-            if (msg) msg.classList.add('hidden');
-            
-            const payload = {
-                kelasCode: window.appData.activeKelasCode,
-                cloudId: window.appData.activeCloudId,
-                profile: window.appData.guruProfile,
-                siswa: window.appData.siswaList,
-                guruMapel: window.appData.guruMapelList
-            };
-
-            const compressed = window.compressDataObj(payload);
-            const generated = `${window.location.origin}${window.location.pathname}?d=${compressed}`;
-            
-            if (linkInput) linkInput.value = generated;
-            
-            document.getElementById('modal-share-link')?.classList.remove('hidden');
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function closeModalShareLink() {
-            document.getElementById('modal-share-link')?.classList.add('hidden');
-        }
-
-        function copyGeneratedLink() {
-            const linkInput = document.getElementById('share-link-input');
-            if (!linkInput) return;
-
-            linkInput.select();
-            linkInput.setSelectionRange(0, 99999);
-
-            try {
-                document.execCommand('copy');
-                const msg = document.getElementById('share-copied-msg');
-                if (msg) msg.classList.remove('hidden');
-                showToast('Link Instan Portal Siswa berhasil disalin!', 'success');
-            } catch (err) {
-                showToast('Silakan salin link secara manual.');
-            }
-        }
-
-        function showLoginScreen() {
-            document.getElementById('login-screen')?.classList.remove('hidden');
-            document.getElementById('main-app-content')?.classList.add('hidden');
-            document.getElementById('user-badge-container')?.classList.add('hidden');
-            document.getElementById('btn-share-link')?.classList.add('hidden');
-            document.getElementById('btn-export-csv')?.classList.add('hidden');
-
-            populateWaliKelasDropdowns();
-            populateSiswaDropdowns();
-            populateGuruMapelDropdowns();
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function showMainApp() {
-            document.getElementById('login-screen')?.classList.add('hidden');
-            document.getElementById('main-app-content')?.classList.remove('hidden');
-            document.getElementById('user-badge-container')?.classList.remove('hidden');
-            document.getElementById('btn-export-csv')?.classList.remove('hidden');
-
-            if (window.appData.currentRole === 'WALI') {
-                document.getElementById('btn-share-link')?.classList.remove('hidden');
-            } else {
-                document.getElementById('btn-share-link')?.classList.add('hidden');
-            }
-
-            updateHeaderInfo();
-            updateMetrics();
-            populateSiswaDropdowns();
-            populateGuruMapelDropdowns();
-            renderSiswaTable();
-            renderGuruMapelTable();
-            renderBimbinganList();
-            renderAbsensiTable();
-            renderGuruAbsensiTable();
-            renderDashLaporanSiswa();
-            renderDashLaporanGuru();
-            renderCharts();
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function switchWaliTab(tab) {
-            const secDashboard = document.getElementById('wali-sec-dashboard');
-            const secSiswa = document.getElementById('wali-sec-siswa');
-            const secGuruMapel = document.getElementById('wali-sec-guru-mapel');
-            const secBimbingan = document.getElementById('wali-sec-bimbingan');
-            const secPresensi = document.getElementById('wali-sec-presensi');
-
-            const btnDashboard = document.getElementById('tab-btn-dashboard');
-            const btnSiswa = document.getElementById('tab-btn-siswa');
-            const btnGuruMapel = document.getElementById('tab-btn-guru-mapel');
-            const btnBimbingan = document.getElementById('tab-btn-bimbingan');
-            const btnPresensi = document.getElementById('tab-btn-presensi');
-
-            const activeClass = 'px-4 py-2 rounded-xl bg-rose-600 text-white shadow-md flex items-center gap-2 whitespace-nowrap';
-            const inactiveClass = 'px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-2 whitespace-nowrap transition';
-
-            secDashboard?.classList.add('hidden');
-            secSiswa?.classList.add('hidden');
-            secGuruMapel?.classList.add('hidden');
-            secBimbingan?.classList.add('hidden');
-            secPresensi?.classList.add('hidden');
-
-            if (btnDashboard) btnDashboard.className = inactiveClass;
-            if (btnSiswa) btnSiswa.className = inactiveClass;
-            if (btnGuruMapel) btnGuruMapel.className = inactiveClass;
-            if (btnBimbingan) btnBimbingan.className = inactiveClass;
-            if (btnPresensi) btnPresensi.className = inactiveClass;
-
-            if (tab === 'dashboard') {
-                secDashboard?.classList.remove('hidden');
-                if (btnDashboard) btnDashboard.className = activeClass;
-            } else if (tab === 'siswa') {
-                secSiswa?.classList.remove('hidden');
-                if (btnSiswa) btnSiswa.className = activeClass;
-            } else if (tab === 'guru-mapel') {
-                secGuruMapel?.classList.remove('hidden');
-                if (btnGuruMapel) btnGuruMapel.className = activeClass;
-            } else if (tab === 'bimbingan') {
-                secBimbingan?.classList.remove('hidden');
-                if (btnBimbingan) btnBimbingan.className = activeClass;
-            } else if (tab === 'presensi') {
-                secPresensi?.classList.remove('hidden');
-                if (btnPresensi) btnPresensi.className = activeClass;
-            }
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function updateHeaderInfo() {
-            const heroGuruNama = document.getElementById('hero-guru-nama');
-            const heroKelasBadge = document.getElementById('hero-kelas-badge');
-
-            if (heroGuruNama) heroGuruNama.innerText = window.appData.guruProfile.nama;
-            if (heroKelasBadge) heroKelasBadge.innerText = `KELAS: ${window.appData.guruProfile.kelas || '-'}`;
-
-            const badgeRolePill = document.getElementById('badge-role-pill');
-            const badgeUserName = document.getElementById('badge-user-name');
-
-            if (window.appData.currentRole === 'WALI') {
-                if (badgeRolePill) {
-                    badgeRolePill.innerText = 'GURU KELAS';
-                    badgeRolePill.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30';
-                }
-                if (badgeUserName) badgeUserName.innerText = `${window.appData.guruProfile.nama} (${window.appData.guruProfile.kelas})`;
-                
-                document.getElementById('view-wali-kelas')?.classList.remove('hidden');
-                document.getElementById('hero-banner')?.classList.remove('hidden');
-                document.getElementById('view-siswa')?.classList.add('hidden');
-            } else {
-                const activeSiswa = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId) || window.appData.siswaList[0];
-                if (!activeSiswa) {
-                    logout();
-                    return;
-                }
-                window.appData.activeSiswaId = activeSiswa.id;
-
-                if (badgeRolePill) {
-                    badgeRolePill.innerText = 'PORTAL SISWA';
-                    badgeRolePill.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
-                }
-                if (badgeUserName) badgeUserName.innerText = activeSiswa.nama;
-                
-                document.getElementById('view-wali-kelas')?.classList.add('hidden');
-                document.getElementById('hero-banner')?.classList.add('hidden');
-                document.getElementById('view-siswa')?.classList.remove('hidden');
-                
-                renderSiswaPortal();
-            }
-        }
-
-        function renderSiswaPortal() {
-            const activeSiswa = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
-            if (!activeSiswa) return;
-
-            const elNama = document.getElementById('siswa-portal-nama');
-            const elNis = document.getElementById('siswa-portal-nis');
-            const elGuru = document.getElementById('siswa-portal-guru-nama');
-            const elIpk = document.getElementById('siswa-portal-ipk');
-            const elKelas = document.getElementById('siswa-portal-kelas-badge');
-            const elReporter = document.getElementById('siswa-reporter-badge');
-
-            if (elNama) elNama.innerText = `Selamat Datang, ${activeSiswa.nama}`;
-            if (elNis) elNis.innerText = `NIS: ${activeSiswa.nis} | SMK Negeri 1 Marisa`;
-            if (elGuru) elGuru.innerText = window.appData.guruProfile.nama;
-            if (elIpk) elIpk.innerText = activeSiswa.ipk || '0.00';
-            if (elKelas) elKelas.innerText = `KELAS: ${window.appData.guruProfile.kelas}`;
-            if (elReporter) elReporter.innerText = activeSiswa.nama;
-
-            const bimbContainer = document.getElementById('siswa-portal-bimbingan-list');
-            if (bimbContainer) {
-                const myCatatan = window.appData.catatanList.filter(c => c.siswaId === activeSiswa.id);
-                if (myCatatan.length === 0) {
-                    bimbContainer.innerHTML = `<p class="text-xs text-slate-500 py-4 text-center">Belum ada catatan bimbingan dari Guru Perwalian.</p>`;
-                } else {
-                    bimbContainer.innerHTML = myCatatan.map(c => `
-                        <div class="p-3 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-1.5 text-xs">
-                            <div class="flex items-center justify-between border-b border-slate-800/80 pb-1.5">
-                                <span class="font-bold text-rose-400">${c.kategori}</span>
-                                <span class="text-[10px] text-slate-500 font-mono">${c.tanggal}</span>
-                            </div>
-                            <p class="text-slate-300"><strong>Topik:</strong> ${c.topik}</p>
-                            <div class="p-2 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px]">
-                                <strong>Action Plan:</strong> ${c.solusi}
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            }
-        }
-
-        function updateMetrics() {
-            const statTotalSiswa = document.getElementById('stat-total-siswa');
-            const statRataIpk = document.getElementById('stat-rata-ipk');
-            const statRataKat = document.getElementById('stat-rata-kat');
-            const statAbsenSiswa = document.getElementById('stat-absen-siswa');
-            const statAbsenDetail = document.getElementById('stat-absen-detail');
-            const statAbsenGuru = document.getElementById('stat-absen-guru');
-            const statTotalCatatan = document.getElementById('stat-total-catatan');
-
-            if (statTotalSiswa) statTotalSiswa.innerText = window.appData.siswaList.length;
-            
-            if (window.appData.siswaList.length > 0) {
-                const totalIpk = window.appData.siswaList.reduce((acc, curr) => acc + parseFloat(curr.ipk || 0), 0);
-                const avgIpk = (totalIpk / window.appData.siswaList.length).toFixed(2);
-                if (statRataIpk) statRataIpk.innerText = avgIpk;
-                if (statRataKat) statRataKat.innerText = avgIpk >= 3.5 ? 'Kategori SANGAT BAIK' : (avgIpk >= 3.0 ? 'Kategori BAIK' : 'Kategori PERLU BIMBINGAN');
-            } else {
-                if (statRataIpk) statRataIpk.innerText = "0.00";
-                if (statRataKat) statRataKat.innerText = "Belum Ada Data";
-            }
-
-            const totalAbsenSiswa = window.appData.absensiList.length;
-            const cntHadir = window.appData.absensiList.filter(a => a.kategori === 'Hadir').length;
-            const cntSakit = window.appData.absensiList.filter(a => a.kategori === 'Sakit').length;
-            const cntIjin = window.appData.absensiList.filter(a => a.kategori === 'Ijin').length;
-            const cntAlpa = window.appData.absensiList.filter(a => a.kategori === 'Alpa').length;
-
-            if (statAbsenSiswa) statAbsenSiswa.innerText = totalAbsenSiswa;
-            if (statAbsenDetail) statAbsenDetail.innerText = `H:${cntHadir} | S:${cntSakit} | I:${cntIjin} | A:${cntAlpa}`;
-            if (statAbsenGuru) statAbsenGuru.innerText = window.appData.guruAbsensiList.length;
-            if (statTotalCatatan) statTotalCatatan.innerText = window.appData.catatanList.length;
-        }
-
-        function populateGuruMapelDropdowns() {
-            const siswaGuruDropdown = document.getElementById('siswa-guru-nama-mapel');
-
-            let optionsHtml = '';
-            if (!window.appData.guruMapelList || window.appData.guruMapelList.length === 0) {
-                optionsHtml = '<option value="" disabled selected>-- Belum ada guru mapel terdaftar pada kelas ini --</option>';
-            } else {
-                optionsHtml = '<option value="" disabled selected>-- Pilih Guru Mapel --</option>' +
-                    window.appData.guruMapelList.map(g => `<option value="${g.nama} (${g.mapel})">${g.nama} - ${g.mapel}</option>`).join('');
-            }
-
-            if (siswaGuruDropdown) siswaGuruDropdown.innerHTML = optionsHtml;
         }
 
         function populateSiswaDropdowns() {
@@ -2134,8 +1185,8 @@
             if (!window.appData.siswaList || window.appData.siswaList.length === 0) {
                 optionsHtml = '<option value="" disabled selected>-- Belum Ada Siswa Terdaftar --</option>';
             } else {
-                optionsHtml = '<option value="" disabled selected>-- Pilih Siswa --</option>' +
-                    window.appData.siswaList.map(s => `<option value="${s.id}">${s.nis} - ${s.nama}</option>`).join('');
+                optionsHtml = '<option value="" disabled selected>-- Pilih Nama Siswa --</option>' +
+                    window.appData.siswaList.map(s => `<option value="${s.id}">${s.nis ? s.nis + ' - ' : ''}${s.nama}</option>`).join('');
             }
 
             if (catatanDropdown) catatanDropdown.innerHTML = optionsHtml;
