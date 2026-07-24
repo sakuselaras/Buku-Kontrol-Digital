@@ -30,13 +30,16 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Firebase Web SDK Compat Libraries (Google Cloud Database) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
     <!-- Google Fonts Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- Custom CSS Styles -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -104,7 +107,6 @@
             currentRole: 'WALI',
             activeKelasCode: '',
             activeSiswaId: '',
-            cloudBlobId: '',
             guruProfile: {
                 nama: "Guru Perwalian",
                 nip: "-",
@@ -141,7 +143,6 @@
     <!-- Toast Message Container -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
-    <!-- Application Header -->
     <header class="bg-[#10172a] border-b border-slate-800 sticky top-0 z-30 px-4 py-3 shadow-xl">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -151,8 +152,8 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <h1 class="font-black text-lg text-white tracking-wide uppercase">CATATAN PERWALIAN</h1>
-                        <span id="cloud-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> CLOUD MULTI-KELAS
+                        <span id="cloud-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> LOCAL MODE
                         </span>
                     </div>
                     <p id="header-subtitle" class="text-xs text-slate-400">Sistem Informasi Bimbingan Akademik & Presensi Kelompok Perwalian • SMK Negeri 1 Marisa</p>
@@ -161,6 +162,10 @@
 
             <!-- Header Actions & User Status -->
             <div class="flex items-center gap-2 flex-wrap">
+                <button onclick="openModalFirebaseConfig()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-cyan-400 flex items-center gap-1.5 transition">
+                    <i data-lucide="cloud" class="w-3.5 h-3.5"></i> Setup Firebase Cloud
+                </button>
+
                 <div id="user-badge-container" class="hidden items-center gap-2 bg-[#0b0f19] px-3 py-1.5 rounded-xl border border-slate-800">
                     <div id="badge-role-pill" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase">GURU KELAS</div>
                     <span id="badge-user-name" class="text-xs font-bold text-white">-</span>
@@ -270,7 +275,7 @@
                 <div id="form-login-siswa" class="hidden space-y-4">
                     <div id="cloud-loading-banner" class="hidden p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-                        <span id="cloud-loading-text">Menghubungkan & mengunduh data kelas dari Cloud...</span>
+                        <span id="cloud-loading-text">Menghubungkan ke Firestore Cloud...</span>
                     </div>
 
                     <div>
@@ -309,7 +314,6 @@
             </div>
         </div>
 
-        <!-- MAIN APP CONTENT CONTAINER -->
         <div id="main-app-content" class="hidden space-y-6">
 
             <!-- Hero Banner Wali Kelas -->
@@ -399,7 +403,7 @@
                                     <i data-lucide="user-x" class="w-4 h-4"></i>
                                     Form Quick Input Absensi Siswa
                                 </div>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Realtime Cloud</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Realtime Firestore</span>
                             </div>
 
                             <form onsubmit="handleQuickAbsensi(event)" class="space-y-3 text-xs">
@@ -816,6 +820,34 @@
 
     </main>
 
+    <!-- MODAL FIREBASE CONFIG (SETUP FIREBASE CLOUD) -->
+    <div id="modal-firebase-config" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="max-w-lg w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
+                    <i data-lucide="cloud" class="w-4 h-4 text-cyan-400"></i> Setup Firebase Cloud Database
+                </h3>
+                <button onclick="closeModalFirebaseConfig()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <p class="text-xs text-slate-300">
+                Masukkan objek / JSON <strong>firebaseConfig</strong> milik Anda dari Google Firebase Console. Data ini akan tersimpan dan langsung mengaktifkan sinkronisasi cloud Firestore secara real-time!
+            </p>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-400 mb-1">FIREBASE CONFIG JSON / SCRIPT</label>
+                    <textarea id="firebase-config-input" rows="6" placeholder='{\n  "apiKey": "AIzaSy...",\n  "authDomain": "app.firebaseapp.com",\n  "projectId": "my-project",\n  "storageBucket": "my-project.appspot.com",\n  "messagingSenderId": "123...",\n  "appId": "1:123..."\n}' class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl p-3 text-cyan-400 font-mono text-[11px] focus:outline-none focus:border-cyan-500 transition"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeModalFirebaseConfig()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs">Batal</button>
+                <button type="button" onclick="saveFirebaseConfigFromModal()" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-md shadow-cyan-600/20">Simpan Firebase Config</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL EDIT PROFIL GURU WALI KELAS -->
     <div id="modal-edit-guru" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="max-w-md w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
@@ -987,15 +1019,7 @@
         </div>
     </div>
 
-    <!-- APPLICATION JAVASCRIPT LOGIC -->
     <script>
-        // Universal REST Cloud Engine
-        const CLOUD_API_BASE = 'https://api.npoint.io/';
-        const KVDB_API_BASE = 'https://kvdb.io/A84N8eX93vJ7xW1L9Z2/';
-
-        let absensiChart = null;
-        let ipkChart = null;
-
         // Custom Toast Notification System
         window.showToast = function(message, type = 'info') {
             const container = document.getElementById('toast-container');
@@ -1017,11 +1041,97 @@
             }, 4000);
         };
 
-        // Upload Class Dataset to Multi-Cloud
-        async function uploadClassToCloud(kelasCode) {
-            if (!kelasCode) return null;
+        // Firebase Cloud Database Config & Initialization Engine
+        window.db = null;
+        window.firestoreUnsubscribe = null;
 
-            const currentProfile = (window.appData.allKelasProfiles || []).find(k => k.id === kelasCode || k.kelasCode === kelasCode) || window.appData.guruProfile;
+        function initFirebaseEngine() {
+            let configToUse = null;
+
+            // 1. Try local storage saved Firebase config
+            try {
+                const savedConfig = localStorage.getItem('PERWALIAN_FIREBASE_CONFIG');
+                if (savedConfig) configToUse = JSON.parse(savedConfig);
+            } catch (e) { console.warn("Saved firebase config error:", e); }
+
+            // 2. Try window global config
+            if (!configToUse && window.FIREBASE_CONFIG) {
+                configToUse = window.FIREBASE_CONFIG;
+            }
+
+            if (configToUse && configToUse.apiKey && typeof firebase !== 'undefined') {
+                try {
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(configToUse);
+                    }
+                    window.db = firebase.firestore();
+                    
+                    const badge = document.getElementById('cloud-status-badge');
+                    if (badge) {
+                        badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1';
+                        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> FIRESTORE REALTIME';
+                    }
+                    console.log("Firebase Firestore Initialized Successfully!");
+                } catch (e) {
+                    console.error("Firebase init failed:", e);
+                }
+            }
+        }
+
+        // Realtime Listener for Active Class in Firestore
+        function subscribeToClassFirestore(kelasCode) {
+            if (!window.db || !kelasCode) return;
+
+            if (window.firestoreUnsubscribe) {
+                window.firestoreUnsubscribe();
+            }
+
+            const docRef = window.db.collection('kelas').doc(kelasCode);
+
+            window.firestoreUnsubscribe = docRef.onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    
+                    // Merge remote class data into state
+                    if (data.profile) {
+                        const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === kelasCode);
+                        if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = data.profile;
+                        else window.appData.allKelasProfiles.push(data.profile);
+                        window.appData.guruProfile = data.profile;
+                    }
+
+                    if (Array.isArray(data.siswa)) {
+                        window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== kelasCode).concat(data.siswa);
+                    }
+
+                    if (Array.isArray(data.guruMapel)) {
+                        window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== kelasCode).concat(data.guruMapel);
+                    }
+
+                    if (Array.isArray(data.catatan)) {
+                        window.appData.allCatatanList = (window.appData.allCatatanList || []).filter(c => c.kelasCode !== kelasCode).concat(data.catatan);
+                    }
+
+                    if (Array.isArray(data.absensi)) {
+                        window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== kelasCode).concat(data.absensi);
+                    }
+
+                    if (Array.isArray(data.guruAbsensi)) {
+                        window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== kelasCode).concat(data.guruAbsensi);
+                    }
+
+                    window.syncFilteredData(false);
+                }
+            }, (error) => {
+                console.warn("Firestore subscription notice:", error);
+            });
+        }
+
+        // Upload Active Class Dataset to Firestore
+        async function syncClassToFirestore(kelasCode) {
+            if (!window.db || !kelasCode) return;
+
+            const currentProfile = (window.appData.allKelasProfiles || []).find(k => k.id === kelasCode) || window.appData.guruProfile;
 
             const payload = {
                 kelasCode: kelasCode,
@@ -1034,136 +1144,52 @@
                 updatedAt: Date.now()
             };
 
-            // 1. Primary Sync: NPoint Endpoint
             try {
-                let blobId = window.appData.cloudBlobId;
-                let res;
-                if (blobId) {
-                    res = await fetch(`${CLOUD_API_BASE}${blobId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                } else {
-                    res = await fetch(CLOUD_API_BASE, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (res.ok) {
-                        const jsonRes = await res.json();
-                        if (jsonRes && jsonRes.id) {
-                            blobId = jsonRes.id;
-                            window.appData.cloudBlobId = blobId;
-                        }
-                    }
-                }
-            } catch (e) {
-                console.warn("NPoint upload notice:", e);
+                await window.db.collection('kelas').doc(kelasCode).set(payload, { merge: true });
+            } catch (err) {
+                console.error("Firestore sync error:", err);
+            }
+        }
+
+        // Open/Save Modal Firebase Config
+        function openModalFirebaseConfig() {
+            const textarea = document.getElementById('firebase-config-input');
+            const savedConfig = localStorage.getItem('PERWALIAN_FIREBASE_CONFIG');
+            if (textarea && savedConfig) {
+                textarea.value = savedConfig;
+            }
+            document.getElementById('modal-firebase-config')?.classList.remove('hidden');
+        }
+
+        function closeModalFirebaseConfig() {
+            document.getElementById('modal-firebase-config')?.classList.add('hidden');
+        }
+
+        function saveFirebaseConfigFromModal() {
+            const textarea = document.getElementById('firebase-config-input');
+            if (!textarea || !textarea.value.trim()) {
+                if (typeof window.showToast === 'function') window.showToast('Masukkan Firebase Config!', 'error');
+                return;
             }
 
-            // 2. Secondary Sync: KVDB Endpoint
             try {
-                await fetch(`${KVDB_API_BASE}class_${kelasCode}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-            } catch (e) {
-                console.warn("KVDB upload notice:", e);
+                const parsed = JSON.parse(textarea.value.trim());
+                localStorage.setItem('PERWALIAN_FIREBASE_CONFIG', JSON.stringify(parsed));
+                closeModalFirebaseConfig();
+                initFirebaseEngine();
+                if (window.appData.activeKelasCode) {
+                    subscribeToClassFirestore(window.appData.activeKelasCode);
+                }
+                if (typeof window.showToast === 'function') window.showToast('Firebase Firestore Config berhasil disimpan!', 'success');
+            } catch (err) {
+                if (typeof window.showToast === 'function') window.showToast('Format JSON Firebase Config tidak valid!', 'error');
             }
-
-            return window.appData.cloudBlobId || '';
         }
 
-        // Fetch Class Dataset from Multi-Cloud
-        async function fetchClassFromCloud(kelasCode, blobId) {
-            if (!kelasCode && !blobId) return;
+        let absensiChart = null;
+        let ipkChart = null;
 
-            const loadingBanner = document.getElementById('cloud-loading-banner');
-            const loadingText = document.getElementById('cloud-loading-text');
-
-            if (loadingBanner) loadingBanner.classList.remove('hidden');
-            if (loadingText) loadingText.innerText = `Menghubungkan & mengunduh data kelas dari Cloud...`;
-
-            let fetchedData = null;
-
-            // Try NPoint First if blobId is supplied
-            if (blobId) {
-                try {
-                    const res = await fetch(`${CLOUD_API_BASE}${blobId}`);
-                    if (res.ok) {
-                        fetchedData = await res.json();
-                    }
-                } catch (err) {
-                    console.warn("NPoint fetch notice:", err);
-                }
-            }
-
-            // Fallback to KVDB if fetch failed or no blobId
-            if (!fetchedData && kelasCode) {
-                try {
-                    const res = await fetch(`${KVDB_API_BASE}class_${kelasCode}`);
-                    if (res.ok) {
-                        fetchedData = await res.json();
-                    }
-                } catch (err) {
-                    console.warn("KVDB fetch notice:", err);
-                }
-            }
-
-            if (fetchedData && fetchedData.profile) {
-                const targetCode = fetchedData.kelasCode || kelasCode;
-                const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === targetCode);
-                
-                if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = fetchedData.profile;
-                else window.appData.allKelasProfiles.push(fetchedData.profile);
-
-                if (Array.isArray(fetchedData.siswa)) {
-                    window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== targetCode).concat(fetchedData.siswa);
-                }
-
-                if (Array.isArray(fetchedData.guruMapel)) {
-                    window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== targetCode).concat(fetchedData.guruMapel);
-                }
-
-                if (Array.isArray(fetchedData.catatan)) {
-                    window.appData.allCatatanList = (window.appData.allCatatanList || []).filter(c => c.kelasCode !== targetCode).concat(fetchedData.catatan);
-                }
-
-                if (Array.isArray(fetchedData.absensi)) {
-                    window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== targetCode).concat(fetchedData.absensi);
-                }
-
-                if (Array.isArray(fetchedData.guruAbsensi)) {
-                    window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== targetCode).concat(fetchedData.guruAbsensi);
-                }
-
-                window.appData.activeKelasCode = targetCode;
-                if (blobId) window.appData.cloudBlobId = blobId;
-
-                window.syncFilteredData();
-
-                if (typeof window.showToast === 'function') {
-                    window.showToast(`Data kelas (${fetchedData.profile.kelas || targetCode}) berhasil dimuat!`, 'success');
-                }
-            }
-
-            if (loadingBanner) loadingBanner.classList.add('hidden');
-        }
-
-        // Generate Short Link for WhatsApp Sharing
-        async function generateShareLink() {
-            const kCode = window.appData.activeKelasCode || 'DEFAULT';
-            const bId = await uploadClassToCloud(kCode);
-            
-            let queryStr = `code=${encodeURIComponent(kCode)}`;
-            if (bId) queryStr += `&b=${encodeURIComponent(bId)}`;
-
-            return `${window.location.origin}${window.location.pathname}?${queryStr}`;
-        }
-
-        window.syncFilteredData = function() {
+        window.syncFilteredData = function(pushToRemote = true) {
             const kCode = window.appData.activeKelasCode;
 
             const currentKelasProf = (window.appData.allKelasProfiles || []).find(k => k.id === kCode || k.kelasCode === kCode);
@@ -1182,17 +1208,16 @@
             window.appData.absensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode === kCode).sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
             window.appData.guruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode === kCode).sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-            window.saveToStorage(false);
+            window.saveToStorage(false, pushToRemote);
         };
 
-        window.saveToStorage = function(writeToLocal = true) {
+        window.saveToStorage = function(writeToLocal = true, pushToRemote = true) {
             if (writeToLocal) {
                 localStorage.setItem('PERWALIAN_SMK_MARISA_DATA', JSON.stringify({
                     isLoggedIn: window.appData.isLoggedIn,
                     currentRole: window.appData.currentRole,
                     activeKelasCode: window.appData.activeKelasCode,
-                    activeSiswaId: window.appData.activeSiswaId,
-                    cloudBlobId: window.appData.cloudBlobId
+                    activeSiswaId: window.appData.activeSiswaId
                 }));
             }
             updateMetrics();
@@ -1206,13 +1231,14 @@
             renderGuruAbsensiTable();
             renderCharts();
 
-            if (window.appData.activeKelasCode) {
-                uploadClassToCloud(window.appData.activeKelasCode);
+            if (pushToRemote && window.appData.activeKelasCode) {
+                syncClassToFirestore(window.appData.activeKelasCode);
             }
         };
 
         window.onload = async function() {
             if (typeof lucide !== 'undefined') lucide.createIcons();
+            initFirebaseEngine();
 
             const today = new Date().toISOString().split('T')[0];
             const elQuickTgl = document.getElementById('quick-tanggal');
@@ -1229,31 +1255,21 @@
 
             const urlParams = new URLSearchParams(window.location.search);
             const linkClassCode = urlParams.get('code') || urlParams.get('kelas');
-            const linkBlobId = urlParams.get('b') || urlParams.get('blob');
 
-            if (linkClassCode || linkBlobId) {
-                if (linkClassCode) window.appData.activeKelasCode = linkClassCode;
-                if (linkBlobId) window.appData.cloudBlobId = linkBlobId;
-
+            if (linkClassCode) {
+                window.appData.activeKelasCode = linkClassCode;
                 switchLoginTab('SISWA');
-                await fetchClassFromCloud(linkClassCode, linkBlobId);
+                subscribeToClassFirestore(linkClassCode);
             } else if (window.appData.activeKelasCode) {
-                fetchClassFromCloud(window.appData.activeKelasCode, window.appData.cloudBlobId);
+                subscribeToClassFirestore(window.appData.activeKelasCode);
             }
 
             if (window.appData.isLoggedIn) {
-                window.syncFilteredData();
+                window.syncFilteredData(false);
                 showMainApp();
             } else {
                 showLoginScreen();
             }
-
-            // Periodic live refresh every 4 seconds
-            setInterval(() => {
-                if (window.appData.activeKelasCode) {
-                    fetchClassFromCloud(window.appData.activeKelasCode, window.appData.cloudBlobId);
-                }
-            }, 4000);
         };
 
         function switchLoginTab(role) {
@@ -1336,7 +1352,8 @@
 
             window.appData.isLoggedIn = true;
             window.appData.currentRole = 'WALI';
-            window.syncFilteredData();
+            window.syncFilteredData(true);
+            subscribeToClassFirestore(kelasCode);
             showMainApp();
             if (typeof window.showToast === 'function') window.showToast(`Kelompok Perwalian ${kelas} Berhasil Dibuat!`, 'success');
         }
@@ -1359,7 +1376,8 @@
                 window.appData.activeKelasCode = selectedKelasId;
                 window.appData.isLoggedIn = true;
                 window.appData.currentRole = 'WALI';
-                window.syncFilteredData();
+                window.syncFilteredData(false);
+                subscribeToClassFirestore(selectedKelasId);
                 showMainApp();
                 if (typeof window.showToast === 'function') window.showToast(`Berhasil masuk sebagai Guru Perwalian ${kelasProf?.kelas || ''}!`, 'success');
             } else {
@@ -1372,7 +1390,8 @@
             if (!selectedKelasCode) return;
 
             window.appData.activeKelasCode = selectedKelasCode;
-            window.syncFilteredData();
+            subscribeToClassFirestore(selectedKelasCode);
+            window.syncFilteredData(false);
             populateSiswaDropdowns();
         }
 
@@ -1388,7 +1407,7 @@
             }
 
             window.appData.activeKelasCode = selectedKelasCode;
-            window.syncFilteredData();
+            window.syncFilteredData(false);
 
             let matchedSiswa = null;
 
@@ -1403,7 +1422,7 @@
                 window.appData.isLoggedIn = true;
                 window.appData.currentRole = 'SISWA';
                 window.appData.activeSiswaId = matchedSiswa.id;
-                saveToStorage();
+                saveToStorage(true, false);
                 showMainApp();
                 if (typeof window.showToast === 'function') window.showToast(`Selamat datang, ${matchedSiswa.nama}!`, 'success');
             } else {
@@ -1413,7 +1432,7 @@
 
         function logout() {
             window.appData.isLoggedIn = false;
-            saveToStorage();
+            saveToStorage(true, false);
             showLoginScreen();
         }
 
@@ -1677,7 +1696,7 @@
             window.appData.absensiList.unshift(newAbsen);
             window.appData.allAbsensiList.unshift(newAbsen);
 
-            saveToStorage();
+            saveToStorage(true, true);
             document.getElementById('quick-alasan').value = '';
             if (typeof window.showToast === 'function') window.showToast('Ketidakhadiran siswa berhasil dicatat!', 'success');
         }
@@ -1704,7 +1723,7 @@
             window.appData.guruAbsensiList.unshift(newGuruAbsen);
             window.appData.allGuruAbsensiList.unshift(newGuruAbsen);
 
-            saveToStorage();
+            saveToStorage(true, true);
             document.getElementById('guru-nama-mapel').value = '';
             document.getElementById('guru-jam-ke').value = '';
             document.getElementById('guru-keterangan').value = '';
@@ -1735,13 +1754,13 @@
             window.appData.catatanList.unshift(newCatatan);
             window.appData.allCatatanList.unshift(newCatatan);
 
-            saveToStorage();
+            saveToStorage(true, true);
             document.getElementById('catatan-topik').value = '';
             document.getElementById('catatan-solusi').value = '';
             if (typeof window.showToast === 'function') window.showToast('Catatan perwalian berhasil disimpan!', 'success');
         }
 
-        async function openModalShareLink() {
+        function openModalShareLink() {
             const linkInput = document.getElementById('share-link-input');
             const msg = document.getElementById('share-copied-msg');
             const codeLabel = document.getElementById('modal-share-code-label');
@@ -1749,11 +1768,8 @@
             if (msg) msg.classList.add('hidden');
             if (codeLabel) codeLabel.innerText = window.appData.guruProfile?.kelas || window.appData.activeKelasCode;
             
-            if (linkInput) {
-                linkInput.value = "Menggenerasi link...";
-                const generated = await generateShareLink();
-                linkInput.value = generated;
-            }
+            const generated = `${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(window.appData.activeKelasCode || '')}`;
+            if (linkInput) linkInput.value = generated;
             
             document.getElementById('modal-share-link')?.classList.remove('hidden');
             if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -2068,7 +2084,7 @@
             window.appData.absensiList.unshift(newAbsen);
             window.appData.allAbsensiList.unshift(newAbsen);
 
-            saveToStorage();
+            saveToStorage(true, true);
             
             document.getElementById('siswa-target-absen-id').value = '';
             document.getElementById('siswa-self-alasan').value = '';
@@ -2098,7 +2114,7 @@
             window.appData.guruAbsensiList.unshift(newGuruAbsen);
             window.appData.allGuruAbsensiList.unshift(newGuruAbsen);
 
-            saveToStorage();
+            saveToStorage(true, true);
 
             document.getElementById('siswa-guru-nama-mapel').value = '';
             document.getElementById('siswa-guru-jam-ke').value = '';
@@ -2151,7 +2167,7 @@
                 window.appData.allSiswaList.push(newObj);
             }
 
-            saveToStorage();
+            saveToStorage(true, true);
             closeModalSiswa();
             if (typeof window.showToast === 'function') window.showToast('Data siswa berhasil disimpan!', 'success');
         }
@@ -2174,7 +2190,7 @@
         function deleteSiswa(id) {
             window.appData.siswaList = window.appData.siswaList.filter(s => s.id !== id);
             window.appData.allSiswaList = window.appData.allSiswaList.filter(s => s.id !== id);
-            saveToStorage();
+            saveToStorage(true, true);
             if (typeof window.showToast === 'function') window.showToast('Data siswa telah dihapus.', 'info');
         }
 
@@ -2214,7 +2230,7 @@
                 window.appData.allGuruMapelList.push(newObj);
             }
 
-            saveToStorage();
+            saveToStorage(true, true);
             closeModalGuruMapel();
             if (typeof window.showToast === 'function') window.showToast('Data guru mapel berhasil disimpan!', 'success');
         }
@@ -2232,7 +2248,7 @@
         function deleteGuruMapel(id) {
             window.appData.guruMapelList = window.appData.guruMapelList.filter(g => g.id !== id);
             window.appData.allGuruMapelList = window.appData.allGuruMapelList.filter(g => g.id !== id);
-            saveToStorage();
+            saveToStorage(true, true);
             if (typeof window.showToast === 'function') window.showToast('Data guru mapel dihapus.');
         }
 
@@ -2265,7 +2281,7 @@
             if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = updatedProfile;
             else window.appData.allKelasProfiles.push(updatedProfile);
 
-            saveToStorage();
+            saveToStorage(true, true);
             closeModalEditGuru();
             updateHeaderInfo();
             if (typeof window.showToast === 'function') window.showToast('Profil Guru Perwalian berhasil diperbarui!', 'success');
@@ -2280,7 +2296,7 @@
             if (allIdx !== -1) {
                 window.appData.allAbsensiList[allIdx].status = 'Disetujui';
             }
-            saveToStorage();
+            saveToStorage(true, true);
             if (typeof window.showToast === 'function') window.showToast('Ketidakhadiran disetujui.', 'success');
         }
 
@@ -2293,28 +2309,28 @@
             if (allIdx !== -1) {
                 window.appData.allAbsensiList[allIdx].status = 'Ditolak';
             }
-            saveToStorage();
+            saveToStorage(true, true);
             if (typeof window.showToast === 'function') window.showToast('Ketidakhadiran ditolak.');
         }
 
         function deleteAbsensi(id) {
             window.appData.absensiList = window.appData.absensiList.filter(a => a.id !== id);
             window.appData.allAbsensiList = window.appData.allAbsensiList.filter(a => a.id !== id);
-            saveToStorage();
+            saveToStorage(true, true);
             if (typeof window.showToast === 'function') window.showToast('Catatan absensi dihapus.');
         }
 
         function deleteGuruAbsensi(id) {
             window.appData.guruAbsensiList = window.appData.guruAbsensiList.filter(g => g.id !== id);
             window.appData.allGuruAbsensiList = window.appData.allGuruAbsensiList.filter(g => g.id !== id);
-            saveToStorage();
+            saveToStorage(true, true);
             if (typeof window.showToast === 'function') window.showToast('Laporan guru dihapus.');
         }
 
         function deleteCatatan(id) {
             window.appData.catatanList = window.appData.catatanList.filter(c => c.id !== id);
             window.appData.allCatatanList = window.appData.allCatatanList.filter(c => c.id !== id);
-            saveToStorage();
+            saveToStorage(true, true);
             if (typeof window.showToast === 'function') window.showToast('Catatan bimbingan dihapus.');
         }
 
