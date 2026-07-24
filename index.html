@@ -1021,7 +1021,7 @@
         };
 
         // =========================================================================
-        // ZERO-CONFIG REST CLOUD SYNC ENGINE
+        // ZERO-CONFIG REST CLOUD SYNC ENGINE (SMART MERGE & AUTO RECOVERY)
         // =========================================================================
         const CLOUD_API_URL = 'https://api.restful-api.dev/objects';
 
@@ -1036,22 +1036,35 @@
 
                 if (currentCloudId) {
                     // Update existing object on cloud
-                    await fetch(`${CLOUD_API_URL}/${currentCloudId}`, {
+                    const res = await fetch(`${CLOUD_API_URL}/${currentCloudId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(cloudData)
                     });
-                    return currentCloudId;
-                } else {
-                    // Create new object on cloud
-                    const res = await fetch(CLOUD_API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(cloudData)
-                    });
+
+                    if (res.ok) {
+                        return currentCloudId;
+                    }
+                }
+
+                // If no cloudId or PUT failed (e.g. 404 expired), CREATE NEW OBJECT
+                const res = await fetch(CLOUD_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cloudData)
+                });
+                
+                if (res.ok) {
                     const resData = await res.json();
                     if (resData && resData.id) {
                         window.appData.activeCloudId = resData.id;
+                        
+                        // Update cloudId in current profile
+                        const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === payload.kelasCode);
+                        if (pIdx !== -1) {
+                            window.appData.allKelasProfiles[pIdx].cloudId = resData.id;
+                        }
+                        
                         saveToStorage(true, false);
                         return resData.id;
                     }
@@ -1061,6 +1074,184 @@
             }
             return window.appData.activeCloudId || '';
         }
+
+        async function fetchClassFromCloud(cloudId) {
+            if (!cloudId) return null;
+            try {
+                const res = await fetch(`${CLOUD_API_URL}/${cloudId}`);
+                if (!res.ok) return null;
+                const json = await res.json();
+                if (json && json.data) {
+                    return json.data;
+                }
+            } catch (err) {
+                console.warn("Cloud fetch notice:", err);
+            }
+            return null;
+        }
+
+        async function handleSiswaLaporAbsen(e) {
+            e.preventDefault();
+            const targetSiswaId = document.getElementById('siswa-target-absen-id')?.value;
+            const kat = document.getElementById('siswa-self-kategori')?.value || 'Sakit';
+            const tgl = document.getElementById('siswa-self-tanggal')?.value;
+            const alasan = document.getElementById('siswa-self-alasan')?.value || (kat === 'Sakit' ? 'Sakit' : 'Tanpa Keterangan');
+
+            if (!targetSiswaId || !tgl) {
+                showToast('Pilih siswa dan tanggal!', 'error');
+                return;
+            }
+
+            const targetSiswa = window.appData.siswaList.find(s => s.id === targetSiswaId);
+            const targetNama = targetSiswa ? targetSiswa.nama : 'Siswa';
+
+            const activeSiswa = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
+            const reporterNama = activeSiswa ? activeSiswa.nama : 'Siswa (Teman)';
+
+            const newAbsen = {
+                id: 'abs-' + Date.now(),
+                siswaId: targetSiswaId,
+                kategori: kat,
+                tanggal: tgl,
+                alasan: alasan,
+                pelapor: `Siswa (${reporterNama})`,
+                status: 'Pending',
+                kelasCode: window.appData.activeKelasCode,
+                timestamp: Date.now()
+            };
+
+            // 1. Dapatkan data cloud terbaru terlebih dahulu (Smart Merge)
+            let latestCloudData = null;
+            if (window.appData.activeCloudId) {
+                latestCloudData = await fetchClassFromCloud(window.appData.activeCloudId);
+            }
+
+            let mergedAbsensi = window.appData.allAbsensiList || [];
+            if (latestCloudData && Array.isArray(latestCloudData.absensi)) {
+                mergedAbsensi = latestCloudData.absensi;
+            }
+
+            // Tambahkan laporan baru
+            mergedAbsensi.unshift(newAbsen);
+
+            window.appData.allAbsensiList = mergedAbsensi;
+            window.appData.absensiList = mergedAbsensi.filter(a => a.kelasCode === window.appData.activeKelasCode);
+
+            saveToStorage(true, true);
+            
+            document.getElementById('siswa-target-absen-id').value = '';
+            document.getElementById('siswa-self-alasan').value = '';
+
+            showToast(`Laporan ${targetNama} (${kat}) berhasil terkirim ke Wali Kelas!`, 'success');
+        }
+
+        async function handleSiswaLaporGuru(e) {
+            e.preventDefault();
+            const guruMapel = document.getElementById('siswa-guru-nama-mapel')?.value;
+            const jamKe = document.getElementById('siswa-guru-jam-ke')?.value;
+            const tgl = document.getElementById('siswa-guru-tanggal')?.value;
+            const ket = document.getElementById('siswa-guru-keterangan')?.value;
+
+            if (!guruMapel || !tgl || !ket) return;
+
+            const newGuruAbsen = {
+                id: 'gabs-' + Date.now(),
+                guruMapel: guruMapel,
+                jamKe: jamKe || 'Jam KBM',
+                tanggal: tgl,
+                keterangan: ket,
+                kelasCode: window.appData.activeKelasCode,
+                timestamp: Date.now()
+            };
+
+            // 1. Smart Merge dari Cloud
+            let latestCloudData = null;
+            if (window.appData.activeCloudId) {
+                latestCloudData = await fetchClassFromCloud(window.appData.activeCloudId);
+            }
+
+            let mergedGuruAbsensi = window.appData.allGuruAbsensiList || [];
+            if (latestCloudData && Array.isArray(latestCloudData.guruAbsensi)) {
+                mergedGuruAbsensi = latestCloudData.guruAbsensi;
+            }
+
+            mergedGuruAbsensi.unshift(newGuruAbsen);
+
+            window.appData.allGuruAbsensiList = mergedGuruAbsensi;
+            window.appData.guruAbsensiList = mergedGuruAbsensi.filter(g => g.kelasCode === window.appData.activeKelasCode);
+
+            saveToStorage(true, true);
+
+            document.getElementById('siswa-guru-nama-mapel').value = '';
+            document.getElementById('siswa-guru-jam-ke').value = '';
+            document.getElementById('siswa-guru-keterangan').value = '';
+            showToast('Laporan guru tidak hadir berhasil dikirim ke Wali Kelas!', 'success');
+        }
+
+        let lastReportCount = 0;
+
+        // Page Load Event Listener
+        window.onload = async function() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            const today = new Date().toISOString().split('T')[0];
+            const elQuickTgl = document.getElementById('quick-tanggal');
+            const elGuruTgl = document.getElementById('guru-tanggal');
+            const elCatatanTgl = document.getElementById('catatan-tanggal');
+            const elSiswaSelfTgl = document.getElementById('siswa-self-tanggal');
+            const elSiswaGuruTgl = document.getElementById('siswa-guru-tanggal');
+
+            if (elQuickTgl) elQuickTgl.value = today;
+            if (elGuruTgl) elGuruTgl.value = today;
+            if (elCatatanTgl) elCatatanTgl.value = today;
+            if (elSiswaSelfTgl) elSiswaSelfTgl.value = today;
+            if (elSiswaGuruTgl) elSiswaGuruTgl.value = today;
+
+            // Read URL Cloud Parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const cloudIdFromUrl = urlParams.get('c') || urlParams.get('id');
+
+            if (cloudIdFromUrl) {
+                await initStudentFromCloud(cloudIdFromUrl);
+            } else if (window.appData.isLoggedIn) {
+                window.syncFilteredData(false);
+                showMainApp();
+            } else {
+                showLoginScreen();
+            }
+
+            // Realtime Background Cloud Polling for Wali Kelas
+            setInterval(async () => {
+                if (window.appData.isLoggedIn && window.appData.currentRole === 'WALI' && window.appData.activeCloudId) {
+                    const remoteData = await fetchClassFromCloud(window.appData.activeCloudId);
+                    if (remoteData) {
+                        let hasNewData = false;
+
+                        if (Array.isArray(remoteData.absensi)) {
+                            const newAbsCount = remoteData.absensi.length;
+                            if (newAbsCount > (window.appData.absensiList || []).length) {
+                                hasNewData = true;
+                            }
+                            window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== window.appData.activeKelasCode).concat(remoteData.absensi);
+                        }
+
+                        if (Array.isArray(remoteData.guruAbsensi)) {
+                            const newGuruCount = remoteData.guruAbsensi.length;
+                            if (newGuruCount > (window.appData.guruAbsensiList || []).length) {
+                                hasNewData = true;
+                            }
+                            window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== window.appData.activeKelasCode).concat(remoteData.guruAbsensi);
+                        }
+
+                        if (hasNewData) {
+                            showToast('📢 Laporan baru masuk dari siswa!', 'success');
+                        }
+
+                        window.syncFilteredData(false);
+                    }
+                }
+            }, 3500);
+        };
 
         async function fetchClassFromCloud(cloudId) {
             if (!cloudId) return null;
