@@ -174,7 +174,6 @@
 </head>
 <body class="min-h-screen flex flex-col selection:bg-rose-500 selection:text-white relative">
 
-    <!-- Toast Notification System -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
     <header class="bg-[#10172a] border-b border-slate-800 sticky top-0 z-30 px-4 py-3 shadow-xl">
@@ -187,7 +186,7 @@
                     <div class="flex items-center gap-2">
                         <h1 class="font-black text-lg text-white tracking-wide uppercase">CATATAN PERWALIAN</h1>
                         <span id="cloud-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> INSTANT HYDRATION SYNC
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> REALTIME CLOUD SYNC
                         </span>
                     </div>
                     <p id="header-subtitle" class="text-xs text-slate-400">Sistem Informasi Bimbingan Akademik & Presensi Kelompok Perwalian • SMK Negeri 1 Marisa</p>
@@ -392,19 +391,9 @@
                 <div id="wali-sec-dashboard" class="space-y-6">
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
-                            <span class="text-[10px] font-bold text-slate-500 uppercase">TOTAL SISWA KELAS</span>
-                            <div id="stat-total-siswa" class="text-2xl font-black text-white">0</div>
-                            <span class="text-[10px] font-semibold text-emerald-400 block">Terdaftar Aktif</span>
-                        </div>
-                        <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
-                            <span class="text-[10px] font-bold text-slate-500 uppercase">RATA-RATA IPK / NILAI</span>
-                            <div id="stat-rata-ipk" class="text-2xl font-black text-cyan-400">0.00</div>
-                            <span id="stat-rata-kat" class="text-[10px] font-semibold text-slate-400 block">Kategori -</span>
-                        </div>
-                        <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
-                            <span class="text-[10px] font-bold text-slate-500 uppercase">KETIDAKHADIRAN SISWA</span>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase">REKAP PRESENSI SISWA</span>
                             <div id="stat-absen-siswa" class="text-2xl font-black text-rose-400">0</div>
-                            <span id="stat-absen-detail" class="text-[10px] font-semibold text-slate-400 block">S:0 | I:0 | A:0</span>
+                            <span id="stat-absen-detail" class="text-[10px] font-semibold text-slate-400 block">H:0 | S:0 | I:0 | A:0</span>
                         </div>
                         <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
                             <span class="text-[10px] font-bold text-slate-500 uppercase">ABSENSI GURU PENGAJAR</span>
@@ -418,89 +407,36 @@
                         </div>
                     </div>
 
+                    <!-- HASIL LAPORAN LANGSUNG DARI PORTAL SISWA -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Form 1: Quick Input Absensi Siswa -->
+                        <!-- Card 1: Live Hasil Laporan Ketidakhadiran Siswa -->
                         <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
                             <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
                                 <div class="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase tracking-wider">
-                                    <i data-lucide="user-x" class="w-4 h-4"></i>
-                                    Form Quick Input Absensi Siswa
+                                    <i data-lucide="inbox" class="w-4 h-4"></i>
+                                    Hasil Laporan Ketidakhadiran Siswa
                                 </div>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Realtime Cloud</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Inputan Portal Siswa</span>
                             </div>
 
-                            <form onsubmit="handleQuickAbsensi(event)" class="space-y-3 text-xs">
-                                <div>
-                                    <label class="block font-semibold text-slate-400 mb-1">PILIH NAMA SISWA</label>
-                                    <select id="quick-siswa-id" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-rose-500 transition" required>
-                                        <option value="" disabled selected>-- Pilih Siswa --</option>
-                                    </select>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block font-semibold text-slate-400 mb-1">KATEGORI ABSEN</label>
-                                        <select id="quick-kategori" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-rose-500 transition">
-                                            <option value="Sakit">Sakit</option>
-                                            <option value="Ijin">Ijin</option>
-                                            <option value="Alpa">Alpa</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block font-semibold text-slate-400 mb-1">TANGGAL</label>
-                                        <input type="date" id="quick-tanggal" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-rose-500 transition" required>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block font-semibold text-slate-400 mb-1">ALASAN / CATATAN KETERANGAN</label>
-                                    <input type="text" id="quick-alasan" placeholder="Contoh: Demam tinggi, Acara keluarga, atau Tanpa kabar..." class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-rose-500 transition" required>
-                                </div>
-
-                                <button type="submit" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 font-bold text-white transition shadow-md shadow-rose-600/20 uppercase tracking-wider">
-                                    Kirim Ketidakhadiran Siswa
-                                </button>
-                            </form>
+                            <div id="dash-laporan-siswa-container" class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                                <!-- Rendered dynamically -->
+                            </div>
                         </div>
 
-                        <!-- Form 2: Lapor Guru Pengajar Tidak Hadir -->
+                        <!-- Card 2: Live Hasil Laporan Guru Pengajar Tidak Hadir -->
                         <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
                             <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
                                 <div class="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
-                                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
-                                    Lapor Guru Pengajar Tidak Hadir
+                                    <i data-lucide="user-x" class="w-4 h-4"></i>
+                                    Hasil Laporan Guru Mapel Tidak Masuk
                                 </div>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Laporan Kelas</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Inputan Portal Siswa</span>
                             </div>
 
-                            <form onsubmit="handleLaporGuru(event)" class="space-y-3 text-xs">
-                                <div>
-                                    <label class="block font-semibold text-slate-400 mb-1">PILIH GURU & MATA PELAJARAN</label>
-                                    <select id="guru-nama-mapel" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition" required>
-                                        <option value="" disabled selected>-- Pilih Guru Mapel --</option>
-                                    </select>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block font-semibold text-slate-400 mb-1">HARI & JAM PELAJARAN</label>
-                                        <input type="text" id="guru-jam-ke" placeholder="Jam ke 1-3 (07:30 - 09:45)" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition" required>
-                                    </div>
-                                    <div>
-                                        <label class="block font-semibold text-slate-400 mb-1">TANGGAL</label>
-                                        <input type="date" id="guru-tanggal" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition" required>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block font-semibold text-slate-400 mb-1">CATATAN / KETERANGAN TUGAS GURU</label>
-                                    <input type="text" id="guru-keterangan" placeholder="Contoh: Sakit, Dinas luar, atau ditinggali tugas mandiri..." class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition" required>
-                                </div>
-
-                                <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 font-bold text-white transition shadow-md shadow-amber-600/20 uppercase tracking-wider">
-                                    Kirim Laporan Guru Tidak Hadir
-                                </button>
-                            </form>
+                            <div id="dash-laporan-guru-container" class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                                <!-- Rendered dynamically -->
+                            </div>
                         </div>
                     </div>
 
@@ -656,10 +592,18 @@
                 <!-- TAB CONTENT 5: REKAP ABSENSI SISWA & GURU -->
                 <div id="wali-sec-presensi" class="hidden space-y-6">
                     <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
-                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-3 gap-3">
                             <div>
-                                <h3 class="text-sm font-bold text-white uppercase tracking-wide">Rekap & Verifikasi Ketidakhadiran Siswa</h3>
-                                <p class="text-xs text-slate-400">Sertakan persetujuan atau tindak lanjut laporan dari portal siswa.</p>
+                                <h3 class="text-sm font-bold text-white uppercase tracking-wide">Rekap Presensi & Ketidakhadiran Siswa</h3>
+                                <p class="text-xs text-slate-400">Pencatatan harian, mingguan, dan bulanan dari perwakilan siswa portal.</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-xs text-slate-400 font-semibold">FILTER PERIODE:</label>
+                                <select id="filter-presensi-periode" onchange="renderAbsensiTable()" class="bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500">
+                                    <option value="ALL">Semua Tanggal</option>
+                                    <option value="MINGGU">Minggu Ini</option>
+                                    <option value="BULAN">Bulan Ini</option>
+                                </select>
                             </div>
                         </div>
 
@@ -745,45 +689,46 @@
                     <!-- Form 1: Lapor Ketidakhadiran Siswa -->
                     <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
                         <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider border-b border-slate-800 pb-3">
-                            <i data-lucide="user-x" class="w-4 h-4"></i>
-                            Lapor Siswa Tidak Hadir (Sakit, Ijin, Alpa)
+                            <i data-lucide="user-check" class="w-4 h-4"></i>
+                            Presensi Siswa (Hadir, Sakit, Ijin, Alpa)
                         </div>
 
                         <form onsubmit="handleSiswaLaporAbsen(event)" class="space-y-3 text-xs">
                             <div>
-                                <label class="block font-semibold text-slate-400 mb-1">PILIH SISWA YANG TIDAK HADIR</label>
+                                <label class="block font-semibold text-slate-400 mb-1">PILIH SISWA YANG DILAPORKAN</label>
                                 <select id="siswa-target-absen-id" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition" required>
-                                    <option value="" disabled selected>-- Pilih Siswa yang Absen --</option>
+                                    <option value="" disabled selected>-- Pilih Siswa --</option>
                                 </select>
                             </div>
 
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block font-semibold text-slate-400 mb-1">KATEGORI / ALASAN</label>
+                                    <label class="block font-semibold text-slate-400 mb-1">STATUS PRESENSI</label>
                                     <select id="siswa-self-kategori" onchange="toggleAlasanField()" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition">
+                                        <option value="Hadir">Hadir (Masuk Kelas)</option>
                                         <option value="Sakit">Sakit</option>
                                         <option value="Ijin">Ijin</option>
                                         <option value="Alpa">Alpa / Tanpa Keterangan</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block font-semibold text-slate-400 mb-1">TANGGAL TIDAK HADIR</label>
+                                    <label class="block font-semibold text-slate-400 mb-1">TANGGAL PRESENSI</label>
                                     <input type="date" id="siswa-self-tanggal" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition" required>
                                 </div>
                             </div>
 
                             <div id="container-siswa-self-alasan" class="hidden">
-                                <label class="block font-semibold text-slate-400 mb-1">ALASAN KETERANGAN (BERLAKU IJIN / ALPA)</label>
-                                <textarea id="siswa-self-alasan" rows="3" placeholder="Tuliskan keterangan detail alasan Ijin atau Alpa siswa..." class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500 transition"></textarea>
+                                <label class="block font-semibold text-slate-400 mb-1">ALASAN / CATATAN KETERANGAN</label>
+                                <textarea id="siswa-self-alasan" rows="2" placeholder="Tuliskan keterangan detail alasan Ijin, Sakit, atau Alpa siswa..." class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500 transition"></textarea>
                             </div>
 
                             <div class="p-2.5 rounded-lg bg-[#0b0f19] border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
-                                <span>Pelapor (Siswa Hadir):</span>
+                                <span>Perwakilan Pelapor:</span>
                                 <span id="siswa-reporter-badge" class="font-bold text-emerald-400">-</span>
                             </div>
 
                             <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white transition shadow-md shadow-emerald-600/20 uppercase tracking-wider">
-                                Kirim Laporan Ke Guru Perwalian
+                                Kirim Presensi Ke Wali Kelas
                             </button>
                         </form>
                     </div>
@@ -1107,9 +1052,9 @@
         async function handleSiswaLaporAbsen(e) {
             e.preventDefault();
             const targetSiswaId = document.getElementById('siswa-target-absen-id')?.value;
-            const kat = document.getElementById('siswa-self-kategori')?.value || 'Sakit';
+            const kat = document.getElementById('siswa-self-kategori')?.value || 'Hadir';
             const tgl = document.getElementById('siswa-self-tanggal')?.value;
-            const alasan = document.getElementById('siswa-self-alasan')?.value || (kat === 'Sakit' ? 'Sakit' : 'Tanpa Keterangan');
+            const alasan = document.getElementById('siswa-self-alasan')?.value || (kat === 'Hadir' ? 'Hadir di Kelas' : (kat === 'Sakit' ? 'Sakit' : 'Tanpa Keterangan'));
 
             if (!targetSiswaId || !tgl) {
                 showToast('Pilih siswa dan tanggal!', 'error');
@@ -1120,7 +1065,7 @@
             const targetNama = targetSiswa ? targetSiswa.nama : 'Siswa';
 
             const activeSiswa = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
-            const reporterNama = activeSiswa ? activeSiswa.nama : 'Siswa (Teman)';
+            const reporterNama = activeSiswa ? activeSiswa.nama : 'Perwakilan Siswa';
 
             const newAbsen = {
                 id: 'abs-' + Date.now(),
@@ -1128,8 +1073,8 @@
                 kategori: kat,
                 tanggal: tgl,
                 alasan: alasan,
-                pelapor: `Siswa (${reporterNama})`,
-                status: 'Pending',
+                pelapor: `Perwakilan (${reporterNama})`,
+                status: 'Disetujui',
                 kelasCode: window.appData.activeKelasCode,
                 timestamp: Date.now()
             };
@@ -1152,7 +1097,7 @@
             document.getElementById('siswa-target-absen-id').value = '';
             document.getElementById('siswa-self-alasan').value = '';
 
-            showToast(`Laporan ${targetNama} (${kat}) terkirim ke Guru Perwalian!`, 'success');
+            showToast(`Presensi ${targetNama} (${kat}) terkirim ke Wali Kelas!`, 'success');
         }
 
         async function handleSiswaLaporGuru(e) {
@@ -1200,14 +1145,10 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
 
             const today = new Date().toISOString().split('T')[0];
-            const elQuickTgl = document.getElementById('quick-tanggal');
-            const elGuruTgl = document.getElementById('guru-tanggal');
             const elCatatanTgl = document.getElementById('catatan-tanggal');
             const elSiswaSelfTgl = document.getElementById('siswa-self-tanggal');
             const elSiswaGuruTgl = document.getElementById('siswa-guru-tanggal');
 
-            if (elQuickTgl) elQuickTgl.value = today;
-            if (elGuruTgl) elGuruTgl.value = today;
             if (elCatatanTgl) elCatatanTgl.value = today;
             if (elSiswaSelfTgl) elSiswaSelfTgl.value = today;
             if (elSiswaGuruTgl) elSiswaGuruTgl.value = today;
@@ -1266,29 +1207,29 @@
                         let hasNewData = false;
 
                         if (Array.isArray(remoteData.absensi)) {
-                            const newAbsCount = remoteData.absensi.length;
-                            if (newAbsCount > (window.appData.absensiList || []).length) {
+                            const currentCount = (window.appData.absensiList || []).length;
+                            if (remoteData.absensi.length > currentCount) {
                                 hasNewData = true;
                             }
                             window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== window.appData.activeKelasCode).concat(remoteData.absensi);
                         }
 
                         if (Array.isArray(remoteData.guruAbsensi)) {
-                            const newGuruCount = remoteData.guruAbsensi.length;
-                            if (newGuruCount > (window.appData.guruAbsensiList || []).length) {
+                            const currentGuruCount = (window.appData.guruAbsensiList || []).length;
+                            if (remoteData.guruAbsensi.length > currentGuruCount) {
                                 hasNewData = true;
                             }
                             window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== window.appData.activeKelasCode).concat(remoteData.guruAbsensi);
                         }
 
                         if (hasNewData) {
-                            showToast('📢 Laporan baru masuk dari siswa!', 'success');
+                            showToast('📢 Laporan baru masuk dari portal siswa!', 'success');
                         }
 
                         window.syncFilteredData(false);
                     }
                 }
-            }, 3500);
+            }, 3000);
         };
 
         // Initialize Student Data from Shared Cloud ID
@@ -1392,6 +1333,8 @@
             renderBimbinganList();
             renderAbsensiTable();
             renderGuruAbsensiTable();
+            renderDashLaporanSiswa();
+            renderDashLaporanGuru();
             renderCharts();
 
             if (pushToRemote && window.appData.activeKelasCode) {
@@ -1574,6 +1517,102 @@
             showLoginScreen();
         }
 
+        // RENDER HASIL LAPORAN KETIDAKHADIRAN SISWA PADA DASHBOARD WALI KELAS
+        function renderDashLaporanSiswa() {
+            const container = document.getElementById('dash-laporan-siswa-container');
+            if (!container) return;
+
+            if (!window.appData.absensiList || window.appData.absensiList.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center text-slate-500 space-y-1">
+                        <i data-lucide="check-circle-2" class="w-8 h-8 mx-auto text-slate-600"></i>
+                        <p class="text-xs font-semibold">Belum ada laporan presensi dari portal siswa.</p>
+                        <p class="text-[10px] text-slate-600">Laporan presensi siswa yang dikirim perwakilan akan langsung muncul di sini.</p>
+                    </div>
+                `;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = window.appData.absensiList.map(a => {
+                const siswa = window.appData.siswaList.find(s => s.id === a.siswaId);
+                const namaSiswa = siswa ? siswa.nama : 'Siswa (Terhapus)';
+
+                let statusBadge = '';
+                if (a.kategori === 'Hadir') statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Hadir</span>';
+                else if (a.kategori === 'Sakit') statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Sakit</span>';
+                else if (a.kategori === 'Ijin') statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Ijin</span>';
+                else statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Alpa</span>';
+
+                let verifBadge = '';
+                if (a.status === 'Disetujui') verifBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Disetujui</span>';
+                else if (a.status === 'Ditolak') verifBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Ditolak</span>';
+                else verifBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Pending</span>';
+
+                return `
+                    <div class="p-3.5 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2 text-xs">
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-white">${namaSiswa}</span>
+                                ${statusBadge}
+                            </div>
+                            <span class="font-mono text-[10px] text-slate-400">${a.tanggal}</span>
+                        </div>
+                        <p class="text-slate-300"><strong>Catatan:</strong> ${a.alasan || '-'}</p>
+                        <div class="flex items-center justify-between pt-1 text-[11px]">
+                            <span class="text-slate-500">Pelapor: <strong class="text-slate-400">${a.pelapor || '-'}</strong></span>
+                            <div class="flex items-center gap-1.5">
+                                ${verifBadge}
+                                ${a.status !== 'Disetujui' ? `<button onclick="approveAbsensi('${a.id}')" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 font-bold text-[10px]">Setujui</button>` : ''}
+                                ${a.status !== 'Ditolak' ? `<button onclick="rejectAbsensi('${a.id}')" class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 font-bold text-[10px]">Tolak</button>` : ''}
+                                <button onclick="deleteAbsensi('${a.id}')" class="p-1 text-slate-500 hover:text-rose-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        // RENDER HASIL LAPORAN GURU MAPEL TIDAK HADIR PADA DASHBOARD WALI KELAS
+        function renderDashLaporanGuru() {
+            const container = document.getElementById('dash-laporan-guru-container');
+            if (!container) return;
+
+            if (!window.appData.guruAbsensiList || window.appData.guruAbsensiList.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center text-slate-500 space-y-1">
+                        <i data-lucide="check-circle-2" class="w-8 h-8 mx-auto text-slate-600"></i>
+                        <p class="text-xs font-semibold">Belum ada laporan guru mapel tidak hadir dari portal siswa.</p>
+                        <p class="text-[10px] text-slate-600">Laporan guru pengajar yang tidak masuk kelas akan langsung muncul di sini.</p>
+                    </div>
+                `;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = window.appData.guruAbsensiList.map(g => {
+                return `
+                    <div class="p-3.5 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2 text-xs">
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                            <span class="font-bold text-white">${g.guruMapel}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">${g.jamKe || 'Jam KBM'}</span>
+                        </div>
+                        <p class="text-slate-300"><strong>Keterangan / Tugas:</strong> ${g.keterangan}</p>
+                        <div class="flex items-center justify-between pt-1 text-[11px]">
+                            <span class="font-mono text-[10px] text-slate-400">Tanggal: ${g.tanggal}</span>
+                            <button onclick="deleteGuruAbsensi('${g.id}')" class="px-2 py-1 rounded bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[10px] font-bold flex items-center gap-1">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i> Hapus
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
         function renderCharts() {
             if (typeof Chart === 'undefined') return;
 
@@ -1745,17 +1784,31 @@
             const tbody = document.getElementById('absensi-table-body');
             if (!tbody) return;
 
-            if (!window.appData.absensiList || window.appData.absensiList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Belum ada rekap ketidakhadiran siswa pada kelas ini.</td></tr>`;
+            const filterPeriode = document.getElementById('filter-presensi-periode')?.value || 'ALL';
+            let listToRender = window.appData.absensiList || [];
+
+            if (filterPeriode === 'MINGGU') {
+                const now = new Date();
+                const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                listToRender = listToRender.filter(a => new Date(a.tanggal) >= oneWeekAgo);
+            } else if (filterPeriode === 'BULAN') {
+                const now = new Date();
+                const currentMonthStr = now.toISOString().slice(0, 7); // YYYY-MM
+                listToRender = listToRender.filter(a => a.tanggal && a.tanggal.startsWith(currentMonthStr));
+            }
+
+            if (!listToRender || listToRender.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Belum ada rekap presensi siswa pada periode ini.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = window.appData.absensiList.map(a => {
+            tbody.innerHTML = listToRender.map(a => {
                 const siswa = window.appData.siswaList.find(s => s.id === a.siswaId);
                 const namaSiswa = siswa ? siswa.nama : 'Siswa (Terhapus)';
                 
                 let statusBadge = '';
-                if (a.kategori === 'Sakit') statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Sakit</span>';
+                if (a.kategori === 'Hadir') statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Hadir</span>';
+                else if (a.kategori === 'Sakit') statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Sakit</span>';
                 else if (a.kategori === 'Ijin') statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Ijin</span>';
                 else statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Alpa</span>';
 
@@ -1888,6 +1941,8 @@
             renderBimbinganList();
             renderAbsensiTable();
             renderGuruAbsensiTable();
+            renderDashLaporanSiswa();
+            renderDashLaporanGuru();
             renderCharts();
 
             if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -2044,18 +2099,18 @@
             }
 
             const totalAbsenSiswa = window.appData.absensiList.length;
+            const cntHadir = window.appData.absensiList.filter(a => a.kategori === 'Hadir').length;
             const cntSakit = window.appData.absensiList.filter(a => a.kategori === 'Sakit').length;
             const cntIjin = window.appData.absensiList.filter(a => a.kategori === 'Ijin').length;
             const cntAlpa = window.appData.absensiList.filter(a => a.kategori === 'Alpa').length;
 
             if (statAbsenSiswa) statAbsenSiswa.innerText = totalAbsenSiswa;
-            if (statAbsenDetail) statAbsenDetail.innerText = `S:${cntSakit} | I:${cntIjin} | A:${cntAlpa}`;
+            if (statAbsenDetail) statAbsenDetail.innerText = `H:${cntHadir} | S:${cntSakit} | I:${cntIjin} | A:${cntAlpa}`;
             if (statAbsenGuru) statAbsenGuru.innerText = window.appData.guruAbsensiList.length;
             if (statTotalCatatan) statTotalCatatan.innerText = window.appData.catatanList.length;
         }
 
         function populateGuruMapelDropdowns() {
-            const waliGuruDropdown = document.getElementById('guru-nama-mapel');
             const siswaGuruDropdown = document.getElementById('siswa-guru-nama-mapel');
 
             let optionsHtml = '';
@@ -2066,12 +2121,10 @@
                     window.appData.guruMapelList.map(g => `<option value="${g.nama} (${g.mapel})">${g.nama} - ${g.mapel}</option>`).join('');
             }
 
-            if (waliGuruDropdown) waliGuruDropdown.innerHTML = optionsHtml;
             if (siswaGuruDropdown) siswaGuruDropdown.innerHTML = optionsHtml;
         }
 
         function populateSiswaDropdowns() {
-            const quickDropdown = document.getElementById('quick-siswa-id');
             const catatanDropdown = document.getElementById('catatan-siswa-id');
             const filterDropdown = document.getElementById('filter-bimbingan-siswa');
             const loginSelect = document.getElementById('login-siswa-select');
@@ -2085,7 +2138,6 @@
                     window.appData.siswaList.map(s => `<option value="${s.id}">${s.nis} - ${s.nama}</option>`).join('');
             }
 
-            if (quickDropdown) quickDropdown.innerHTML = optionsHtml;
             if (catatanDropdown) catatanDropdown.innerHTML = optionsHtml;
             if (loginSelect) loginSelect.innerHTML = optionsHtml;
             if (siswaTargetAbsenDropdown) siswaTargetAbsenDropdown.innerHTML = optionsHtml;
@@ -2106,64 +2158,6 @@
                     container.classList.add('hidden');
                 }
             }
-        }
-
-        function handleQuickAbsensi(e) {
-            e.preventDefault();
-            const siswaId = document.getElementById('quick-siswa-id')?.value;
-            const kategori = document.getElementById('quick-kategori')?.value;
-            const tanggal = document.getElementById('quick-tanggal')?.value;
-            const alasan = document.getElementById('quick-alasan')?.value;
-
-            if (!siswaId || !tanggal || !alasan) return;
-
-            const newAbsen = {
-                id: 'abs-' + Date.now(),
-                siswaId: siswaId,
-                kategori: kategori,
-                tanggal: tanggal,
-                alasan: alasan,
-                pelapor: 'GURU KELAS',
-                status: 'Disetujui',
-                kelasCode: window.appData.activeKelasCode,
-                timestamp: Date.now()
-            };
-
-            window.appData.absensiList.unshift(newAbsen);
-            window.appData.allAbsensiList.unshift(newAbsen);
-
-            saveToStorage(true, true);
-            document.getElementById('quick-alasan').value = '';
-            showToast('Ketidakhadiran siswa berhasil dicatat!', 'success');
-        }
-
-        function handleLaporGuru(e) {
-            e.preventDefault();
-            const guruMapel = document.getElementById('guru-nama-mapel')?.value;
-            const jamKe = document.getElementById('guru-jam-ke')?.value;
-            const tanggal = document.getElementById('guru-tanggal')?.value;
-            const keterangan = document.getElementById('guru-keterangan')?.value;
-
-            if (!guruMapel || !tanggal || !keterangan) return;
-
-            const newGuruAbsen = {
-                id: 'gabs-' + Date.now(),
-                guruMapel: guruMapel,
-                jamKe: jamKe || 'Jam KBM',
-                tanggal: tanggal,
-                keterangan: keterangan,
-                kelasCode: window.appData.activeKelasCode,
-                timestamp: Date.now()
-            };
-
-            window.appData.guruAbsensiList.unshift(newGuruAbsen);
-            window.appData.allGuruAbsensiList.unshift(newGuruAbsen);
-
-            saveToStorage(true, true);
-            document.getElementById('guru-nama-mapel').value = '';
-            document.getElementById('guru-jam-ke').value = '';
-            document.getElementById('guru-keterangan').value = '';
-            showToast('Laporan guru tidak hadir berhasil disimpan!', 'success');
         }
 
         function handleSaveCatatan(e) {
@@ -2409,25 +2403,47 @@
         }
 
         function exportCSV() {
-            if (window.appData.siswaList.length === 0) {
-                showToast('Tidak ada data siswa untuk diexport!', 'error');
+            if (!window.appData.absensiList || window.appData.absensiList.length === 0) {
+                if (window.appData.siswaList.length === 0) {
+                    showToast('Tidak ada data untuk diexport!', 'error');
+                    return;
+                }
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "NO,NIS,NAMA SISWA,KELAS,JURUSAN,JENIS KELAMIN,IPK/IPS,KONTAK ORANG TUA\n";
+
+                window.appData.siswaList.forEach((s, i) => {
+                    csvContent += `${i + 1},"${s.nis}","${s.nama}","${s.kelas || ''}","${s.jurusan || ''}","${s.gender}",${s.ipk || '0.00'},"${s.ortu}"\n`;
+                });
+
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `Data_Siswa_${window.appData.guruProfile.kelas}_${new Date().toISOString().split('T')[0]}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast('Data Siswa berhasil diexport ke CSV!', 'success');
                 return;
             }
 
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "NO,NIS,NAMA SISWA,KELAS,JURUSAN,JENIS KELAMIN,IPK/IPS,KONTAK ORANG TUA\n";
+            csvContent += "NO,TANGGAL,NIS,NAMA SISWA,STATUS PRESENSI,KETERANGAN/ALASAN,PELAPOR PERWAKILAN,STATUS VERIFIKASI\n";
 
-            window.appData.siswaList.forEach((s, i) => {
-                csvContent += `${i + 1},"${s.nis}","${s.nama}","${s.kelas || ''}","${s.jurusan || ''}","${s.gender}",${s.ipk || '0.00'},"${s.ortu}"\n`;
+            window.appData.absensiList.forEach((a, i) => {
+                const siswa = window.appData.siswaList.find(s => s.id === a.siswaId);
+                const nis = siswa ? siswa.nis : '-';
+                const nama = siswa ? siswa.nama : 'Siswa';
+                csvContent += `${i + 1},"${a.tanggal}","${nis}","${nama}","${a.kategori}","${a.alasan || '-'}","${a.pelapor || '-'}","${a.status || 'Disetujui'}"\n`;
             });
 
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `Rekap_Perwalian_SMK_Marisa_${window.appData.guruProfile.kelas}_${new Date().toISOString().split('T')[0]}.csv`);
+            link.setAttribute("download", `Rekap_Presensi_Perwalian_${window.appData.guruProfile.kelas}_${new Date().toISOString().split('T')[0]}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            showToast('Rekap Presensi berhasil diexport ke CSV!', 'success');
         }
     </script>
 </body>
