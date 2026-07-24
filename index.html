@@ -68,7 +68,6 @@
     </style>
 
     <script>
-        // Global Logo Error Handler (Fallback to Official Tut Wuri Handayani SVG)
         window.handleLogoError = function(imgElement) {
             const step = parseInt(imgElement.getAttribute('data-try-step') || '0', 10);
             const sources = ['tutwuri.png', 'tutwuri_handayani.png', 'tutwuri.svg', 'logo_tutwuri.png', 'tutwuri.jpg'];
@@ -339,34 +338,34 @@
 
         <div id="main-app-content" class="hidden space-y-6">
 
-            <!-- Hero Banner Wali Kelas -->
-            <div id="hero-banner" class="p-6 rounded-2xl bg-gradient-to-r from-rose-950/60 to-[#131b2e] border border-rose-500/30 flex flex-wrap items-center justify-between gap-4">
-                <div class="space-y-1">
-                    <div class="flex items-center gap-2">
-                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 uppercase">
-                            PERWALIAN TUNTAS 2026
-                        </span>
-                        <span id="hero-kelas-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 uppercase">
-                            KELAS: -
-                        </span>
-                    </div>
-                    <h2 class="text-xl font-black text-white uppercase tracking-tight">MONITORING KETUNTASAN & PRESENSI PERWALIAN</h2>
-                    <p class="text-xs text-slate-400">Ruang kontrol terpadu untuk Guru Perwalian dalam memantau perkembangan IPK, ketidakhadiran siswa, dan tindak lanjut permasalahan belajar.</p>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <button onclick="openModalEditGuru()" class="px-3 py-2 rounded-xl bg-[#0b0f19] hover:bg-slate-800 border border-slate-800 text-xs font-bold text-rose-400 flex items-center gap-2 transition">
-                        <i data-lucide="user-cog" class="w-4 h-4"></i>
-                        <div>
-                            <div class="text-[9px] text-slate-500 uppercase">GURU PERWALIAN</div>
-                            <div id="hero-guru-nama" class="text-xs text-white font-bold">Guru Perwalian</div>
-                        </div>
-                    </button>
-                </div>
-            </div>
-
             <!-- VIEW FOR WALI KELAS -->
             <div id="view-wali-kelas" class="space-y-6">
+
+                <!-- Hero Banner Wali Kelas (Hanya muncul di Portal Wali Kelas) -->
+                <div id="hero-banner" class="p-6 rounded-2xl bg-gradient-to-r from-rose-950/60 to-[#131b2e] border border-rose-500/30 flex flex-wrap items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 uppercase">
+                                PERWALIAN TUNTAS 2026
+                            </span>
+                            <span id="hero-kelas-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 uppercase">
+                                KELAS: -
+                            </span>
+                        </div>
+                        <h2 class="text-xl font-black text-white uppercase tracking-tight">MONITORING KETUNTASAN & PRESENSI PERWALIAN</h2>
+                        <p class="text-xs text-slate-400">Ruang kontrol terpadu untuk Guru Perwalian dalam memantau perkembangan IPK, ketidakhadiran siswa, dan tindak lanjut permasalahan belajar.</p>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <button onclick="openModalEditGuru()" class="px-3 py-2 rounded-xl bg-[#0b0f19] hover:bg-slate-800 border border-slate-800 text-xs font-bold text-rose-400 flex items-center gap-2 transition">
+                            <i data-lucide="user-cog" class="w-4 h-4"></i>
+                            <div>
+                                <div class="text-[9px] text-slate-500 uppercase">GURU PERWALIAN</div>
+                                <div id="hero-guru-nama" class="text-xs text-white font-bold">Guru Perwalian</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Navigation Tabs for Wali Kelas -->
                 <div class="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto text-xs font-bold">
@@ -935,7 +934,7 @@
 
             <div class="space-y-3 text-xs">
                 <p class="text-slate-300">
-                    Kirimkan link instan ini ke WhatsApp grup siswa. Ketika siswa mengklik link ini, HP mereka akan <strong>secara otomatis memuat nama siswa dan guru mapel dalam 0 detik</strong>!
+                    Kirimkan link instan ini ke WhatsApp grup siswa. Ketika siswa mengklik link ini, HP mereka akan <strong>secara otomatis memuat nama siswa dan guru mapel secara instan</strong>!
                 </p>
 
                 <div>
@@ -981,7 +980,7 @@
             }, 4000);
         };
 
-        // REST CLOUD & INSTANT HYDRATION ENGINE WITH TIMEOUT GUARDS
+        // REST CLOUD ENGINE
         const CLOUD_API_URL = 'https://api.restful-api.dev/objects';
 
         async function saveClassToCloud(payload) {
@@ -1517,7 +1516,6 @@
             }
         }
 
-        // Modal Control Functions for Guru Profile, Siswa, and Guru Mapel
         function openModalEditGuru() {
             const prof = window.appData.guruProfile || { nama: '', nip: '', kelas: '', pin: '808015' };
             const elNama = document.getElementById('edit-guru-nama');
@@ -2205,7 +2203,7 @@
             }
         }
 
-        function handleSiswaLaporAbsen(e) {
+        async function handleSiswaLaporAbsen(e) {
             e.preventDefault();
             const targetSiswaId = document.getElementById('siswa-target-absen-id')?.value;
             const kategori = document.getElementById('siswa-self-kategori')?.value;
@@ -2232,15 +2230,31 @@
                 timestamp: Date.now()
             };
 
+            showToast('Mengirim laporan presensi ke Cloud...', 'info');
+
+            let targetCloudId = window.appData.activeCloudId;
+            if (!targetCloudId) {
+                const prof = (window.appData.allKelasProfiles || []).find(k => k.id === window.appData.activeKelasCode || k.kelasCode === window.appData.activeKelasCode);
+                if (prof && prof.cloudId) targetCloudId = prof.cloudId;
+            }
+
+            if (targetCloudId) {
+                const latestCloud = await fetchClassFromCloud(targetCloudId);
+                if (latestCloud && Array.isArray(latestCloud.absensi)) {
+                    window.appData.absensiList = latestCloud.absensi;
+                }
+            }
+
             window.appData.absensiList.unshift(newAbsen);
-            window.appData.allAbsensiList.unshift(newAbsen);
+            window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== window.appData.activeKelasCode).concat(window.appData.absensiList);
 
             saveToStorage(true, true);
-            document.getElementById('siswa-self-alasan').value = '';
+            const inputAlasan = document.getElementById('siswa-self-alasan');
+            if (inputAlasan) inputAlasan.value = '';
             showToast('Laporan presensi berhasil dikirim ke Wali Kelas!', 'success');
         }
 
-        function handleSiswaLaporGuru(e) {
+        async function handleSiswaLaporGuru(e) {
             e.preventDefault();
             const guruMapel = document.getElementById('siswa-guru-nama-mapel')?.value;
             const jamKe = document.getElementById('siswa-guru-jam-ke')?.value;
@@ -2266,12 +2280,29 @@
                 timestamp: Date.now()
             };
 
+            showToast('Mengirim laporan guru ke Cloud...', 'info');
+
+            let targetCloudId = window.appData.activeCloudId;
+            if (!targetCloudId) {
+                const prof = (window.appData.allKelasProfiles || []).find(k => k.id === window.appData.activeKelasCode || k.kelasCode === window.appData.activeKelasCode);
+                if (prof && prof.cloudId) targetCloudId = prof.cloudId;
+            }
+
+            if (targetCloudId) {
+                const latestCloud = await fetchClassFromCloud(targetCloudId);
+                if (latestCloud && Array.isArray(latestCloud.guruAbsensi)) {
+                    window.appData.guruAbsensiList = latestCloud.guruAbsensi;
+                }
+            }
+
             window.appData.guruAbsensiList.unshift(newGuruAbsen);
-            window.appData.allGuruAbsensiList.unshift(newGuruAbsen);
+            window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== window.appData.activeKelasCode).concat(window.appData.guruAbsensiList);
 
             saveToStorage(true, true);
-            document.getElementById('siswa-guru-jam-ke').value = '';
-            document.getElementById('siswa-guru-keterangan').value = '';
+            const inputJam = document.getElementById('siswa-guru-jam-ke');
+            const inputKet = document.getElementById('siswa-guru-keterangan');
+            if (inputJam) inputJam.value = '';
+            if (inputKet) inputKet.value = '';
             showToast('Laporan guru tidak hadir dikirim ke Guru Perwalian!', 'success');
         }
 
@@ -2312,20 +2343,36 @@
                 showLoginScreen();
             }
 
-            // Realtime Poll Sync every 4s
+            // Realtime Sync Polling setiap 3 detik untuk memuat laporan baru dari siswa
             setInterval(async () => {
                 if (window.appData.isLoggedIn && window.appData.activeCloudId) {
                     const latest = await fetchClassFromCloud(window.appData.activeCloudId);
                     if (latest) {
-                        if (Array.isArray(latest.absensi)) window.appData.absensiList = latest.absensi;
-                        if (Array.isArray(latest.guruAbsensi)) window.appData.guruAbsensiList = latest.guruAbsensi;
-                        renderDashLaporanSiswa();
-                        renderDashLaporanGuru();
-                        renderAbsensiTable();
-                        renderGuruAbsensiTable();
+                        let hasNew = false;
+                        if (Array.isArray(latest.absensi) && latest.absensi.length !== window.appData.absensiList.length) {
+                            window.appData.absensiList = latest.absensi;
+                            window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== window.appData.activeKelasCode).concat(latest.absensi);
+                            hasNew = true;
+                        }
+                        if (Array.isArray(latest.guruAbsensi) && latest.guruAbsensi.length !== window.appData.guruAbsensiList.length) {
+                            window.appData.guruAbsensiList = latest.guruAbsensi;
+                            window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== window.appData.activeKelasCode).concat(latest.guruAbsensi);
+                            hasNew = true;
+                        }
+                        if (hasNew) {
+                            renderDashLaporanSiswa();
+                            renderDashLaporanGuru();
+                            renderAbsensiTable();
+                            renderGuruAbsensiTable();
+                            renderCharts();
+                            updateHeaderInfo();
+                            if (window.appData.currentRole === 'WALI') {
+                                showToast('📢 Ada laporan baru masuk dari portal siswa!', 'success');
+                            }
+                        }
                     }
                 }
-            }, 4000);
+            }, 3000);
         };
     </script>
 </body>
