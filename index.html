@@ -30,10 +30,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Firebase Web SDK Compat Libraries (Google Cloud Database) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
     <!-- Google Fonts Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -60,15 +56,17 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #334155;
         }
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white !important; color: black !important; }
-            .print-card { background: white !important; border: 1px solid #ccc !important; color: black !important; box-shadow: none !important; }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.02); }
+        }
+        .animate-pulse-glow {
+            animation: pulseGlow 2s infinite ease-in-out;
         }
     </style>
 
     <script>
-        // Global Logo Error Handler in Head
+        // Global Logo Error Handler
         window.handleLogoError = function(imgElement) {
             const step = parseInt(imgElement.getAttribute('data-try-step') || '0', 10);
             const sources = ['tutwuri.png', 'tutwuri_handayani.png', 'tutwuri.svg', 'logo_tutwuri.png', 'tutwuri.jpg'];
@@ -102,10 +100,12 @@
             }
         };
 
+        // Default Application State
         window.defaultState = {
             isLoggedIn: false,
             currentRole: 'WALI',
             activeKelasCode: '',
+            activeCloudId: '',
             activeSiswaId: '',
             guruProfile: {
                 nama: "Guru Perwalian",
@@ -138,10 +138,26 @@
         window.appData = Object.assign({}, window.defaultState, savedData || {});
     </script>
 </head>
-<body class="min-h-screen flex flex-col selection:bg-rose-500 selection:text-white">
+<body class="min-h-screen flex flex-col selection:bg-rose-500 selection:text-white relative">
 
     <!-- Toast Message Container -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- FULL SCREEN CLOUD LOADING OVERLAY (DILAYARKAN SAAT MEMUAT DARI CLOUD) -->
+    <div id="cloud-loading-overlay" class="fixed inset-0 bg-[#0b0f19]/95 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-6 text-center">
+        <div class="p-4 rounded-3xl bg-[#131b2e] border border-cyan-500/30 shadow-2xl max-w-md w-full space-y-4">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center animate-pulse-glow">
+                <i data-lucide="cloud-download" class="w-8 h-8"></i>
+            </div>
+            <div class="space-y-1">
+                <h3 class="text-base font-black text-white uppercase tracking-wide">MENGUNDUH DATA KELAS</h3>
+                <p id="cloud-loading-overlay-desc" class="text-xs text-slate-400">Menghubungkan ke Cloud Server & mengunduh data nama siswa serta guru mapel...</p>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div class="bg-gradient-to-r from-cyan-500 to-emerald-500 h-full w-3/4 animate-pulse"></div>
+            </div>
+        </div>
+    </div>
 
     <header class="bg-[#10172a] border-b border-slate-800 sticky top-0 z-30 px-4 py-3 shadow-xl">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
@@ -152,8 +168,8 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <h1 class="font-black text-lg text-white tracking-wide uppercase">CATATAN PERWALIAN</h1>
-                        <span id="cloud-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> LOCAL MODE
+                        <span id="cloud-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> REST CLOUD SYNC
                         </span>
                     </div>
                     <p id="header-subtitle" class="text-xs text-slate-400">Sistem Informasi Bimbingan Akademik & Presensi Kelompok Perwalian • SMK Negeri 1 Marisa</p>
@@ -162,10 +178,6 @@
 
             <!-- Header Actions & User Status -->
             <div class="flex items-center gap-2 flex-wrap">
-                <button onclick="openModalFirebaseConfig()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-cyan-400 flex items-center gap-1.5 transition">
-                    <i data-lucide="cloud" class="w-3.5 h-3.5"></i> Setup Firebase Cloud
-                </button>
-
                 <div id="user-badge-container" class="hidden items-center gap-2 bg-[#0b0f19] px-3 py-1.5 rounded-xl border border-slate-800">
                     <div id="badge-role-pill" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase">GURU KELAS</div>
                     <span id="badge-user-name" class="text-xs font-bold text-white">-</span>
@@ -273,11 +285,6 @@
 
                 <!-- Form Login Siswa -->
                 <div id="form-login-siswa" class="hidden space-y-4">
-                    <div id="cloud-loading-banner" class="hidden p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-                        <span id="cloud-loading-text">Menghubungkan ke Firestore Cloud...</span>
-                    </div>
-
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1">PILIH KELOMPOK PERWALIAN / KELAS</label>
                         <select id="login-siswa-kelas-select" onchange="handleSiswaKelasChange()" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition">
@@ -366,7 +373,6 @@
 
                 <!-- TAB CONTENT 1: DASHBOARD MAIN -->
                 <div id="wali-sec-dashboard" class="space-y-6">
-                    <!-- Metrics Cards Grid -->
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
                             <span class="text-[10px] font-bold text-slate-500 uppercase">TOTAL SISWA KELAS</span>
@@ -403,7 +409,7 @@
                                     <i data-lucide="user-x" class="w-4 h-4"></i>
                                     Form Quick Input Absensi Siswa
                                 </div>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Realtime Firestore</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Realtime Cloud</span>
                             </div>
 
                             <form onsubmit="handleQuickAbsensi(event)" class="space-y-3 text-xs">
@@ -820,34 +826,6 @@
 
     </main>
 
-    <!-- MODAL FIREBASE CONFIG (SETUP FIREBASE CLOUD) -->
-    <div id="modal-firebase-config" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="max-w-lg w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
-                    <i data-lucide="cloud" class="w-4 h-4 text-cyan-400"></i> Setup Firebase Cloud Database
-                </h3>
-                <button onclick="closeModalFirebaseConfig()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-
-            <p class="text-xs text-slate-300">
-                Masukkan objek / JSON <strong>firebaseConfig</strong> milik Anda dari Google Firebase Console. Data ini akan tersimpan dan langsung mengaktifkan sinkronisasi cloud Firestore secara real-time!
-            </p>
-
-            <div class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-400 mb-1">FIREBASE CONFIG JSON / SCRIPT</label>
-                    <textarea id="firebase-config-input" rows="6" placeholder='{\n  "apiKey": "AIzaSy...",\n  "authDomain": "app.firebaseapp.com",\n  "projectId": "my-project",\n  "storageBucket": "my-project.appspot.com",\n  "messagingSenderId": "123...",\n  "appId": "1:123..."\n}' class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl p-3 text-cyan-400 font-mono text-[11px] focus:outline-none focus:border-cyan-500 transition"></textarea>
-                </div>
-            </div>
-
-            <div class="flex justify-end gap-2 pt-2">
-                <button type="button" onclick="closeModalFirebaseConfig()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs">Batal</button>
-                <button type="button" onclick="saveFirebaseConfigFromModal()" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-md shadow-cyan-600/20">Simpan Firebase Config</button>
-            </div>
-        </div>
-    </div>
-
     <!-- MODAL EDIT PROFIL GURU WALI KELAS -->
     <div id="modal-edit-guru" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="max-w-md w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
@@ -995,7 +973,7 @@
 
             <div class="space-y-3 text-xs">
                 <p class="text-slate-300">
-                    Kirimkan link khusus kelas ini ke grup WhatsApp siswa. Link ini sudah mengunci kode perwalian Anda (<strong id="modal-share-code-label" class="text-emerald-400 font-mono">-</strong>) sehingga siswa langsung diarahkan ke kelas Anda!
+                    Kirimkan link pendek ini ke grup WhatsApp siswa. Ketika siswa mengklik link ini, HP mereka akan <strong>secara otomatis mendownload data kelas</strong> dari Cloud Server dan langsung membuka portal login kelas Anda!
                 </p>
 
                 <div>
@@ -1019,6 +997,7 @@
         </div>
     </div>
 
+    <!-- APPLICATION JAVASCRIPT LOGIC -->
     <script>
         // Custom Toast Notification System
         window.showToast = function(message, type = 'info') {
@@ -1041,149 +1020,118 @@
             }, 4000);
         };
 
-        // Firebase Cloud Database Config & Initialization Engine
-        window.db = null;
-        window.firestoreUnsubscribe = null;
+        // =========================================================================
+        // ZERO-CONFIG REST CLOUD SYNC ENGINE
+        // =========================================================================
+        const CLOUD_API_URL = 'https://api.restful-api.dev/objects';
 
-        function initFirebaseEngine() {
-            let configToUse = null;
-
-            // 1. Try local storage saved Firebase config
+        async function saveClassToCloud(payload) {
             try {
-                const savedConfig = localStorage.getItem('PERWALIAN_FIREBASE_CONFIG');
-                if (savedConfig) configToUse = JSON.parse(savedConfig);
-            } catch (e) { console.warn("Saved firebase config error:", e); }
+                let currentCloudId = window.appData.activeCloudId;
+                
+                const cloudData = {
+                    name: `PERWALIAN_${payload.kelasCode}`,
+                    data: payload
+                };
 
-            // 2. Try window global config
-            if (!configToUse && window.FIREBASE_CONFIG) {
-                configToUse = window.FIREBASE_CONFIG;
-            }
-
-            if (configToUse && configToUse.apiKey && typeof firebase !== 'undefined') {
-                try {
-                    if (!firebase.apps.length) {
-                        firebase.initializeApp(configToUse);
+                if (currentCloudId) {
+                    // Update existing object on cloud
+                    await fetch(`${CLOUD_API_URL}/${currentCloudId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(cloudData)
+                    });
+                    return currentCloudId;
+                } else {
+                    // Create new object on cloud
+                    const res = await fetch(CLOUD_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(cloudData)
+                    });
+                    const resData = await res.json();
+                    if (resData && resData.id) {
+                        window.appData.activeCloudId = resData.id;
+                        saveToStorage(true, false);
+                        return resData.id;
                     }
-                    window.db = firebase.firestore();
-                    
-                    const badge = document.getElementById('cloud-status-badge');
-                    if (badge) {
-                        badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1';
-                        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> FIRESTORE REALTIME';
-                    }
-                    console.log("Firebase Firestore Initialized Successfully!");
-                } catch (e) {
-                    console.error("Firebase init failed:", e);
                 }
-            }
-        }
-
-        // Realtime Listener for Active Class in Firestore
-        function subscribeToClassFirestore(kelasCode) {
-            if (!window.db || !kelasCode) return;
-
-            if (window.firestoreUnsubscribe) {
-                window.firestoreUnsubscribe();
-            }
-
-            const docRef = window.db.collection('kelas').doc(kelasCode);
-
-            window.firestoreUnsubscribe = docRef.onSnapshot((doc) => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    
-                    // Merge remote class data into state
-                    if (data.profile) {
-                        const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === kelasCode);
-                        if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = data.profile;
-                        else window.appData.allKelasProfiles.push(data.profile);
-                        window.appData.guruProfile = data.profile;
-                    }
-
-                    if (Array.isArray(data.siswa)) {
-                        window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== kelasCode).concat(data.siswa);
-                    }
-
-                    if (Array.isArray(data.guruMapel)) {
-                        window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== kelasCode).concat(data.guruMapel);
-                    }
-
-                    if (Array.isArray(data.catatan)) {
-                        window.appData.allCatatanList = (window.appData.allCatatanList || []).filter(c => c.kelasCode !== kelasCode).concat(data.catatan);
-                    }
-
-                    if (Array.isArray(data.absensi)) {
-                        window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== kelasCode).concat(data.absensi);
-                    }
-
-                    if (Array.isArray(data.guruAbsensi)) {
-                        window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== kelasCode).concat(data.guruAbsensi);
-                    }
-
-                    window.syncFilteredData(false);
-                }
-            }, (error) => {
-                console.warn("Firestore subscription notice:", error);
-            });
-        }
-
-        // Upload Active Class Dataset to Firestore
-        async function syncClassToFirestore(kelasCode) {
-            if (!window.db || !kelasCode) return;
-
-            const currentProfile = (window.appData.allKelasProfiles || []).find(k => k.id === kelasCode) || window.appData.guruProfile;
-
-            const payload = {
-                kelasCode: kelasCode,
-                profile: currentProfile,
-                siswa: (window.appData.allSiswaList || []).filter(s => s.kelasCode === kelasCode),
-                guruMapel: (window.appData.allGuruMapelList || []).filter(g => g.kelasCode === kelasCode),
-                catatan: (window.appData.allCatatanList || []).filter(c => c.kelasCode === kelasCode),
-                absensi: (window.appData.allAbsensiList || []).filter(a => a.kelasCode === kelasCode),
-                guruAbsensi: (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode === kelasCode),
-                updatedAt: Date.now()
-            };
-
-            try {
-                await window.db.collection('kelas').doc(kelasCode).set(payload, { merge: true });
             } catch (err) {
-                console.error("Firestore sync error:", err);
+                console.warn("Cloud save notice:", err);
             }
+            return window.appData.activeCloudId || '';
         }
 
-        // Open/Save Modal Firebase Config
-        function openModalFirebaseConfig() {
-            const textarea = document.getElementById('firebase-config-input');
-            const savedConfig = localStorage.getItem('PERWALIAN_FIREBASE_CONFIG');
-            if (textarea && savedConfig) {
-                textarea.value = savedConfig;
-            }
-            document.getElementById('modal-firebase-config')?.classList.remove('hidden');
-        }
-
-        function closeModalFirebaseConfig() {
-            document.getElementById('modal-firebase-config')?.classList.add('hidden');
-        }
-
-        function saveFirebaseConfigFromModal() {
-            const textarea = document.getElementById('firebase-config-input');
-            if (!textarea || !textarea.value.trim()) {
-                if (typeof window.showToast === 'function') window.showToast('Masukkan Firebase Config!', 'error');
-                return;
-            }
-
+        async function fetchClassFromCloud(cloudId) {
+            if (!cloudId) return null;
             try {
-                const parsed = JSON.parse(textarea.value.trim());
-                localStorage.setItem('PERWALIAN_FIREBASE_CONFIG', JSON.stringify(parsed));
-                closeModalFirebaseConfig();
-                initFirebaseEngine();
-                if (window.appData.activeKelasCode) {
-                    subscribeToClassFirestore(window.appData.activeKelasCode);
+                const res = await fetch(`${CLOUD_API_URL}/${cloudId}`);
+                if (!res.ok) return null;
+                const json = await res.json();
+                if (json && json.data) {
+                    return json.data;
                 }
-                if (typeof window.showToast === 'function') window.showToast('Firebase Firestore Config berhasil disimpan!', 'success');
             } catch (err) {
-                if (typeof window.showToast === 'function') window.showToast('Format JSON Firebase Config tidak valid!', 'error');
+                console.warn("Cloud fetch notice:", err);
             }
+            return null;
+        }
+
+        // Initialize Student Data from Shared Cloud ID
+        async function initStudentFromCloud(cloudId) {
+            const overlay = document.getElementById('cloud-loading-overlay');
+            if (overlay) overlay.classList.remove('hidden');
+
+            const cloudPayload = await fetchClassFromCloud(cloudId);
+
+            if (cloudPayload && cloudPayload.kelasCode) {
+                window.appData.activeKelasCode = cloudPayload.kelasCode;
+                window.appData.activeCloudId = cloudId;
+
+                // Sync remote lists into app state
+                if (cloudPayload.profile) {
+                    window.appData.guruProfile = cloudPayload.profile;
+                    const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === cloudPayload.kelasCode);
+                    if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = cloudPayload.profile;
+                    else window.appData.allKelasProfiles.push(cloudPayload.profile);
+                }
+
+                if (Array.isArray(cloudPayload.siswa)) {
+                    window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== cloudPayload.kelasCode).concat(cloudPayload.siswa);
+                }
+
+                if (Array.isArray(cloudPayload.guruMapel)) {
+                    window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== cloudPayload.kelasCode).concat(cloudPayload.guruMapel);
+                }
+
+                if (Array.isArray(cloudPayload.catatan)) {
+                    window.appData.allCatatanList = (window.appData.allCatatanList || []).filter(c => c.kelasCode !== cloudPayload.kelasCode).concat(cloudPayload.catatan);
+                }
+
+                if (Array.isArray(cloudPayload.absensi)) {
+                    window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== cloudPayload.kelasCode).concat(cloudPayload.absensi);
+                }
+
+                if (Array.isArray(cloudPayload.guruAbsensi)) {
+                    window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== cloudPayload.kelasCode).concat(cloudPayload.guruAbsensi);
+                }
+
+                window.syncFilteredData(false);
+                switchLoginTab('SISWA');
+
+                // Auto-select class in dropdown
+                const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
+                if (siswaKelasSelect) {
+                    siswaKelasSelect.value = cloudPayload.kelasCode;
+                    handleSiswaKelasChange();
+                }
+
+                showToast(`Data Kelas ${cloudPayload.profile?.kelas || ''} Berhasil Dimuat dari Cloud!`, 'success');
+            } else {
+                showToast('Gagal memuat data kelas dari Cloud. Pastikan koneksi internet aktif.', 'error');
+            }
+
+            if (overlay) overlay.classList.add('hidden');
         }
 
         let absensiChart = null;
@@ -1217,7 +1165,14 @@
                     isLoggedIn: window.appData.isLoggedIn,
                     currentRole: window.appData.currentRole,
                     activeKelasCode: window.appData.activeKelasCode,
-                    activeSiswaId: window.appData.activeSiswaId
+                    activeCloudId: window.appData.activeCloudId,
+                    activeSiswaId: window.appData.activeSiswaId,
+                    allKelasProfiles: window.appData.allKelasProfiles,
+                    allSiswaList: window.appData.allSiswaList,
+                    allGuruMapelList: window.appData.allGuruMapelList,
+                    allCatatanList: window.appData.allCatatanList,
+                    allAbsensiList: window.appData.allAbsensiList,
+                    allGuruAbsensiList: window.appData.allGuruAbsensiList
                 }));
             }
             updateMetrics();
@@ -1232,13 +1187,24 @@
             renderCharts();
 
             if (pushToRemote && window.appData.activeKelasCode) {
-                syncClassToFirestore(window.appData.activeKelasCode);
+                const currentProfile = (window.appData.allKelasProfiles || []).find(k => k.id === window.appData.activeKelasCode) || window.appData.guruProfile;
+                const payload = {
+                    kelasCode: window.appData.activeKelasCode,
+                    profile: currentProfile,
+                    siswa: (window.appData.allSiswaList || []).filter(s => s.kelasCode === window.appData.activeKelasCode),
+                    guruMapel: (window.appData.allGuruMapelList || []).filter(g => g.kelasCode === window.appData.activeKelasCode),
+                    catatan: (window.appData.allCatatanList || []).filter(c => c.kelasCode === window.appData.activeKelasCode),
+                    absensi: (window.appData.allAbsensiList || []).filter(a => a.kelasCode === window.appData.activeKelasCode),
+                    guruAbsensi: (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode === window.appData.activeKelasCode),
+                    updatedAt: Date.now()
+                };
+                saveClassToCloud(payload);
             }
         };
 
+        // Page Load Event Listener
         window.onload = async function() {
             if (typeof lucide !== 'undefined') lucide.createIcons();
-            initFirebaseEngine();
 
             const today = new Date().toISOString().split('T')[0];
             const elQuickTgl = document.getElementById('quick-tanggal');
@@ -1253,23 +1219,34 @@
             if (elSiswaSelfTgl) elSiswaSelfTgl.value = today;
             if (elSiswaGuruTgl) elSiswaGuruTgl.value = today;
 
+            // Read URL Cloud Parameters
             const urlParams = new URLSearchParams(window.location.search);
-            const linkClassCode = urlParams.get('code') || urlParams.get('kelas');
+            const cloudIdFromUrl = urlParams.get('c') || urlParams.get('id');
 
-            if (linkClassCode) {
-                window.appData.activeKelasCode = linkClassCode;
-                switchLoginTab('SISWA');
-                subscribeToClassFirestore(linkClassCode);
-            } else if (window.appData.activeKelasCode) {
-                subscribeToClassFirestore(window.appData.activeKelasCode);
-            }
-
-            if (window.appData.isLoggedIn) {
+            if (cloudIdFromUrl) {
+                await initStudentFromCloud(cloudIdFromUrl);
+            } else if (window.appData.isLoggedIn) {
                 window.syncFilteredData(false);
                 showMainApp();
             } else {
                 showLoginScreen();
             }
+
+            // Background Cloud Polling for Wali Kelas (Sync Student Reports)
+            setInterval(async () => {
+                if (window.appData.isLoggedIn && window.appData.currentRole === 'WALI' && window.appData.activeCloudId) {
+                    const remoteData = await fetchClassFromCloud(window.appData.activeCloudId);
+                    if (remoteData) {
+                        if (Array.isArray(remoteData.absensi)) {
+                            window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== window.appData.activeKelasCode).concat(remoteData.absensi);
+                        }
+                        if (Array.isArray(remoteData.guruAbsensi)) {
+                            window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== window.appData.activeKelasCode).concat(remoteData.guruAbsensi);
+                        }
+                        window.syncFilteredData(false);
+                    }
+                }
+            }, 4000);
         };
 
         function switchLoginTab(role) {
@@ -1339,7 +1316,7 @@
             const pin = document.getElementById('new-guru-pin')?.value.trim() || '808015';
 
             if (!nama || !kelas) {
-                if (typeof window.showToast === 'function') window.showToast('Isi nama guru & nama kelas!', 'error');
+                showToast('Isi nama guru & nama kelas!', 'error');
                 return;
             }
 
@@ -1347,15 +1324,17 @@
             const profileData = { id: kelasCode, kelasCode, nama, nip, kelas, pin };
 
             window.appData.activeKelasCode = kelasCode;
+            window.appData.activeCloudId = '';
             window.appData.guruProfile = profileData;
+            
+            if (!Array.isArray(window.appData.allKelasProfiles)) window.appData.allKelasProfiles = [];
             window.appData.allKelasProfiles.push(profileData);
 
             window.appData.isLoggedIn = true;
             window.appData.currentRole = 'WALI';
             window.syncFilteredData(true);
-            subscribeToClassFirestore(kelasCode);
             showMainApp();
-            if (typeof window.showToast === 'function') window.showToast(`Kelompok Perwalian ${kelas} Berhasil Dibuat!`, 'success');
+            showToast(`Kelompok Perwalian ${kelas} Berhasil Dibuat!`, 'success');
         }
 
         function loginWali() {
@@ -1364,7 +1343,7 @@
             const errBox = document.getElementById('login-pin-error');
 
             if (!selectedKelasId) {
-                if (typeof window.showToast === 'function') window.showToast('Pilih kelompok perwalian/kelas terlebih dahulu!', 'error');
+                showToast('Pilih kelompok perwalian/kelas terlebih dahulu!', 'error');
                 return;
             }
 
@@ -1377,9 +1356,8 @@
                 window.appData.isLoggedIn = true;
                 window.appData.currentRole = 'WALI';
                 window.syncFilteredData(false);
-                subscribeToClassFirestore(selectedKelasId);
                 showMainApp();
-                if (typeof window.showToast === 'function') window.showToast(`Berhasil masuk sebagai Guru Perwalian ${kelasProf?.kelas || ''}!`, 'success');
+                showToast(`Berhasil masuk sebagai Guru Perwalian ${kelasProf?.kelas || ''}!`, 'success');
             } else {
                 if (errBox) errBox.classList.remove('hidden');
             }
@@ -1390,7 +1368,6 @@
             if (!selectedKelasCode) return;
 
             window.appData.activeKelasCode = selectedKelasCode;
-            subscribeToClassFirestore(selectedKelasCode);
             window.syncFilteredData(false);
             populateSiswaDropdowns();
         }
@@ -1402,7 +1379,7 @@
             const errBox = document.getElementById('login-siswa-error');
 
             if (!selectedKelasCode) {
-                if (typeof window.showToast === 'function') window.showToast('Pilih Kelompok Perwalian / Kelas terlebih dahulu!', 'error');
+                showToast('Pilih Kelompok Perwalian / Kelas terlebih dahulu!', 'error');
                 return;
             }
 
@@ -1424,7 +1401,7 @@
                 window.appData.activeSiswaId = matchedSiswa.id;
                 saveToStorage(true, false);
                 showMainApp();
-                if (typeof window.showToast === 'function') window.showToast(`Selamat datang, ${matchedSiswa.nama}!`, 'success');
+                showToast(`Selamat datang, ${matchedSiswa.nama}!`, 'success');
             } else {
                 if (errBox) errBox.classList.remove('hidden');
             }
@@ -1672,103 +1649,14 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        function handleQuickAbsensi(e) {
-            e.preventDefault();
-            const siswaId = document.getElementById('quick-siswa-id')?.value;
-            const kategori = document.getElementById('quick-kategori')?.value;
-            const tanggal = document.getElementById('quick-tanggal')?.value;
-            const alasan = document.getElementById('quick-alasan')?.value;
-
-            if (!siswaId || !tanggal || !alasan) return;
-
-            const newAbsen = {
-                id: 'abs-' + Date.now(),
-                siswaId: siswaId,
-                kategori: kategori,
-                tanggal: tanggal,
-                alasan: alasan,
-                pelapor: 'GURU KELAS',
-                status: 'Disetujui',
-                kelasCode: window.appData.activeKelasCode,
-                timestamp: Date.now()
-            };
-
-            window.appData.absensiList.unshift(newAbsen);
-            window.appData.allAbsensiList.unshift(newAbsen);
-
-            saveToStorage(true, true);
-            document.getElementById('quick-alasan').value = '';
-            if (typeof window.showToast === 'function') window.showToast('Ketidakhadiran siswa berhasil dicatat!', 'success');
-        }
-
-        function handleLaporGuru(e) {
-            e.preventDefault();
-            const guruMapel = document.getElementById('guru-nama-mapel')?.value;
-            const jamKe = document.getElementById('guru-jam-ke')?.value;
-            const tanggal = document.getElementById('guru-tanggal')?.value;
-            const keterangan = document.getElementById('guru-keterangan')?.value;
-
-            if (!guruMapel || !tanggal || !keterangan) return;
-
-            const newGuruAbsen = {
-                id: 'gabs-' + Date.now(),
-                guruMapel: guruMapel,
-                jamKe: jamKe || 'Jam KBM',
-                tanggal: tanggal,
-                keterangan: keterangan,
-                kelasCode: window.appData.activeKelasCode,
-                timestamp: Date.now()
-            };
-
-            window.appData.guruAbsensiList.unshift(newGuruAbsen);
-            window.appData.allGuruAbsensiList.unshift(newGuruAbsen);
-
-            saveToStorage(true, true);
-            document.getElementById('guru-nama-mapel').value = '';
-            document.getElementById('guru-jam-ke').value = '';
-            document.getElementById('guru-keterangan').value = '';
-            if (typeof window.showToast === 'function') window.showToast('Laporan guru tidak hadir berhasil disimpan!', 'success');
-        }
-
-        function handleSaveCatatan(e) {
-            e.preventDefault();
-            const siswaId = document.getElementById('catatan-siswa-id')?.value;
-            const tanggal = document.getElementById('catatan-tanggal')?.value;
-            const kategori = document.getElementById('catatan-kategori')?.value;
-            const topik = document.getElementById('catatan-topik')?.value;
-            const solusi = document.getElementById('catatan-solusi')?.value;
-
-            if (!siswaId || !topik || !solusi) return;
-
-            const newCatatan = {
-                id: 'cat-' + Date.now(),
-                siswaId: siswaId,
-                tanggal: tanggal,
-                kategori: kategori,
-                topik: topik,
-                solusi: solusi,
-                kelasCode: window.appData.activeKelasCode,
-                timestamp: Date.now()
-            };
-
-            window.appData.catatanList.unshift(newCatatan);
-            window.appData.allCatatanList.unshift(newCatatan);
-
-            saveToStorage(true, true);
-            document.getElementById('catatan-topik').value = '';
-            document.getElementById('catatan-solusi').value = '';
-            if (typeof window.showToast === 'function') window.showToast('Catatan perwalian berhasil disimpan!', 'success');
-        }
-
         function openModalShareLink() {
             const linkInput = document.getElementById('share-link-input');
             const msg = document.getElementById('share-copied-msg');
-            const codeLabel = document.getElementById('modal-share-code-label');
 
             if (msg) msg.classList.add('hidden');
-            if (codeLabel) codeLabel.innerText = window.appData.guruProfile?.kelas || window.appData.activeKelasCode;
             
-            const generated = `${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(window.appData.activeKelasCode || '')}`;
+            let cloudId = window.appData.activeCloudId;
+            const generated = `${window.location.origin}${window.location.pathname}?c=${encodeURIComponent(cloudId || '')}`;
             if (linkInput) linkInput.value = generated;
             
             document.getElementById('modal-share-link')?.classList.remove('hidden');
@@ -1790,9 +1678,9 @@
                 document.execCommand('copy');
                 const msg = document.getElementById('share-copied-msg');
                 if (msg) msg.classList.remove('hidden');
-                if (typeof window.showToast === 'function') window.showToast('Link Portal Siswa Kelas berhasil disalin!', 'success');
+                showToast('Link Portal Siswa Kelas berhasil disalin!', 'success');
             } catch (err) {
-                if (typeof window.showToast === 'function') window.showToast('Silakan salin link secara manual.');
+                showToast('Silakan salin link secara manual.');
             }
         }
 
@@ -1942,7 +1830,6 @@
             if (elKelas) elKelas.innerText = `KELAS: ${window.appData.guruProfile.kelas}`;
             if (elReporter) elReporter.innerText = activeSiswa.nama;
 
-            // Render personal bimbingan notes
             const bimbContainer = document.getElementById('siswa-portal-bimbingan-list');
             if (bimbContainer) {
                 const myCatatan = window.appData.catatanList.filter(c => c.siswaId === activeSiswa.id);
@@ -2059,7 +1946,7 @@
             const alasan = document.getElementById('siswa-self-alasan')?.value || (kat === 'Sakit' ? 'Sakit' : 'Tanpa Keterangan');
 
             if (!targetSiswaId || !tgl) {
-                if (typeof window.showToast === 'function') window.showToast('Pilih siswa dan tanggal!', 'error');
+                showToast('Pilih siswa dan tanggal!', 'error');
                 return;
             }
 
@@ -2089,7 +1976,7 @@
             document.getElementById('siswa-target-absen-id').value = '';
             document.getElementById('siswa-self-alasan').value = '';
 
-            if (typeof window.showToast === 'function') window.showToast(`Laporan ${targetNama} (${kat}) dikirim ke Guru Perwalian!`, 'success');
+            showToast(`Laporan ${targetNama} (${kat}) dikirim ke Guru Perwalian!`, 'success');
         }
 
         function handleSiswaLaporGuru(e) {
@@ -2119,7 +2006,95 @@
             document.getElementById('siswa-guru-nama-mapel').value = '';
             document.getElementById('siswa-guru-jam-ke').value = '';
             document.getElementById('siswa-guru-keterangan').value = '';
-            if (typeof window.showToast === 'function') window.showToast('Laporan guru tidak hadir dikirim ke Guru Perwalian!', 'success');
+            showToast('Laporan guru tidak hadir dikirim ke Guru Perwalian!', 'success');
+        }
+
+        function handleQuickAbsensi(e) {
+            e.preventDefault();
+            const siswaId = document.getElementById('quick-siswa-id')?.value;
+            const kategori = document.getElementById('quick-kategori')?.value;
+            const tanggal = document.getElementById('quick-tanggal')?.value;
+            const alasan = document.getElementById('quick-alasan')?.value;
+
+            if (!siswaId || !tanggal || !alasan) return;
+
+            const newAbsen = {
+                id: 'abs-' + Date.now(),
+                siswaId: siswaId,
+                kategori: kategori,
+                tanggal: tanggal,
+                alasan: alasan,
+                pelapor: 'GURU KELAS',
+                status: 'Disetujui',
+                kelasCode: window.appData.activeKelasCode,
+                timestamp: Date.now()
+            };
+
+            window.appData.absensiList.unshift(newAbsen);
+            window.appData.allAbsensiList.unshift(newAbsen);
+
+            saveToStorage(true, true);
+            document.getElementById('quick-alasan').value = '';
+            showToast('Ketidakhadiran siswa berhasil dicatat!', 'success');
+        }
+
+        function handleLaporGuru(e) {
+            e.preventDefault();
+            const guruMapel = document.getElementById('guru-nama-mapel')?.value;
+            const jamKe = document.getElementById('guru-jam-ke')?.value;
+            const tanggal = document.getElementById('guru-tanggal')?.value;
+            const keterangan = document.getElementById('guru-keterangan')?.value;
+
+            if (!guruMapel || !tanggal || !keterangan) return;
+
+            const newGuruAbsen = {
+                id: 'gabs-' + Date.now(),
+                guruMapel: guruMapel,
+                jamKe: jamKe || 'Jam KBM',
+                tanggal: tanggal,
+                keterangan: keterangan,
+                kelasCode: window.appData.activeKelasCode,
+                timestamp: Date.now()
+            };
+
+            window.appData.guruAbsensiList.unshift(newGuruAbsen);
+            window.appData.allGuruAbsensiList.unshift(newGuruAbsen);
+
+            saveToStorage(true, true);
+            document.getElementById('guru-nama-mapel').value = '';
+            document.getElementById('guru-jam-ke').value = '';
+            document.getElementById('guru-keterangan').value = '';
+            showToast('Laporan guru tidak hadir berhasil disimpan!', 'success');
+        }
+
+        function handleSaveCatatan(e) {
+            e.preventDefault();
+            const siswaId = document.getElementById('catatan-siswa-id')?.value;
+            const tanggal = document.getElementById('catatan-tanggal')?.value;
+            const kategori = document.getElementById('catatan-kategori')?.value;
+            const topik = document.getElementById('catatan-topik')?.value;
+            const solusi = document.getElementById('catatan-solusi')?.value;
+
+            if (!siswaId || !topik || !solusi) return;
+
+            const newCatatan = {
+                id: 'cat-' + Date.now(),
+                siswaId: siswaId,
+                tanggal: tanggal,
+                kategori: kategori,
+                topik: topik,
+                solusi: solusi,
+                kelasCode: window.appData.activeKelasCode,
+                timestamp: Date.now()
+            };
+
+            window.appData.catatanList.unshift(newCatatan);
+            window.appData.allCatatanList.unshift(newCatatan);
+
+            saveToStorage(true, true);
+            document.getElementById('catatan-topik').value = '';
+            document.getElementById('catatan-solusi').value = '';
+            showToast('Catatan perwalian berhasil disimpan!', 'success');
         }
 
         function openModalTambahSiswa() {
@@ -2169,7 +2144,7 @@
 
             saveToStorage(true, true);
             closeModalSiswa();
-            if (typeof window.showToast === 'function') window.showToast('Data siswa berhasil disimpan!', 'success');
+            showToast('Data siswa berhasil disimpan!', 'success');
         }
 
         function editSiswa(id) {
@@ -2191,7 +2166,7 @@
             window.appData.siswaList = window.appData.siswaList.filter(s => s.id !== id);
             window.appData.allSiswaList = window.appData.allSiswaList.filter(s => s.id !== id);
             saveToStorage(true, true);
-            if (typeof window.showToast === 'function') window.showToast('Data siswa telah dihapus.', 'info');
+            showToast('Data siswa telah dihapus.', 'info');
         }
 
         function openModalTambahGuruMapel() {
@@ -2232,7 +2207,7 @@
 
             saveToStorage(true, true);
             closeModalGuruMapel();
-            if (typeof window.showToast === 'function') window.showToast('Data guru mapel berhasil disimpan!', 'success');
+            showToast('Data guru mapel berhasil disimpan!', 'success');
         }
 
         function editGuruMapel(id) {
@@ -2249,7 +2224,7 @@
             window.appData.guruMapelList = window.appData.guruMapelList.filter(g => g.id !== id);
             window.appData.allGuruMapelList = window.appData.allGuruMapelList.filter(g => g.id !== id);
             saveToStorage(true, true);
-            if (typeof window.showToast === 'function') window.showToast('Data guru mapel dihapus.');
+            showToast('Data guru mapel dihapus.');
         }
 
         function openModalEditGuru() {
@@ -2284,7 +2259,7 @@
             saveToStorage(true, true);
             closeModalEditGuru();
             updateHeaderInfo();
-            if (typeof window.showToast === 'function') window.showToast('Profil Guru Perwalian berhasil diperbarui!', 'success');
+            showToast('Profil Guru Perwalian berhasil diperbarui!', 'success');
         }
 
         function approveAbsensi(id) {
@@ -2297,7 +2272,7 @@
                 window.appData.allAbsensiList[allIdx].status = 'Disetujui';
             }
             saveToStorage(true, true);
-            if (typeof window.showToast === 'function') window.showToast('Ketidakhadiran disetujui.', 'success');
+            showToast('Ketidakhadiran disetujui.', 'success');
         }
 
         function rejectAbsensi(id) {
@@ -2310,33 +2285,33 @@
                 window.appData.allAbsensiList[allIdx].status = 'Ditolak';
             }
             saveToStorage(true, true);
-            if (typeof window.showToast === 'function') window.showToast('Ketidakhadiran ditolak.');
+            showToast('Ketidakhadiran ditolak.');
         }
 
         function deleteAbsensi(id) {
             window.appData.absensiList = window.appData.absensiList.filter(a => a.id !== id);
             window.appData.allAbsensiList = window.appData.allAbsensiList.filter(a => a.id !== id);
             saveToStorage(true, true);
-            if (typeof window.showToast === 'function') window.showToast('Catatan absensi dihapus.');
+            showToast('Catatan absensi dihapus.');
         }
 
         function deleteGuruAbsensi(id) {
             window.appData.guruAbsensiList = window.appData.guruAbsensiList.filter(g => g.id !== id);
             window.appData.allGuruAbsensiList = window.appData.allGuruAbsensiList.filter(g => g.id !== id);
             saveToStorage(true, true);
-            if (typeof window.showToast === 'function') window.showToast('Laporan guru dihapus.');
+            showToast('Laporan guru dihapus.');
         }
 
         function deleteCatatan(id) {
             window.appData.catatanList = window.appData.catatanList.filter(c => c.id !== id);
             window.appData.allCatatanList = window.appData.allCatatanList.filter(c => c.id !== id);
             saveToStorage(true, true);
-            if (typeof window.showToast === 'function') window.showToast('Catatan bimbingan dihapus.');
+            showToast('Catatan bimbingan dihapus.');
         }
 
         function exportCSV() {
             if (window.appData.siswaList.length === 0) {
-                if (typeof window.showToast === 'function') window.showToast('Tidak ada data siswa untuk diexport!', 'error');
+                showToast('Tidak ada data siswa untuk diexport!', 'error');
                 return;
             }
 
