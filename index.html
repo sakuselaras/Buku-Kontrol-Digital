@@ -32,6 +32,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- LZString CDN for ultra-fast URL compression -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+    <!-- MQTT WebSockets CDN for Instant Sub-Second Real-Time Sync -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     
     <!-- Google Fonts Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -106,7 +108,6 @@
             isLoggedIn: false,
             currentRole: 'WALI',
             activeKelasCode: '',
-            activeCloudId: '',
             activeSiswaId: '',
             guruProfile: {
                 nama: "Guru Perwalian",
@@ -169,6 +170,24 @@
                 return null;
             }
         };
+
+        // Synthesize notification chime sound using Web Audio API
+        window.playNotificationChime = function() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.3);
+            } catch (e) {}
+        };
     </script>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-rose-500 selection:text-white relative">
@@ -184,8 +203,8 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <h1 class="font-black text-lg text-white tracking-wide uppercase">CATATAN PERWALIAN</h1>
-                        <span id="cloud-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> REALTIME CLOUD SYNC
+                        <span id="mqtt-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span> REALTIME WEBSOCKETS
                         </span>
                     </div>
                     <p id="header-subtitle" class="text-xs text-slate-400">Sistem Informasi Bimbingan Akademik & Presensi Kelompok Perwalian • SMK Negeri 1 Marisa</p>
@@ -341,7 +360,7 @@
             <!-- VIEW FOR WALI KELAS -->
             <div id="view-wali-kelas" class="space-y-6">
 
-                <!-- Hero Banner Wali Kelas (Hanya muncul di Portal Wali Kelas) -->
+                <!-- Hero Banner Wali Kelas -->
                 <div id="hero-banner" class="p-6 rounded-2xl bg-gradient-to-r from-rose-950/60 to-[#131b2e] border border-rose-500/30 flex flex-wrap items-center justify-between gap-4">
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
@@ -958,6 +977,26 @@
         </div>
     </div>
 
+    <!-- MODAL CUSTOM CONFIRMATION (REPLACES ALERT/CONFIRM) -->
+    <div id="modal-confirm-dialog" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="max-w-sm w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-5 space-y-4 shadow-2xl text-xs">
+            <div class="flex items-center gap-3">
+                <div class="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 id="confirm-dialog-title" class="font-bold text-white text-sm">Konfirmasi Tindakan</h4>
+                    <p id="confirm-dialog-msg" class="text-slate-400 mt-0.5">Apakah Anda yakin ingin melanjutkan tindakan ini?</p>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button id="btn-confirm-cancel" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold">Batal</button>
+                <button id="btn-confirm-action" class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold">Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Custom Toast Notification System
         window.showToast = function(message, type = 'info') {
@@ -980,72 +1019,142 @@
             }, 4000);
         };
 
-        // REST CLOUD ENGINE
-        const CLOUD_API_URL = 'https://api.restful-api.dev/objects';
+        // Custom Modal Confirmation Helper
+        window.showConfirmDialog = function(title, message, onConfirm) {
+            const modal = document.getElementById('modal-confirm-dialog');
+            const titleEl = document.getElementById('confirm-dialog-title');
+            const msgEl = document.getElementById('confirm-dialog-msg');
+            const btnCancel = document.getElementById('btn-confirm-cancel');
+            const btnAction = document.getElementById('btn-confirm-action');
 
-        async function saveClassToCloud(payload) {
+            if (!modal) return;
+            if (titleEl) titleEl.innerText = title;
+            if (msgEl) msgEl.innerText = message;
+
+            modal.classList.remove('hidden');
+
+            const handleCancel = () => {
+                modal.classList.add('hidden');
+                btnCancel.removeEventListener('click', handleCancel);
+                btnAction.removeEventListener('click', handleOk);
+            };
+
+            const handleOk = () => {
+                modal.classList.add('hidden');
+                btnCancel.removeEventListener('click', handleCancel);
+                btnAction.removeEventListener('click', handleOk);
+                if (typeof onConfirm === 'function') onConfirm();
+            };
+
+            btnCancel.addEventListener('click', handleCancel);
+            btnAction.addEventListener('click', handleOk);
+        };
+
+        window.mqttClient = null;
+        window.mqttSubscribedTopic = '';
+
+        function initMQTTWebSocket() {
+            if (typeof mqtt === 'undefined') return;
+
             try {
-                let currentCloudId = window.appData.activeCloudId;
-                const cloudData = {
-                    name: `PERWALIAN_${payload.kelasCode}`,
-                    data: payload
+                const brokerUrl = 'wss://broker.hivemq.com:8884/mqtt';
+                const options = {
+                    keepalive: 60,
+                    clientId: 'perwalian_client_' + Math.random().toString(16).substring(2, 10),
+                    clean: true,
+                    reconnectPeriod: 2000,
+                    connectTimeout: 5000
                 };
 
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3500);
+                window.mqttClient = mqtt.connect(brokerUrl, options);
 
-                if (currentCloudId) {
-                    const res = await fetch(`${CLOUD_API_URL}/${currentCloudId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(cloudData),
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-                    if (res.ok) return currentCloudId;
-                }
-
-                const controllerPost = new AbortController();
-                const timeoutPostId = setTimeout(() => controllerPost.abort(), 3500);
-
-                const res = await fetch(CLOUD_API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(cloudData),
-                    signal: controllerPost.signal
-                });
-                clearTimeout(timeoutPostId);
-
-                if (res.ok) {
-                    const resData = await res.json();
-                    if (resData && resData.id) {
-                        window.appData.activeCloudId = resData.id;
-                        const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === payload.kelasCode);
-                        if (pIdx !== -1) window.appData.allKelasProfiles[pIdx].cloudId = resData.id;
-                        saveToStorage(true, false);
-                        return resData.id;
+                window.mqttClient.on('connect', () => {
+                    const badge = document.getElementById('mqtt-status-badge');
+                    if (badge) {
+                        badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1';
+                        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> REALTIME WEBSOCKETS (CONNECTED)';
                     }
-                }
-            } catch (err) {
-                console.warn("Cloud save notice:", err);
+                    subscribeCurrentClassMQTT();
+                });
+
+                window.mqttClient.on('message', (topic, message) => {
+                    try {
+                        const payload = JSON.parse(message.toString());
+                        handleMQTTIncomingMessage(payload);
+                    } catch (e) {
+                        console.warn("MQTT Parse notice:", e);
+                    }
+                });
+
+                window.mqttClient.on('error', (err) => {
+                    console.warn("MQTT error notice:", err);
+                });
+
+            } catch (e) {
+                console.warn("MQTT Connect notice:", e);
             }
-            return window.appData.activeCloudId || '';
         }
 
-        async function fetchClassFromCloud(cloudId) {
-            if (!cloudId) return null;
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000);
-                const res = await fetch(`${CLOUD_API_URL}/${cloudId}`, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                if (!res.ok) return null;
-                const json = await res.json();
-                return json ? json.data : null;
-            } catch (err) {
-                console.warn("Cloud fetch notice:", err);
+        function subscribeCurrentClassMQTT() {
+            if (!window.mqttClient || !window.mqttClient.connected) return;
+            const code = window.appData.activeKelasCode || 'GLOBAL';
+            const topicToSub = `smkn1marisa/perwalian/v2/${code}`;
+
+            if (window.mqttSubscribedTopic && window.mqttSubscribedTopic !== topicToSub) {
+                window.mqttClient.unsubscribe(window.mqttSubscribedTopic);
             }
-            return null;
+
+            window.mqttClient.subscribe(topicToSub, { qos: 1 }, (err) => {
+                if (!err) {
+                    window.mqttSubscribedTopic = topicToSub;
+                }
+            });
+        }
+
+        function publishMQTTAction(actionType, dataObj) {
+            if (!window.mqttClient || !window.mqttClient.connected) return;
+            const code = window.appData.activeKelasCode || 'GLOBAL';
+            const topicToPub = `smkn1marisa/perwalian/v2/${code}`;
+
+            const payload = {
+                action: actionType,
+                kelasCode: code,
+                senderRole: window.appData.currentRole,
+                data: dataObj,
+                timestamp: Date.now()
+            };
+
+            window.mqttClient.publish(topicToPub, JSON.stringify(payload), { qos: 1 });
+        }
+
+        function handleMQTTIncomingMessage(payload) {
+            if (!payload || payload.kelasCode !== window.appData.activeKelasCode) return;
+
+            if (payload.action === 'REPORT_SISWA') {
+                const newReport = payload.data;
+                const exists = (window.appData.absensiList || []).some(a => a.id === newReport.id);
+                if (!exists) {
+                    window.appData.absensiList = window.appData.absensiList || [];
+                    window.appData.absensiList.unshift(newReport);
+                    window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.id !== newReport.id).concat(newReport);
+                    
+                    saveToStorage(false, true);
+                    window.playNotificationChime();
+                    showToast(`📢 Laporan Presensi Masuk: ${newReport.pelapor || 'Siswa'} (${newReport.kategori})`, 'success');
+                }
+            } else if (payload.action === 'REPORT_GURU') {
+                const newReport = payload.data;
+                const exists = (window.appData.guruAbsensiList || []).some(g => g.id === newReport.id);
+                if (!exists) {
+                    window.appData.guruAbsensiList = window.appData.guruAbsensiList || [];
+                    window.appData.guruAbsensiList.unshift(newReport);
+                    window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.id !== newReport.id).concat(newReport);
+                    
+                    saveToStorage(false, true);
+                    window.playNotificationChime();
+                    showToast(`📢 Laporan Guru Tidak Masuk: ${newReport.guruMapel}`, 'success');
+                }
+            }
         }
 
         let isWaliNewMode = false;
@@ -1088,8 +1197,7 @@
                 nama: nama,
                 nip: nip,
                 kelas: kelas,
-                pin: pin,
-                cloudId: ''
+                pin: pin
             };
 
             window.appData.activeKelasCode = kelasCode;
@@ -1101,6 +1209,7 @@
             window.appData.currentRole = 'WALI';
 
             saveToStorage(true, true);
+            subscribeCurrentClassMQTT();
             showMainApp();
             showToast(`Kelompok Perwalian "${kelas}" Berhasil Dibuat!`, 'success');
         }
@@ -1126,6 +1235,7 @@
                 window.appData.currentRole = 'WALI';
 
                 window.syncFilteredData(true);
+                subscribeCurrentClassMQTT();
                 showMainApp();
                 showToast(`Selamat datang, ${window.appData.guruProfile.nama}!`, 'success');
             } else {
@@ -1161,6 +1271,7 @@
                 window.appData.currentRole = 'SISWA';
 
                 saveToStorage(false, true);
+                subscribeCurrentClassMQTT();
                 showMainApp();
                 showToast(`Selamat datang, ${targetSiswa.nama}!`, 'success');
             } else {
@@ -1205,6 +1316,41 @@
                     }
                 }
             });
+        }
+
+        function openModalShareLink() {
+            const linkInput = document.getElementById('share-link-input');
+            const msg = document.getElementById('share-copied-msg');
+
+            if (msg) msg.classList.add('hidden');
+
+            const compressed = window.compressDataObj({
+                kelasCode: window.appData.activeKelasCode,
+                profile: window.appData.guruProfile,
+                siswa: window.appData.siswaList,
+                guruMapel: window.appData.guruMapelList
+            });
+
+            const generated = `${window.location.origin}${window.location.pathname}?code=${window.appData.activeKelasCode}&d=${compressed}`;
+            
+            if (linkInput) linkInput.value = generated;
+            document.getElementById('modal-share-link')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeModalShareLink() {
+            document.getElementById('modal-share-link')?.classList.add('hidden');
+        }
+
+        function copyGeneratedLink() {
+            const input = document.getElementById('share-link-input');
+            const msg = document.getElementById('share-copied-msg');
+            if (input && input.value) {
+                input.select();
+                document.execCommand('copy');
+                if (msg) msg.classList.remove('hidden');
+                showToast('Link berhasil disalin ke clipboard!', 'success');
+            }
         }
 
         function showMainApp() {
@@ -1257,142 +1403,6 @@
             saveToStorage(false, false);
             showLoginScreen();
             showToast('Berhasil keluar dari portal.', 'info');
-        }
-
-        async function openModalShareLink() {
-            const linkInput = document.getElementById('share-link-input');
-            const msg = document.getElementById('share-copied-msg');
-
-            if (msg) msg.classList.add('hidden');
-            showToast('Menyiapkan link instan kelas...', 'info');
-
-            let cloudId = window.appData.activeCloudId;
-            const currentProfile = (window.appData.allKelasProfiles || []).find(k => k.id === window.appData.activeKelasCode) || window.appData.guruProfile;
-            
-            const payload = {
-                kelasCode: window.appData.activeKelasCode,
-                profile: currentProfile,
-                siswa: (window.appData.allSiswaList || []).filter(s => s.kelasCode === window.appData.activeKelasCode),
-                guruMapel: (window.appData.allGuruMapelList || []).filter(g => g.kelasCode === window.appData.activeKelasCode),
-                catatan: (window.appData.allCatatanList || []).filter(c => c.kelasCode === window.appData.activeKelasCode),
-                absensi: (window.appData.allAbsensiList || []).filter(a => a.kelasCode === window.appData.activeKelasCode),
-                guruAbsensi: (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode === window.appData.activeKelasCode),
-                updatedAt: Date.now()
-            };
-
-            cloudId = await saveClassToCloud(payload);
-
-            let generated = '';
-            if (cloudId) {
-                generated = `${window.location.origin}${window.location.pathname}?c=${cloudId}`;
-            } else {
-                const compressed = window.compressDataObj({
-                    kelasCode: window.appData.activeKelasCode,
-                    profile: window.appData.guruProfile,
-                    siswa: window.appData.siswaList,
-                    guruMapel: window.appData.guruMapelList
-                });
-                generated = `${window.location.origin}${window.location.pathname}?d=${compressed}`;
-            }
-            
-            if (linkInput) linkInput.value = generated;
-            document.getElementById('modal-share-link')?.classList.remove('hidden');
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function closeModalShareLink() {
-            document.getElementById('modal-share-link')?.classList.add('hidden');
-        }
-
-        function copyGeneratedLink() {
-            const input = document.getElementById('share-link-input');
-            const msg = document.getElementById('share-copied-msg');
-            if (input && input.value) {
-                input.select();
-                document.execCommand('copy');
-                if (msg) msg.classList.remove('hidden');
-                showToast('Link berhasil disalin ke clipboard!', 'success');
-            }
-        }
-
-        async function handleSiswaKelasChange() {
-            const selectedKelasCode = document.getElementById('login-siswa-kelas-select')?.value;
-            if (!selectedKelasCode) return;
-
-            window.appData.activeKelasCode = selectedKelasCode;
-
-            const kProf = (window.appData.allKelasProfiles || []).find(k => k.id === selectedKelasCode || k.kelasCode === selectedKelasCode);
-            if (kProf && kProf.cloudId) {
-                showToast('Memuat data siswa dari cloud...', 'info');
-                const cloudData = await fetchClassFromCloud(kProf.cloudId);
-                if (cloudData) {
-                    if (Array.isArray(cloudData.siswa)) {
-                        window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== selectedKelasCode).concat(cloudData.siswa);
-                    }
-                    if (Array.isArray(cloudData.guruMapel)) {
-                        window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== selectedKelasCode).concat(cloudData.guruMapel);
-                    }
-                }
-            }
-
-            window.syncFilteredData(false);
-            populateSiswaDropdowns();
-            populateGuruMapelDropdowns();
-        }
-
-        async function initStudentFromCloud(cloudId) {
-            showToast('Memuat data kelas dari cloud...', 'info');
-            const cloudPayload = await fetchClassFromCloud(cloudId);
-
-            if (cloudPayload && cloudPayload.kelasCode) {
-                window.appData.activeKelasCode = cloudPayload.kelasCode;
-                window.appData.activeCloudId = cloudId;
-
-                if (cloudPayload.profile) {
-                    cloudPayload.profile.cloudId = cloudId;
-                    window.appData.guruProfile = cloudPayload.profile;
-                    const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === cloudPayload.kelasCode);
-                    if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = cloudPayload.profile;
-                    else window.appData.allKelasProfiles.push(cloudPayload.profile);
-                }
-
-                if (Array.isArray(cloudPayload.siswa)) {
-                    window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== cloudPayload.kelasCode).concat(cloudPayload.siswa);
-                }
-
-                if (Array.isArray(cloudPayload.guruMapel)) {
-                    window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== cloudPayload.kelasCode).concat(cloudPayload.guruMapel);
-                }
-
-                if (Array.isArray(cloudPayload.catatan)) {
-                    window.appData.allCatatanList = (window.appData.allCatatanList || []).filter(c => c.kelasCode !== cloudPayload.kelasCode).concat(cloudPayload.catatan);
-                }
-
-                if (Array.isArray(cloudPayload.absensi)) {
-                    window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== cloudPayload.kelasCode).concat(cloudPayload.absensi);
-                }
-
-                if (Array.isArray(cloudPayload.guruAbsensi)) {
-                    window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== cloudPayload.kelasCode).concat(cloudPayload.guruAbsensi);
-                }
-
-                window.syncFilteredData(false);
-                switchLoginTab('SISWA');
-
-                populateWaliKelasDropdowns();
-                populateSiswaDropdowns();
-                populateGuruMapelDropdowns();
-
-                const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
-                if (siswaKelasSelect) {
-                    siswaKelasSelect.value = cloudPayload.kelasCode;
-                }
-
-                showToast(`Data Kelas ${cloudPayload.profile?.kelas || ''} Berhasil Dimuat!`, 'success');
-            } else {
-                showToast('Koneksi Cloud lambat. Menggunakan data terdaftar.', 'info');
-                switchLoginTab('SISWA');
-            }
         }
 
         function populateWaliKelasDropdowns() {
@@ -1500,393 +1510,89 @@
             if (updateUi) {
                 window.syncFilteredData(true);
             }
-
-            if (syncToCloud && window.appData.activeKelasCode) {
-                const payload = {
-                    kelasCode: window.appData.activeKelasCode,
-                    profile: window.appData.guruProfile,
-                    siswa: window.appData.siswaList,
-                    guruMapel: window.appData.guruMapelList,
-                    catatan: window.appData.catatanList,
-                    absensi: window.appData.absensiList,
-                    guruAbsensi: window.appData.guruAbsensiList,
-                    updatedAt: Date.now()
-                };
-                saveClassToCloud(payload);
-            }
         }
 
-        function openModalEditGuru() {
-            const prof = window.appData.guruProfile || { nama: '', nip: '', kelas: '', pin: '808015' };
-            const elNama = document.getElementById('edit-guru-nama');
-            const elNip = document.getElementById('edit-guru-nip');
-            const elKelas = document.getElementById('edit-guru-kelas');
-            const elPin = document.getElementById('edit-guru-pin');
-
-            if (elNama) elNama.value = prof.nama || '';
-            if (elNip) elNip.value = prof.nip || '';
-            if (elKelas) elKelas.value = prof.kelas || '';
-            if (elPin) elPin.value = prof.pin || '808015';
-
-            document.getElementById('modal-edit-guru')?.classList.remove('hidden');
-        }
-
-        function closeModalEditGuru() {
-            document.getElementById('modal-edit-guru')?.classList.add('hidden');
-        }
-
-        function handleSaveGuruProfile(e) {
+        function handleSiswaLaporAbsen(e) {
             e.preventDefault();
-            const nama = document.getElementById('edit-guru-nama')?.value.trim();
-            const nip = document.getElementById('edit-guru-nip')?.value.trim();
-            const kelas = document.getElementById('edit-guru-kelas')?.value.trim();
-            const pin = document.getElementById('edit-guru-pin')?.value.trim();
+            const targetSiswaId = document.getElementById('siswa-target-absen-id')?.value;
+            const kategori = document.getElementById('siswa-self-kategori')?.value;
+            const tanggal = document.getElementById('siswa-self-tanggal')?.value;
+            const alasan = document.getElementById('siswa-self-alasan')?.value;
 
-            if (!nama || !kelas) {
-                showToast('Nama guru dan nama kelas wajib diisi!', 'error');
+            if (!targetSiswaId || !tanggal) {
+                showToast('Pilih nama siswa dan tanggal presensi!', 'error');
                 return;
             }
 
-            window.appData.guruProfile.nama = nama;
-            window.appData.guruProfile.nip = nip || '-';
-            window.appData.guruProfile.kelas = kelas;
-            window.appData.guruProfile.pin = pin || '808015';
+            const reporter = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
+            const reporterNama = reporter ? reporter.nama : 'Siswa Perwakilan';
 
-            const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === window.appData.activeKelasCode);
-            if (pIdx !== -1) {
-                window.appData.allKelasProfiles[pIdx] = Object.assign({}, window.appData.allKelasProfiles[pIdx], window.appData.guruProfile);
-            }
-
-            saveToStorage(true, true);
-            closeModalEditGuru();
-            showToast('Profil Guru Perwalian berhasil diperbarui!', 'success');
-        }
-
-        function openModalTambahSiswa() {
-            document.getElementById('edit-siswa-id').value = '';
-            document.getElementById('form-siswa-nis').value = '';
-            document.getElementById('form-siswa-nama').value = '';
-            document.getElementById('form-siswa-kelas').value = 'X';
-            document.getElementById('form-siswa-jurusan').value = '';
-            document.getElementById('form-siswa-gender').value = 'L';
-            document.getElementById('form-siswa-ipk').value = '';
-            document.getElementById('form-siswa-ortu').value = '';
-
-            const title = document.getElementById('modal-siswa-title');
-            if (title) title.innerHTML = '<i data-lucide="user-plus" class="w-4 h-4 text-emerald-400"></i> Tambah Data Siswa Baru';
-
-            document.getElementById('modal-siswa')?.classList.remove('hidden');
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function closeModalSiswa() {
-            document.getElementById('modal-siswa')?.classList.add('hidden');
-        }
-
-        function editSiswa(id) {
-            const s = (window.appData.allSiswaList || []).find(x => x.id === id);
-            if (!s) return;
-
-            document.getElementById('edit-siswa-id').value = s.id;
-            document.getElementById('form-siswa-nis').value = s.nis || '';
-            document.getElementById('form-siswa-nama').value = s.nama || '';
-            document.getElementById('form-siswa-kelas').value = s.kelas || 'X';
-            document.getElementById('form-siswa-jurusan').value = s.jurusan || '';
-            document.getElementById('form-siswa-gender').value = s.gender || 'L';
-            document.getElementById('form-siswa-ipk').value = s.ipk || '';
-            document.getElementById('form-siswa-ortu').value = s.ortu || '';
-
-            const title = document.getElementById('modal-siswa-title');
-            if (title) title.innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-cyan-400"></i> Edit Data Siswa';
-
-            document.getElementById('modal-siswa')?.classList.remove('hidden');
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function deleteSiswa(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus data siswa ini?')) {
-                window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.id !== id);
-                saveToStorage(true, true);
-                showToast('Data siswa berhasil dihapus.', 'info');
-            }
-        }
-
-        function handleSaveSiswa(e) {
-            e.preventDefault();
-            const editId = document.getElementById('edit-siswa-id')?.value;
-            const nis = document.getElementById('form-siswa-nis')?.value.trim();
-            const nama = document.getElementById('form-siswa-nama')?.value.trim();
-            const kelas = document.getElementById('form-siswa-kelas')?.value;
-            const jurusan = document.getElementById('form-siswa-jurusan')?.value.trim();
-            const gender = document.getElementById('form-siswa-gender')?.value;
-            const ipk = document.getElementById('form-siswa-ipk')?.value.trim();
-            const ortu = document.getElementById('form-siswa-ortu')?.value.trim();
-
-            if (!nama) {
-                showToast('Nama siswa wajib diisi!', 'error');
-                return;
-            }
-
-            if (editId) {
-                const idx = (window.appData.allSiswaList || []).findIndex(s => s.id === editId);
-                if (idx !== -1) {
-                    window.appData.allSiswaList[idx] = {
-                        ...window.appData.allSiswaList[idx],
-                        nis, nama, kelas, jurusan, gender, ipk: ipk || '0.00', ortu
-                    };
-                }
-            } else {
-                const newSiswa = {
-                    id: 'siswa-' + Date.now(),
-                    kelasCode: window.appData.activeKelasCode,
-                    nis, nama, kelas, jurusan, gender, ipk: ipk || '0.00', ortu
-                };
-                window.appData.allSiswaList = window.appData.allSiswaList || [];
-                window.appData.allSiswaList.push(newSiswa);
-            }
-
-            saveToStorage(true, true);
-            closeModalSiswa();
-            showToast('Data siswa berhasil disimpan!', 'success');
-        }
-
-        function openModalTambahGuruMapel() {
-            document.getElementById('edit-guru-mapel-id').value = '';
-            document.getElementById('form-guru-nama').value = '';
-            document.getElementById('form-guru-mapel-nama').value = '';
-
-            const title = document.getElementById('modal-guru-mapel-title');
-            if (title) title.innerHTML = '<i data-lucide="user-plus" class="w-4 h-4 text-amber-400"></i> Tambah Data Guru Mapel';
-
-            document.getElementById('modal-guru-mapel')?.classList.remove('hidden');
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function closeModalGuruMapel() {
-            document.getElementById('modal-guru-mapel')?.classList.add('hidden');
-        }
-
-        function editGuruMapel(id) {
-            const g = (window.appData.allGuruMapelList || []).find(x => x.id === id);
-            if (!g) return;
-
-            document.getElementById('edit-guru-mapel-id').value = g.id;
-            document.getElementById('form-guru-nama').value = g.nama || '';
-            document.getElementById('form-guru-mapel-nama').value = g.mapel || '';
-
-            const title = document.getElementById('modal-guru-mapel-title');
-            if (title) title.innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-cyan-400"></i> Edit Data Guru Mapel';
-
-            document.getElementById('modal-guru-mapel')?.classList.remove('hidden');
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function deleteGuruMapel(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus data guru mapel ini?')) {
-                window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.id !== id);
-                saveToStorage(true, true);
-                showToast('Data guru mapel berhasil dihapus.', 'info');
-            }
-        }
-
-        function handleSaveGuruMapel(e) {
-            e.preventDefault();
-            const editId = document.getElementById('edit-guru-mapel-id')?.value;
-            const nama = document.getElementById('form-guru-nama')?.value.trim();
-            const mapel = document.getElementById('form-guru-mapel-nama')?.value.trim();
-
-            if (!nama || !mapel) {
-                showToast('Nama guru dan mata pelajaran wajib diisi!', 'error');
-                return;
-            }
-
-            if (editId) {
-                const idx = (window.appData.allGuruMapelList || []).findIndex(g => g.id === editId);
-                if (idx !== -1) {
-                    window.appData.allGuruMapelList[idx] = {
-                        ...window.appData.allGuruMapelList[idx],
-                        nama, mapel
-                    };
-                }
-            } else {
-                const newGuru = {
-                    id: 'gmapel-' + Date.now(),
-                    kelasCode: window.appData.activeKelasCode,
-                    nama, mapel
-                };
-                window.appData.allGuruMapelList = window.appData.allGuruMapelList || [];
-                window.appData.allGuruMapelList.push(newGuru);
-            }
-
-            saveToStorage(true, true);
-            closeModalGuruMapel();
-            showToast('Data guru mapel berhasil disimpan!', 'success');
-        }
-
-        function handleSaveCatatan(e) {
-            e.preventDefault();
-            const siswaId = document.getElementById('catatan-siswa-id')?.value;
-            const tanggal = document.getElementById('catatan-tanggal')?.value;
-            const kategori = document.getElementById('catatan-kategori')?.value;
-            const topik = document.getElementById('catatan-topik')?.value.trim();
-            const solusi = document.getElementById('catatan-solusi')?.value.trim();
-
-            if (!siswaId || !topik || !solusi) {
-                showToast('Mohon lengkapi seluruh field catatan bimbingan!', 'error');
-                return;
-            }
-
-            const newCatatan = {
-                id: 'cat-' + Date.now(),
+            const newAbsen = {
+                id: 'abs-' + Date.now(),
+                siswaId: targetSiswaId,
+                kategori: kategori,
+                tanggal: tanggal,
+                alasan: alasan || '-',
+                pelapor: reporterNama,
+                status: 'Disetujui',
                 kelasCode: window.appData.activeKelasCode,
-                siswaId, tanggal, kategori, topik, solusi,
                 timestamp: Date.now()
             };
 
-            window.appData.allCatatanList = window.appData.allCatatanList || [];
-            window.appData.allCatatanList.unshift(newCatatan);
+            window.appData.absensiList = window.appData.absensiList || [];
+            window.appData.absensiList.unshift(newAbsen);
+            window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.id !== newAbsen.id).concat(newAbsen);
 
-            saveToStorage(true, true);
-            document.getElementById('catatan-topik').value = '';
-            document.getElementById('catatan-solusi').value = '';
-            showToast('Catatan bimbingan berhasil disimpan!', 'success');
+            saveToStorage(false, true);
+
+            // PUBLISH VIA MQTT WEBSOCKET INSTANTLY
+            publishMQTTAction('REPORT_SISWA', newAbsen);
+
+            const inputAlasan = document.getElementById('siswa-self-alasan');
+            if (inputAlasan) inputAlasan.value = '';
+            showToast('Laporan presensi berhasil dikirim ke Wali Kelas!', 'success');
         }
 
-        function deleteCatatan(id) {
-            if (confirm('Hapus catatan bimbingan ini?')) {
-                window.appData.allCatatanList = (window.appData.allCatatanList || []).filter(c => c.id !== id);
-                saveToStorage(true, true);
-                showToast('Catatan bimbingan dihapus.', 'info');
-            }
-        }
+        function handleSiswaLaporGuru(e) {
+            e.preventDefault();
+            const guruMapel = document.getElementById('siswa-guru-nama-mapel')?.value;
+            const jamKe = document.getElementById('siswa-guru-jam-ke')?.value;
+            const tanggal = document.getElementById('siswa-guru-tanggal')?.value;
+            const keterangan = document.getElementById('siswa-guru-keterangan')?.value;
 
-        function approveAbsensi(id) {
-            const idx = (window.appData.allAbsensiList || []).findIndex(a => a.id === id);
-            if (idx !== -1) {
-                window.appData.allAbsensiList[idx].status = 'Disetujui';
-                saveToStorage(true, true);
-                showToast('Status presensi disetujui!', 'success');
-            }
-        }
-
-        function rejectAbsensi(id) {
-            const idx = (window.appData.allAbsensiList || []).findIndex(a => a.id === id);
-            if (idx !== -1) {
-                window.appData.allAbsensiList[idx].status = 'Ditolak';
-                saveToStorage(true, true);
-                showToast('Status presensi ditolak.', 'info');
-            }
-        }
-
-        function deleteAbsensi(id) {
-            if (confirm('Hapus entri presensi ini?')) {
-                window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.id !== id);
-                saveToStorage(true, true);
-                showToast('Presensi dihapus.', 'info');
-            }
-        }
-
-        function deleteGuruAbsensi(id) {
-            if (confirm('Hapus laporan ketidakhadiran guru ini?')) {
-                window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.id !== id);
-                saveToStorage(true, true);
-                showToast('Laporan guru dihapus.', 'info');
-            }
-        }
-
-        function toggleAlasanField() {
-            const kat = document.getElementById('siswa-self-kategori')?.value;
-            const container = document.getElementById('container-siswa-self-alasan');
-            if (!container) return;
-
-            if (kat === 'Hadir') {
-                container.classList.add('hidden');
-            } else {
-                container.classList.remove('hidden');
-            }
-        }
-
-        function exportCSV() {
-            let csv = 'NO,TANGGAL,NIS,NAMA SISWA,STATUS PRESENSI,ALASAN/KETERANGAN,PELAPOR,VERIFIKASI\n';
-            const list = window.appData.absensiList || [];
-
-            if (list.length === 0) {
-                showToast('Tidak ada data presensi untuk di-export!', 'error');
+            if (!guruMapel || !jamKe || !tanggal || !keterangan) {
+                showToast('Mohon lengkapi seluruh field laporan guru!', 'error');
                 return;
             }
 
-            list.forEach((a, i) => {
-                const s = (window.appData.siswaList || []).find(x => x.id === a.siswaId);
-                const nama = s ? s.nama : 'Siswa';
-                const nis = s ? (s.nis || '-') : '-';
-                csv += `"${i + 1}","${a.tanggal}","${nis}","${nama}","${a.kategori}","${a.alasan || '-'}","${a.pelapor || '-'}","${a.status || 'Disetujui'}"\n`;
-            });
+            const reporter = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
+            const reporterNama = reporter ? reporter.nama : 'Siswa Perwakilan';
 
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Rekap_Presensi_Perwalian_${window.appData.guruProfile?.kelas || 'Kelas'}_${Date.now()}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            showToast('Rekap presensi CSV berhasil diunduh!', 'success');
-        }
+            const newGuruAbsen = {
+                id: 'gabs-' + Date.now(),
+                guruMapel: guruMapel,
+                jamKe: jamKe,
+                tanggal: tanggal,
+                keterangan: keterangan,
+                pelapor: reporterNama,
+                kelasCode: window.appData.activeKelasCode,
+                timestamp: Date.now()
+            };
 
-        function renderSiswaTable() {
-            const tbody = document.getElementById('siswa-table-body');
-            if (!tbody) return;
+            window.appData.guruAbsensiList = window.appData.guruAbsensiList || [];
+            window.appData.guruAbsensiList.unshift(newGuruAbsen);
+            window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.id !== newGuruAbsen.id).concat(newGuruAbsen);
 
-            if (!window.appData.siswaList || window.appData.siswaList.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-slate-500 italic">Belum ada data siswa terdaftar. Klik "Tambah Siswa Baru".</td></tr>';
-                return;
-            }
+            saveToStorage(false, true);
 
-            tbody.innerHTML = window.appData.siswaList.map((s, idx) => `
-                <tr class="hover:bg-slate-800/50 transition">
-                    <td class="p-3 font-semibold text-slate-400">${idx + 1}</td>
-                    <td class="p-3 font-mono text-cyan-400 font-bold">${s.nis || '-'}</td>
-                    <td class="p-3 font-bold text-white">${s.nama}</td>
-                    <td class="p-3">${s.kelas || 'X'} - ${s.jurusan || ''}</td>
-                    <td class="p-3">${s.gender === 'L' ? '<span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold">L</span>' : '<span class="px-2 py-0.5 rounded bg-pink-500/10 text-pink-400 border border-pink-500/20 font-semibold">P</span>'}</td>
-                    <td class="p-3 font-bold text-emerald-400">${s.ipk || '0.00'}</td>
-                    <td class="p-3 font-mono text-slate-400">${s.ortu || '-'}</td>
-                    <td class="p-3 text-center">
-                        <div class="flex items-center justify-center gap-1.5">
-                            <button onclick="editSiswa('${s.id}')" class="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500 hover:text-white transition"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                            <button onclick="deleteSiswa('${s.id}')" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+            // PUBLISH VIA MQTT WEBSOCKET INSTANTLY
+            publishMQTTAction('REPORT_GURU', newGuruAbsen);
 
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function renderGuruMapelTable() {
-            const tbody = document.getElementById('guru-mapel-table-body');
-            if (!tbody) return;
-
-            if (!window.appData.guruMapelList || window.appData.guruMapelList.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-500 italic">Belum ada data guru mapel terdaftar. Klik "Tambah Guru Mapel".</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = window.appData.guruMapelList.map((g, idx) => `
-                <tr class="hover:bg-slate-800/50 transition">
-                    <td class="p-3 font-semibold text-slate-400">${idx + 1}</td>
-                    <td class="p-3 font-bold text-white">${g.nama}</td>
-                    <td class="p-3 text-amber-400 font-semibold">${g.mapel}</td>
-                    <td class="p-3 text-center">
-                        <div class="flex items-center justify-center gap-1.5">
-                            <button onclick="editGuruMapel('${g.id}')" class="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500 hover:text-white transition"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                            <button onclick="deleteGuruMapel('${g.id}')" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+            const inputJam = document.getElementById('siswa-guru-jam-ke');
+            const inputKet = document.getElementById('siswa-guru-keterangan');
+            if (inputJam) inputJam.value = '';
+            if (inputKet) inputKet.value = '';
+            showToast('Laporan guru tidak hadir dikirim ke Guru Perwalian!', 'success');
         }
 
         function renderDashLaporanSiswa() {
@@ -2078,6 +1784,62 @@
             `).join('');
         }
 
+        function renderSiswaTable() {
+            const tbody = document.getElementById('siswa-table-body');
+            if (!tbody) return;
+
+            if (!window.appData.siswaList || window.appData.siswaList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-slate-500 italic">Belum ada data siswa terdaftar. Klik "Tambah Siswa Baru".</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = window.appData.siswaList.map((s, idx) => `
+                <tr class="hover:bg-slate-800/50 transition">
+                    <td class="p-3 font-semibold text-slate-400">${idx + 1}</td>
+                    <td class="p-3 font-mono text-cyan-400 font-bold">${s.nis || '-'}</td>
+                    <td class="p-3 font-bold text-white">${s.nama}</td>
+                    <td class="p-3">${s.kelas || 'X'} - ${s.jurusan || ''}</td>
+                    <td class="p-3">${s.gender === 'L' ? '<span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold">L</span>' : '<span class="px-2 py-0.5 rounded bg-pink-500/10 text-pink-400 border border-pink-500/20 font-semibold">P</span>'}</td>
+                    <td class="p-3 font-bold text-emerald-400">${s.ipk || '0.00'}</td>
+                    <td class="p-3 font-mono text-slate-400">${s.ortu || '-'}</td>
+                    <td class="p-3 text-center">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="editSiswa('${s.id}')" class="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500 hover:text-white transition"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                            <button onclick="deleteSiswa('${s.id}')" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function renderGuruMapelTable() {
+            const tbody = document.getElementById('guru-mapel-table-body');
+            if (!tbody) return;
+
+            if (!window.appData.guruMapelList || window.appData.guruMapelList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-500 italic">Belum ada data guru mapel terdaftar. Klik "Tambah Guru Mapel".</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = window.appData.guruMapelList.map((g, idx) => `
+                <tr class="hover:bg-slate-800/50 transition">
+                    <td class="p-3 font-semibold text-slate-400">${idx + 1}</td>
+                    <td class="p-3 font-bold text-white">${g.nama}</td>
+                    <td class="p-3 text-amber-400 font-semibold">${g.mapel}</td>
+                    <td class="p-3 text-center">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="editGuruMapel('${g.id}')" class="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500 hover:text-white transition"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                            <button onclick="deleteGuruMapel('${g.id}')" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
         function updateHeaderInfo() {
             const badgeRole = document.getElementById('badge-role-pill');
             const badgeUser = document.getElementById('badge-user-name');
@@ -2203,135 +1965,368 @@
             }
         }
 
-        async function handleSiswaLaporAbsen(e) {
-            e.preventDefault();
-            const targetSiswaId = document.getElementById('siswa-target-absen-id')?.value;
-            const kategori = document.getElementById('siswa-self-kategori')?.value;
-            const tanggal = document.getElementById('siswa-self-tanggal')?.value;
-            const alasan = document.getElementById('siswa-self-alasan')?.value;
+        function openModalEditGuru() {
+            const prof = window.appData.guruProfile || { nama: '', nip: '', kelas: '', pin: '808015' };
+            document.getElementById('edit-guru-nama').value = prof.nama || '';
+            document.getElementById('edit-guru-nip').value = prof.nip || '';
+            document.getElementById('edit-guru-kelas').value = prof.kelas || '';
+            document.getElementById('edit-guru-pin').value = prof.pin || '808015';
 
-            if (!targetSiswaId || !tanggal) {
-                showToast('Pilih nama siswa dan tanggal presensi!', 'error');
+            document.getElementById('modal-edit-guru')?.classList.remove('hidden');
+        }
+
+        function closeModalEditGuru() {
+            document.getElementById('modal-edit-guru')?.classList.add('hidden');
+        }
+
+        function handleSaveGuruProfile(e) {
+            e.preventDefault();
+            const nama = document.getElementById('edit-guru-nama')?.value.trim();
+            const nip = document.getElementById('edit-guru-nip')?.value.trim();
+            const kelas = document.getElementById('edit-guru-kelas')?.value.trim();
+            const pin = document.getElementById('edit-guru-pin')?.value.trim();
+
+            if (!nama || !kelas) {
+                showToast('Nama guru dan nama kelas wajib diisi!', 'error');
                 return;
             }
 
-            const reporter = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
-            const reporterNama = reporter ? reporter.nama : 'Siswa Perwakilan';
+            window.appData.guruProfile.nama = nama;
+            window.appData.guruProfile.nip = nip || '-';
+            window.appData.guruProfile.kelas = kelas;
+            window.appData.guruProfile.pin = pin || '808015';
 
-            const newAbsen = {
-                id: 'abs-' + Date.now(),
-                siswaId: targetSiswaId,
-                kategori: kategori,
-                tanggal: tanggal,
-                alasan: alasan || '-',
-                pelapor: reporterNama,
-                status: 'Disetujui',
-                kelasCode: window.appData.activeKelasCode,
-                timestamp: Date.now()
-            };
-
-            showToast('Mengirim laporan presensi ke Cloud...', 'info');
-
-            let targetCloudId = window.appData.activeCloudId;
-            if (!targetCloudId) {
-                const prof = (window.appData.allKelasProfiles || []).find(k => k.id === window.appData.activeKelasCode || k.kelasCode === window.appData.activeKelasCode);
-                if (prof && prof.cloudId) targetCloudId = prof.cloudId;
+            const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === window.appData.activeKelasCode);
+            if (pIdx !== -1) {
+                window.appData.allKelasProfiles[pIdx] = Object.assign({}, window.appData.allKelasProfiles[pIdx], window.appData.guruProfile);
             }
-
-            if (targetCloudId) {
-                const latestCloud = await fetchClassFromCloud(targetCloudId);
-                if (latestCloud && Array.isArray(latestCloud.absensi)) {
-                    window.appData.absensiList = latestCloud.absensi;
-                }
-            }
-
-            window.appData.absensiList.unshift(newAbsen);
-            window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== window.appData.activeKelasCode).concat(window.appData.absensiList);
 
             saveToStorage(true, true);
-            const inputAlasan = document.getElementById('siswa-self-alasan');
-            if (inputAlasan) inputAlasan.value = '';
-            showToast('Laporan presensi berhasil dikirim ke Wali Kelas!', 'success');
+            closeModalEditGuru();
+            showToast('Profil Guru Perwalian berhasil diperbarui!', 'success');
         }
 
-        async function handleSiswaLaporGuru(e) {
-            e.preventDefault();
-            const guruMapel = document.getElementById('siswa-guru-nama-mapel')?.value;
-            const jamKe = document.getElementById('siswa-guru-jam-ke')?.value;
-            const tanggal = document.getElementById('siswa-guru-tanggal')?.value;
-            const keterangan = document.getElementById('siswa-guru-keterangan')?.value;
+        function openModalTambahSiswa() {
+            document.getElementById('edit-siswa-id').value = '';
+            document.getElementById('form-siswa-nis').value = '';
+            document.getElementById('form-siswa-nama').value = '';
+            document.getElementById('form-siswa-kelas').value = 'X';
+            document.getElementById('form-siswa-jurusan').value = '';
+            document.getElementById('form-siswa-gender').value = 'L';
+            document.getElementById('form-siswa-ipk').value = '';
+            document.getElementById('form-siswa-ortu').value = '';
 
-            if (!guruMapel || !jamKe || !tanggal || !keterangan) {
-                showToast('Mohon lengkapi seluruh field laporan guru!', 'error');
+            const title = document.getElementById('modal-siswa-title');
+            if (title) title.innerHTML = '<i data-lucide="user-plus" class="w-4 h-4 text-emerald-400"></i> Tambah Data Siswa Baru';
+
+            document.getElementById('modal-siswa')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeModalSiswa() {
+            document.getElementById('modal-siswa')?.classList.add('hidden');
+        }
+
+        function editSiswa(id) {
+            const s = (window.appData.allSiswaList || []).find(x => x.id === id);
+            if (!s) return;
+
+            document.getElementById('edit-siswa-id').value = s.id;
+            document.getElementById('form-siswa-nis').value = s.nis || '';
+            document.getElementById('form-siswa-nama').value = s.nama || '';
+            document.getElementById('form-siswa-kelas').value = s.kelas || 'X';
+            document.getElementById('form-siswa-jurusan').value = s.jurusan || '';
+            document.getElementById('form-siswa-gender').value = s.gender || 'L';
+            document.getElementById('form-siswa-ipk').value = s.ipk || '';
+            document.getElementById('form-siswa-ortu').value = s.ortu || '';
+
+            const title = document.getElementById('modal-siswa-title');
+            if (title) title.innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-cyan-400"></i> Edit Data Siswa';
+
+            document.getElementById('modal-siswa')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function deleteSiswa(id) {
+            showConfirmDialog('Hapus Data Siswa', 'Apakah Anda yakin ingin menghapus data siswa ini?', () => {
+                window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.id !== id);
+                saveToStorage(true, true);
+                showToast('Data siswa berhasil dihapus.', 'info');
+            });
+        }
+
+        function handleSaveSiswa(e) {
+            e.preventDefault();
+            const editId = document.getElementById('edit-siswa-id')?.value;
+            const nis = document.getElementById('form-siswa-nis')?.value.trim();
+            const nama = document.getElementById('form-siswa-nama')?.value.trim();
+            const kelas = document.getElementById('form-siswa-kelas')?.value;
+            const jurusan = document.getElementById('form-siswa-jurusan')?.value.trim();
+            const gender = document.getElementById('form-siswa-gender')?.value;
+            const ipk = document.getElementById('form-siswa-ipk')?.value.trim();
+            const ortu = document.getElementById('form-siswa-ortu')?.value.trim();
+
+            if (!nama) {
+                showToast('Nama siswa wajib diisi!', 'error');
                 return;
             }
 
-            const reporter = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
-            const reporterNama = reporter ? reporter.nama : 'Siswa Perwakilan';
+            if (editId) {
+                const idx = (window.appData.allSiswaList || []).findIndex(s => s.id === editId);
+                if (idx !== -1) {
+                    window.appData.allSiswaList[idx] = {
+                        ...window.appData.allSiswaList[idx],
+                        nis, nama, kelas, jurusan, gender, ipk: ipk || '0.00', ortu
+                    };
+                }
+            } else {
+                const newSiswa = {
+                    id: 'siswa-' + Date.now(),
+                    kelasCode: window.appData.activeKelasCode,
+                    nis, nama, kelas, jurusan, gender, ipk: ipk || '0.00', ortu
+                };
+                window.appData.allSiswaList = window.appData.allSiswaList || [];
+                window.appData.allSiswaList.push(newSiswa);
+            }
 
-            const newGuruAbsen = {
-                id: 'gabs-' + Date.now(),
-                guruMapel: guruMapel,
-                jamKe: jamKe,
-                tanggal: tanggal,
-                keterangan: keterangan,
-                pelapor: reporterNama,
+            saveToStorage(true, true);
+            closeModalSiswa();
+            showToast('Data siswa berhasil disimpan!', 'success');
+        }
+
+        function openModalTambahGuruMapel() {
+            document.getElementById('edit-guru-mapel-id').value = '';
+            document.getElementById('form-guru-nama').value = '';
+            document.getElementById('form-guru-mapel-nama').value = '';
+
+            const title = document.getElementById('modal-guru-mapel-title');
+            if (title) title.innerHTML = '<i data-lucide="user-plus" class="w-4 h-4 text-amber-400"></i> Tambah Data Guru Mapel';
+
+            document.getElementById('modal-guru-mapel')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeModalGuruMapel() {
+            document.getElementById('modal-guru-mapel')?.classList.add('hidden');
+        }
+
+        function editGuruMapel(id) {
+            const g = (window.appData.allGuruMapelList || []).find(x => x.id === id);
+            if (!g) return;
+
+            document.getElementById('edit-guru-mapel-id').value = g.id;
+            document.getElementById('form-guru-nama').value = g.nama || '';
+            document.getElementById('form-guru-mapel-nama').value = g.mapel || '';
+
+            const title = document.getElementById('modal-guru-mapel-title');
+            if (title) title.innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-cyan-400"></i> Edit Data Guru Mapel';
+
+            document.getElementById('modal-guru-mapel')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function deleteGuruMapel(id) {
+            showConfirmDialog('Hapus Guru Mapel', 'Apakah Anda yakin ingin menghapus data guru mapel ini?', () => {
+                window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.id !== id);
+                saveToStorage(true, true);
+                showToast('Data guru mapel berhasil dihapus.', 'info');
+            });
+        }
+
+        function handleSaveGuruMapel(e) {
+            e.preventDefault();
+            const editId = document.getElementById('edit-guru-mapel-id')?.value;
+            const nama = document.getElementById('form-guru-nama')?.value.trim();
+            const mapel = document.getElementById('form-guru-mapel-nama')?.value.trim();
+
+            if (!nama || !mapel) {
+                showToast('Nama guru dan mata pelajaran wajib diisi!', 'error');
+                return;
+            }
+
+            if (editId) {
+                const idx = (window.appData.allGuruMapelList || []).findIndex(g => g.id === editId);
+                if (idx !== -1) {
+                    window.appData.allGuruMapelList[idx] = {
+                        ...window.appData.allGuruMapelList[idx],
+                        nama, mapel
+                    };
+                }
+            } else {
+                const newGuru = {
+                    id: 'gmapel-' + Date.now(),
+                    kelasCode: window.appData.activeKelasCode,
+                    nama, mapel
+                };
+                window.appData.allGuruMapelList = window.appData.allGuruMapelList || [];
+                window.appData.allGuruMapelList.push(newGuru);
+            }
+
+            saveToStorage(true, true);
+            closeModalGuruMapel();
+            showToast('Data guru mapel berhasil disimpan!', 'success');
+        }
+
+        function handleSaveCatatan(e) {
+            e.preventDefault();
+            const siswaId = document.getElementById('catatan-siswa-id')?.value;
+            const tanggal = document.getElementById('catatan-tanggal')?.value;
+            const kategori = document.getElementById('catatan-kategori')?.value;
+            const topik = document.getElementById('catatan-topik')?.value.trim();
+            const solusi = document.getElementById('catatan-solusi')?.value.trim();
+
+            if (!siswaId || !topik || !solusi) {
+                showToast('Mohon lengkapi seluruh field catatan bimbingan!', 'error');
+                return;
+            }
+
+            const newCatatan = {
+                id: 'cat-' + Date.now(),
                 kelasCode: window.appData.activeKelasCode,
+                siswaId, tanggal, kategori, topik, solusi,
                 timestamp: Date.now()
             };
 
-            showToast('Mengirim laporan guru ke Cloud...', 'info');
-
-            let targetCloudId = window.appData.activeCloudId;
-            if (!targetCloudId) {
-                const prof = (window.appData.allKelasProfiles || []).find(k => k.id === window.appData.activeKelasCode || k.kelasCode === window.appData.activeKelasCode);
-                if (prof && prof.cloudId) targetCloudId = prof.cloudId;
-            }
-
-            if (targetCloudId) {
-                const latestCloud = await fetchClassFromCloud(targetCloudId);
-                if (latestCloud && Array.isArray(latestCloud.guruAbsensi)) {
-                    window.appData.guruAbsensiList = latestCloud.guruAbsensi;
-                }
-            }
-
-            window.appData.guruAbsensiList.unshift(newGuruAbsen);
-            window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== window.appData.activeKelasCode).concat(window.appData.guruAbsensiList);
+            window.appData.allCatatanList = window.appData.allCatatanList || [];
+            window.appData.allCatatanList.unshift(newCatatan);
 
             saveToStorage(true, true);
-            const inputJam = document.getElementById('siswa-guru-jam-ke');
-            const inputKet = document.getElementById('siswa-guru-keterangan');
-            if (inputJam) inputJam.value = '';
-            if (inputKet) inputKet.value = '';
-            showToast('Laporan guru tidak hadir dikirim ke Guru Perwalian!', 'success');
+            document.getElementById('catatan-topik').value = '';
+            document.getElementById('catatan-solusi').value = '';
+            showToast('Catatan bimbingan berhasil disimpan!', 'success');
         }
 
-        window.onload = async function() {
+        function deleteCatatan(id) {
+            showConfirmDialog('Hapus Catatan Bimbingan', 'Apakah Anda yakin ingin menghapus catatan bimbingan ini?', () => {
+                window.appData.allCatatanList = (window.appData.allCatatanList || []).filter(c => c.id !== id);
+                saveToStorage(true, true);
+                showToast('Catatan bimbingan dihapus.', 'info');
+            });
+        }
+
+        function approveAbsensi(id) {
+            const idx = (window.appData.allAbsensiList || []).findIndex(a => a.id === id);
+            if (idx !== -1) {
+                window.appData.allAbsensiList[idx].status = 'Disetujui';
+                saveToStorage(true, true);
+                showToast('Status presensi disetujui!', 'success');
+            }
+        }
+
+        function rejectAbsensi(id) {
+            const idx = (window.appData.allAbsensiList || []).findIndex(a => a.id === id);
+            if (idx !== -1) {
+                window.appData.allAbsensiList[idx].status = 'Ditolak';
+                saveToStorage(true, true);
+                showToast('Status presensi ditolak.', 'info');
+            }
+        }
+
+        function deleteAbsensi(id) {
+            showConfirmDialog('Hapus Presensi', 'Apakah Anda yakin ingin menghapus entri presensi ini?', () => {
+                window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.id !== id);
+                saveToStorage(true, true);
+                showToast('Presensi dihapus.', 'info');
+            });
+        }
+
+        function deleteGuruAbsensi(id) {
+            showConfirmDialog('Hapus Laporan Guru', 'Apakah Anda yakin ingin menghapus laporan ketidakhadiran guru ini?', () => {
+                window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.id !== id);
+                saveToStorage(true, true);
+                showToast('Laporan guru dihapus.', 'info');
+            });
+        }
+
+        function toggleAlasanField() {
+            const kat = document.getElementById('siswa-self-kategori')?.value;
+            const container = document.getElementById('container-siswa-self-alasan');
+            if (!container) return;
+
+            if (kat === 'Hadir') {
+                container.classList.add('hidden');
+            } else {
+                container.classList.remove('hidden');
+            }
+        }
+
+        function exportCSV() {
+            let csv = 'NO,TANGGAL,NIS,NAMA SISWA,STATUS PRESENSI,ALASAN/KETERANGAN,PELAPOR,VERIFIKASI\n';
+            const list = window.appData.absensiList || [];
+
+            if (list.length === 0) {
+                showToast('Tidak ada data presensi untuk di-export!', 'error');
+                return;
+            }
+
+            list.forEach((a, i) => {
+                const s = (window.appData.siswaList || []).find(x => x.id === a.siswaId);
+                const nama = s ? s.nama : 'Siswa';
+                const nis = s ? (s.nis || '-') : '-';
+                csv += `"${i + 1}","${a.tanggal}","${nis}","${nama}","${a.kategori}","${a.alasan || '-'}","${a.pelapor || '-'}","${a.status || 'Disetujui'}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Rekap_Presensi_Perwalian_${window.appData.guruProfile?.kelas || 'Kelas'}_${Date.now()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast('Rekap presensi CSV berhasil diunduh!', 'success');
+        }
+
+        function handleSiswaKelasChange() {
+            const selectedKelasCode = document.getElementById('login-siswa-kelas-select')?.value;
+            if (!selectedKelasCode) return;
+
+            window.appData.activeKelasCode = selectedKelasCode;
+            window.syncFilteredData(false);
+            populateSiswaDropdowns();
+            populateGuruMapelDropdowns();
+        }
+
+        window.onload = function() {
             if (typeof lucide !== 'undefined') lucide.createIcons();
 
+            initMQTTWebSocket();
+
+            // Handle URL Data Hydration (Instant Load on Student Phone)
             const urlParams = new URLSearchParams(window.location.search);
-            const cloudIdParam = urlParams.get('c');
+            const codeParam = urlParams.get('code');
             const dataParam = urlParams.get('d');
 
-            if (cloudIdParam) {
-                await initStudentFromCloud(cloudIdParam);
-            } else if (dataParam) {
+            if (dataParam) {
                 const decompressed = window.decompressDataObj(dataParam);
                 if (decompressed && decompressed.kelasCode) {
                     window.appData.activeKelasCode = decompressed.kelasCode;
-                    if (decompressed.profile) window.appData.guruProfile = decompressed.profile;
+                    if (decompressed.profile) {
+                        window.appData.guruProfile = decompressed.profile;
+                        const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === decompressed.kelasCode);
+                        if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = decompressed.profile;
+                        else (window.appData.allKelasProfiles = window.appData.allKelasProfiles || []).push(decompressed.profile);
+                    }
                     if (Array.isArray(decompressed.siswa)) {
                         window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== decompressed.kelasCode).concat(decompressed.siswa);
                     }
                     if (Array.isArray(decompressed.guruMapel)) {
                         window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== decompressed.kelasCode).concat(decompressed.guruMapel);
                     }
+                    
                     window.syncFilteredData(false);
                     switchLoginTab('SISWA');
                     populateWaliKelasDropdowns();
                     populateSiswaDropdowns();
                     populateGuruMapelDropdowns();
+
+                    const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
+                    if (siswaKelasSelect) siswaKelasSelect.value = decompressed.kelasCode;
                 }
+            } else if (codeParam) {
+                window.appData.activeKelasCode = codeParam;
+                switchLoginTab('SISWA');
+                populateWaliKelasDropdowns();
             } else {
                 populateWaliKelasDropdowns();
             }
@@ -2342,37 +2337,6 @@
             } else {
                 showLoginScreen();
             }
-
-            // Realtime Sync Polling setiap 3 detik untuk memuat laporan baru dari siswa
-            setInterval(async () => {
-                if (window.appData.isLoggedIn && window.appData.activeCloudId) {
-                    const latest = await fetchClassFromCloud(window.appData.activeCloudId);
-                    if (latest) {
-                        let hasNew = false;
-                        if (Array.isArray(latest.absensi) && latest.absensi.length !== window.appData.absensiList.length) {
-                            window.appData.absensiList = latest.absensi;
-                            window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== window.appData.activeKelasCode).concat(latest.absensi);
-                            hasNew = true;
-                        }
-                        if (Array.isArray(latest.guruAbsensi) && latest.guruAbsensi.length !== window.appData.guruAbsensiList.length) {
-                            window.appData.guruAbsensiList = latest.guruAbsensi;
-                            window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== window.appData.activeKelasCode).concat(latest.guruAbsensi);
-                            hasNew = true;
-                        }
-                        if (hasNew) {
-                            renderDashLaporanSiswa();
-                            renderDashLaporanGuru();
-                            renderAbsensiTable();
-                            renderGuruAbsensiTable();
-                            renderCharts();
-                            updateHeaderInfo();
-                            if (window.appData.currentRole === 'WALI') {
-                                showToast('📢 Ada laporan baru masuk dari portal siswa!', 'success');
-                            }
-                        }
-                    }
-                }
-            }, 3000);
         };
     </script>
 </body>
