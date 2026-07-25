@@ -719,6 +719,13 @@
                                 </select>
                             </div>
 
+                            <div>
+                                <label class="block font-semibold text-slate-400 mb-1">NAMA SISWA PELAPOR (PENGIRIM LAPORAN)</label>
+                                <select id="siswa-self-pelapor-id" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-cyan-400 font-semibold focus:outline-none focus:border-emerald-500 transition" required>
+                                    <option value="" disabled selected>-- Pilih Pelapor --</option>
+                                </select>
+                            </div>
+
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block font-semibold text-slate-400 mb-1">STATUS PRESENSI</label>
@@ -740,11 +747,6 @@
                                 <textarea id="siswa-self-alasan" rows="2" placeholder="Tuliskan keterangan detail alasan Ijin, Sakit, atau Alpa siswa..." class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500 transition"></textarea>
                             </div>
 
-                            <div class="p-2.5 rounded-lg bg-[#0b0f19] border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
-                                <span>Perwakilan Pelapor:</span>
-                                <span id="siswa-reporter-badge" class="font-bold text-emerald-400">-</span>
-                            </div>
-
                             <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white transition shadow-md shadow-emerald-600/20 uppercase tracking-wider">
                                 Kirim Presensi Ke Wali Kelas
                             </button>
@@ -763,6 +765,13 @@
                                 <label class="block font-semibold text-slate-400 mb-1">PILIH GURU & MATA PELAJARAN</label>
                                 <select id="siswa-guru-nama-mapel" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition" required>
                                     <option value="" disabled selected>-- Pilih Guru Mapel --</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-400 mb-1">NAMA SISWA PELAPOR (PENGIRIM LAPORAN)</label>
+                                <select id="siswa-guru-pelapor-id" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-cyan-400 font-semibold focus:outline-none focus:border-amber-500 transition" required>
+                                    <option value="" disabled selected>-- Pilih Pelapor --</option>
                                 </select>
                             </div>
 
@@ -1434,6 +1443,8 @@
             const filterDropdown = document.getElementById('filter-bimbingan-siswa');
             const loginSelect = document.getElementById('login-siswa-select');
             const siswaTargetAbsenDropdown = document.getElementById('siswa-target-absen-id');
+            const siswaSelfPelaporDropdown = document.getElementById('siswa-self-pelapor-id');
+            const siswaGuruPelaporDropdown = document.getElementById('siswa-guru-pelapor-id');
 
             let optionsHtml = '';
             if (!window.appData.siswaList || window.appData.siswaList.length === 0) {
@@ -1446,6 +1457,13 @@
             if (catatanDropdown) catatanDropdown.innerHTML = optionsHtml;
             if (loginSelect) loginSelect.innerHTML = optionsHtml;
             if (siswaTargetAbsenDropdown) siswaTargetAbsenDropdown.innerHTML = optionsHtml;
+            if (siswaSelfPelaporDropdown) siswaSelfPelaporDropdown.innerHTML = optionsHtml;
+            if (siswaGuruPelaporDropdown) siswaGuruPelaporDropdown.innerHTML = optionsHtml;
+
+            if (window.appData.activeSiswaId) {
+                if (siswaSelfPelaporDropdown) siswaSelfPelaporDropdown.value = window.appData.activeSiswaId;
+                if (siswaGuruPelaporDropdown) siswaGuruPelaporDropdown.value = window.appData.activeSiswaId;
+            }
 
             if (filterDropdown) {
                 filterDropdown.innerHTML = '<option value="ALL">Semua Siswa</option>' +
@@ -1453,68 +1471,10 @@
             }
         }
 
-        function populateGuruMapelDropdowns() {
-            const siswaGuruMapelDropdown = document.getElementById('siswa-guru-nama-mapel');
-            if (!siswaGuruMapelDropdown) return;
-
-            let optionsHtml = '';
-            if (!window.appData.guruMapelList || window.appData.guruMapelList.length === 0) {
-                optionsHtml = '<option value="" disabled selected>-- Belum Ada Guru Mapel Terdaftar --</option>';
-            } else {
-                optionsHtml = '<option value="" disabled selected>-- Pilih Guru Mapel --</option>' +
-                    window.appData.guruMapelList.map(g => `<option value="${g.nama} - ${g.mapel}">${g.nama} (${g.mapel})</option>`).join('');
-            }
-            siswaGuruMapelDropdown.innerHTML = optionsHtml;
-        }
-
-        window.syncFilteredData = function(updateUi = true) {
-            const code = window.appData.activeKelasCode;
-
-            if (code) {
-                window.appData.siswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode === code);
-                window.appData.guruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode === code);
-                window.appData.catatanList = (window.appData.allCatatanList || []).filter(c => c.kelasCode === code);
-                window.appData.absensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode === code);
-                window.appData.guruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode === code);
-
-                const currentProfile = (window.appData.allKelasProfiles || []).find(k => k.id === code || k.kelasCode === code);
-                if (currentProfile) {
-                    window.appData.guruProfile = currentProfile;
-                }
-            }
-
-            if (updateUi) {
-                populateSiswaDropdowns();
-                populateGuruMapelDropdowns();
-                populateWaliKelasDropdowns();
-                renderSiswaTable();
-                renderGuruMapelTable();
-                renderBimbinganList();
-                renderAbsensiTable();
-                renderGuruAbsensiTable();
-                renderDashLaporanSiswa();
-                renderDashLaporanGuru();
-                renderSiswaPortalBimbingan();
-                renderCharts();
-                updateHeaderInfo();
-            }
-        };
-
-        function saveToStorage(syncToCloud = true, updateUi = true) {
-            try {
-                localStorage.setItem('PERWALIAN_SMK_MARISA_DATA', JSON.stringify(window.appData));
-            } catch (e) {
-                console.warn("Storage save warning:", e);
-            }
-
-            if (updateUi) {
-                window.syncFilteredData(true);
-            }
-        }
-
         function handleSiswaLaporAbsen(e) {
             e.preventDefault();
             const targetSiswaId = document.getElementById('siswa-target-absen-id')?.value;
+            const pelaporSiswaId = document.getElementById('siswa-self-pelapor-id')?.value || window.appData.activeSiswaId;
             const kategori = document.getElementById('siswa-self-kategori')?.value;
             const tanggal = document.getElementById('siswa-self-tanggal')?.value;
             const alasan = document.getElementById('siswa-self-alasan')?.value;
@@ -1524,8 +1484,8 @@
                 return;
             }
 
-            const reporter = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
-            const reporterNama = reporter ? reporter.nama : 'Siswa Perwakilan';
+            const reporter = window.appData.siswaList.find(s => s.id === pelaporSiswaId) || window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
+            const reporterNama = reporter ? reporter.nama : 'Siswa';
 
             const newAbsen = {
                 id: 'abs-' + Date.now(),
@@ -1550,12 +1510,13 @@
 
             const inputAlasan = document.getElementById('siswa-self-alasan');
             if (inputAlasan) inputAlasan.value = '';
-            showToast('Laporan presensi berhasil dikirim ke Wali Kelas!', 'success');
+            showToast(`Laporan presensi (${kategori}) dikirim oleh ${reporterNama}!`, 'success');
         }
 
         function handleSiswaLaporGuru(e) {
             e.preventDefault();
             const guruMapel = document.getElementById('siswa-guru-nama-mapel')?.value;
+            const pelaporSiswaId = document.getElementById('siswa-guru-pelapor-id')?.value || window.appData.activeSiswaId;
             const jamKe = document.getElementById('siswa-guru-jam-ke')?.value;
             const tanggal = document.getElementById('siswa-guru-tanggal')?.value;
             const keterangan = document.getElementById('siswa-guru-keterangan')?.value;
@@ -1565,8 +1526,8 @@
                 return;
             }
 
-            const reporter = window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
-            const reporterNama = reporter ? reporter.nama : 'Siswa Perwakilan';
+            const reporter = window.appData.siswaList.find(s => s.id === pelaporSiswaId) || window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
+            const reporterNama = reporter ? reporter.nama : 'Siswa';
 
             const newGuruAbsen = {
                 id: 'gabs-' + Date.now(),
@@ -1592,7 +1553,7 @@
             const inputKet = document.getElementById('siswa-guru-keterangan');
             if (inputJam) inputJam.value = '';
             if (inputKet) inputKet.value = '';
-            showToast('Laporan guru tidak hadir dikirim ke Guru Perwalian!', 'success');
+            showToast(`Laporan guru tidak hadir dikirim oleh ${reporterNama}!`, 'success');
         }
 
         function renderDashLaporanSiswa() {
@@ -1612,12 +1573,15 @@
                 return `
                     <div class="p-3 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2">
                         <div class="flex items-center justify-between">
-                            <span class="font-bold text-white text-xs">${namaSiswa}</span>
+                            <div>
+                                <span class="text-[10px] text-slate-500 uppercase block font-semibold">Siswa Dilaporkan:</span>
+                                <span class="font-bold text-white text-xs">${namaSiswa}</span>
+                            </div>
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${colorBadge}">${a.kategori}</span>
                         </div>
                         <p class="text-[11px] text-slate-400">${a.alasan || 'Tidak ada catatan.'}</p>
                         <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
-                            <span>Pelapor: <strong class="text-slate-300">${a.pelapor || '-'}</strong> • ${a.tanggal}</span>
+                            <span>Dilaporkan Oleh: <strong class="text-cyan-400 font-bold">${a.pelapor || '-'}</strong> • ${a.tanggal}</span>
                             <div class="flex items-center gap-1">
                                 <button onclick="approveAbsensi('${a.id}')" class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white font-bold transition">Setujui</button>
                                 <button onclick="deleteAbsensi('${a.id}')" class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white font-bold transition">Hapus</button>
@@ -1640,12 +1604,15 @@
             container.innerHTML = window.appData.guruAbsensiList.map(g => `
                 <div class="p-3 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 text-xs">${g.guruMapel}</span>
+                        <div>
+                            <span class="text-[10px] text-slate-500 uppercase block font-semibold">Guru & Mapel:</span>
+                            <span class="font-bold text-amber-400 text-xs">${g.guruMapel}</span>
+                        </div>
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">${g.jamKe || 'Jam Pelajaran'}</span>
                     </div>
                     <p class="text-[11px] text-slate-400">${g.keterangan || 'Tidak ada keterangan.'}</p>
                     <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
-                        <span>Pelapor: <strong class="text-slate-300">${g.pelapor || '-'}</strong> • ${g.tanggal}</span>
+                        <span>Dilaporkan Oleh: <strong class="text-cyan-400 font-bold">${g.pelapor || '-'}</strong> • ${g.tanggal}</span>
                         <button onclick="deleteGuruAbsensi('${g.id}')" class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white font-bold transition">Hapus</button>
                     </div>
                 </div>
@@ -2300,6 +2267,11 @@
             if (dataParam) {
                 const decompressed = window.decompressDataObj(dataParam);
                 if (decompressed && decompressed.kelasCode) {
+                    // Paksa status belum login agar siswa memilih nama sendiri di portal login
+                    window.appData.isLoggedIn = false;
+                    window.appData.activeSiswaId = '';
+                    window.appData.currentRole = 'SISWA';
+
                     window.appData.activeKelasCode = decompressed.kelasCode;
                     if (decompressed.profile) {
                         window.appData.guruProfile = decompressed.profile;
@@ -2317,16 +2289,32 @@
                     window.syncFilteredData(false);
                     switchLoginTab('SISWA');
                     populateWaliKelasDropdowns();
-                    populateSiswaDropdowns();
-                    populateGuruMapelDropdowns();
 
                     const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
-                    if (siswaKelasSelect) siswaKelasSelect.value = decompressed.kelasCode;
+                    if (siswaKelasSelect) {
+                        siswaKelasSelect.value = decompressed.kelasCode;
+                        handleSiswaKelasChange();
+                    }
+
+                    showLoginScreen();
+                    showToast(`Data kelas ${decompressed.profile?.kelas || ''} berhasil dimuat. Silakan pilih nama Anda untuk masuk.`, 'info');
+                    return;
                 }
             } else if (codeParam) {
+                window.appData.isLoggedIn = false;
+                window.appData.activeSiswaId = '';
+                window.appData.currentRole = 'SISWA';
                 window.appData.activeKelasCode = codeParam;
+
                 switchLoginTab('SISWA');
                 populateWaliKelasDropdowns();
+                const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
+                if (siswaKelasSelect) {
+                    siswaKelasSelect.value = codeParam;
+                    handleSiswaKelasChange();
+                }
+                showLoginScreen();
+                return;
             } else {
                 populateWaliKelasDropdowns();
             }
