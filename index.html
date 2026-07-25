@@ -807,7 +807,7 @@
         <div class="max-w-md w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
-                    <i data-lucide="user-cog" class="w-4 h-4 text-rose-400"></i> Edit Profil Guru Perwalian
+                    <i data-lucide="user-cog" class="w-4 h-4 text-rose-400"></i> Edit Profil & Pengaturan Kelompok
                 </h3>
                 <button onclick="closeModalEditGuru()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
@@ -833,9 +833,14 @@
                     <input type="password" id="edit-guru-pin" maxlength="6" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-rose-500 transition font-mono" required>
                 </div>
 
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeModalEditGuru()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold">Batal</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold shadow-md shadow-rose-600/20">Simpan Perubahan</button>
+                <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-800/80">
+                    <button type="button" onclick="deleteCurrentKelas()" class="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-600 text-rose-400 hover:text-white font-bold transition flex items-center gap-1.5 text-xs">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus Kelompok Ini
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeModalEditGuru()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold">Batal</button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold shadow-md shadow-rose-600/20">Simpan Perubahan</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -1216,6 +1221,17 @@
                 return;
             }
 
+            // Validasi: 1 Guru hanya boleh memiliki 1 Kelompok Perwalian
+            const existingProf = (window.appData.allKelasProfiles || []).find(p => 
+                (nip !== '-' && p.nip && p.nip.trim() === nip) || 
+                (p.nama && p.nama.trim().toLowerCase() === nama.toLowerCase())
+            );
+
+            if (existingProf) {
+                showToast(`Gagal! Guru/NIP "${nama}" sudah memiliki kelompok perwalian (${existingProf.kelas}). Hapus kelompok lama terlebih dahulu!`, 'error');
+                return;
+            }
+
             if (pin.length > 6) {
                 showToast('PIN Keamanan maksimal 6 digit!', 'error');
                 return;
@@ -1245,6 +1261,42 @@
             populateWaliKelasDropdowns();
             showMainApp();
             showToast(`Kelompok Perwalian "${kelas}" Berhasil Dibuat!`, 'success');
+        }
+
+        function deleteCurrentKelas() {
+            const code = window.appData.activeKelasCode;
+            if (!code) {
+                showToast('Tidak ada kelompok perwalian aktif yang dipilih!', 'error');
+                return;
+            }
+
+            const currentProf = window.appData.guruProfile || {};
+            const namaKelas = currentProf.kelas || 'kelompok ini';
+
+            showConfirmDialog(
+                'Hapus Kelompok Perwalian', 
+                `Apakah Anda yakin ingin MENGHAPUS "${namaKelas}"? Seluruh data siswa, presensi, dan catatan perwalian kelas ini akan dihapus secara permanen!`, 
+                function() {
+                    // Hapus profil kelas dari daftar
+                    window.appData.allKelasProfiles = (window.appData.allKelasProfiles || []).filter(k => k.id !== code && k.kelasCode !== code);
+                    
+                    // Hapus seluruh data siswa, guru mapel, catatan, & absensi terkait kelas ini
+                    window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== code);
+                    window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== code);
+                    window.appData.allCatatanList = (window.appData.allCatatanList || []).filter(c => c.kelasCode !== code);
+                    window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== code);
+                    window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== code);
+
+                    // Reset status login & active kelas
+                    window.appData.activeKelasCode = '';
+                    window.appData.isLoggedIn = false;
+
+                    saveToStorage(true, false);
+                    closeModalEditGuru();
+                    showLoginScreen();
+                    showToast(`Kelompok perwalian "${namaKelas}" berhasil dihapus. Anda dapat membuat kelompok perwalian baru sekarang.`, 'success');
+                }
+            );
         }
 
         function loginWali() {
