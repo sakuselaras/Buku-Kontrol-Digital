@@ -419,7 +419,7 @@
                             <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
                                 <div class="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase tracking-wider">
                                     <i data-lucide="inbox" class="w-4 h-4"></i>
-                                    Hasil Laporan Ketidakhadiran Siswa
+                                    Hasil Laporan Ketidakhadiran / Presensi Siswa
                                 </div>
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Inputan Portal Siswa</span>
                             </div>
@@ -616,7 +616,7 @@
                             <table class="w-full text-left text-xs border-collapse">
                                 <thead>
                                     <tr class="bg-[#0b0f19] text-slate-400 uppercase font-bold border-b border-slate-800">
-                                        <th class="p-3">TANGGAL</th>
+                                        <th class="p-3">TANGGAL & WAKTU</th>
                                         <th class="p-3">NAMA SISWA</th>
                                         <th class="p-3">STATUS</th>
                                         <th class="p-3">ALASAN / CATATAN</th>
@@ -644,7 +644,7 @@
                             <table class="w-full text-left text-xs border-collapse">
                                 <thead>
                                     <tr class="bg-[#0b0f19] text-slate-400 uppercase font-bold border-b border-slate-800">
-                                        <th class="p-3">TANGGAL</th>
+                                        <th class="p-3">TANGGAL & WAKTU LAPOR</th>
                                         <th class="p-3">GURU & MAPEL</th>
                                         <th class="p-3">JAM PELAJARAN</th>
                                         <th class="p-3">KETERANGAN / TUGAS</th>
@@ -691,7 +691,7 @@
 
                 <!-- Student Action Grid -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Form 1: Lapor Ketidakhadiran Siswa -->
+                    <!-- Form 1: Lapor Ketidakhadiran / Presensi Siswa -->
                     <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
                         <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider border-b border-slate-800 pb-3">
                             <i data-lucide="user-check" class="w-4 h-4"></i>
@@ -727,6 +727,15 @@
                                     <label class="block font-semibold text-slate-400 mb-1">TANGGAL PRESENSI</label>
                                     <input type="date" id="siswa-self-tanggal" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition" required>
                                 </div>
+                            </div>
+
+                            <!-- INPUT WAKTU / JAM PRESENSI REALTIME -->
+                            <div>
+                                <label class="block font-semibold text-emerald-400 mb-1 flex items-center gap-1">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5"></i> WAKTU / JAM PRESENSI (REALTIME)
+                                </label>
+                                <input type="time" id="siswa-self-waktu" class="w-full bg-[#0b0f19] border border-emerald-500/50 rounded-xl px-3 py-2 text-emerald-400 font-mono font-bold focus:outline-none focus:border-emerald-500 transition" required>
+                                <span class="text-[10px] text-slate-500 mt-0.5 block">* Otomatis terisi jam saat ini</span>
                             </div>
 
                             <div id="container-siswa-self-alasan" class="hidden">
@@ -768,9 +777,16 @@
                                     <input type="text" id="siswa-guru-jam-ke" placeholder="Jam ke 1-3" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition" required>
                                 </div>
                                 <div>
-                                    <label class="block font-semibold text-slate-400 mb-1">TANGGAL</label>
+                                    <label class="block font-semibold text-slate-400 mb-1">TANGGAL LAPOR</label>
                                     <input type="date" id="siswa-guru-tanggal" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition" required>
                                 </div>
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-amber-400 mb-1 flex items-center gap-1">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5"></i> WAKTU / JAM LAPOR (REALTIME)
+                                </label>
+                                <input type="time" id="siswa-guru-waktu" class="w-full bg-[#0b0f19] border border-amber-500/50 rounded-xl px-3 py-2 text-amber-400 font-mono font-bold focus:outline-none focus:border-amber-500 transition" required>
                             </div>
 
                             <div>
@@ -1277,17 +1293,13 @@
                 'Hapus Kelompok Perwalian', 
                 `Apakah Anda yakin ingin MENGHAPUS "${namaKelas}"? Seluruh data siswa, presensi, dan catatan perwalian kelas ini akan dihapus secara permanen!`, 
                 function() {
-                    // Hapus profil kelas dari daftar
                     window.appData.allKelasProfiles = (window.appData.allKelasProfiles || []).filter(k => k.id !== code && k.kelasCode !== code);
-                    
-                    // Hapus seluruh data siswa, guru mapel, catatan, & absensi terkait kelas ini
                     window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== code);
                     window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== code);
                     window.appData.allCatatanList = (window.appData.allCatatanList || []).filter(c => c.kelasCode !== code);
                     window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.kelasCode !== code);
                     window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.kelasCode !== code);
 
-                    // Reset status login & active kelas
                     window.appData.activeKelasCode = '';
                     window.appData.isLoggedIn = false;
 
@@ -1568,7 +1580,13 @@
             const pelaporSiswaId = document.getElementById('siswa-self-pelapor-id')?.value || window.appData.activeSiswaId;
             const kategori = document.getElementById('siswa-self-kategori')?.value;
             const tanggal = document.getElementById('siswa-self-tanggal')?.value;
-            const alasan = document.getElementById('siswa-self-alasan')?.value;
+            
+            // Format waktu presensi
+            let waktu = document.getElementById('siswa-self-waktu')?.value;
+            if (!waktu) {
+                const now = new Date();
+                waktu = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            }
 
             if (!targetSiswaId || !tanggal) {
                 showToast('Pilih nama siswa dan tanggal presensi!', 'error');
@@ -1583,7 +1601,8 @@
                 siswaId: targetSiswaId,
                 kategori: kategori,
                 tanggal: tanggal,
-                alasan: alasan || '-',
+                waktu: waktu,
+                alasan: document.getElementById('siswa-self-alasan')?.value || '-',
                 pelapor: reporterNama,
                 status: 'Disetujui',
                 kelasCode: window.appData.activeKelasCode,
@@ -1601,7 +1620,7 @@
 
             const inputAlasan = document.getElementById('siswa-self-alasan');
             if (inputAlasan) inputAlasan.value = '';
-            showToast(`Laporan presensi (${kategori}) dikirim oleh ${reporterNama}!`, 'success');
+            showToast(`Laporan presensi (${kategori}) pukul ${waktu} WITA dikirim oleh ${reporterNama}!`, 'success');
         }
 
         function handleSiswaLaporGuru(e) {
@@ -1611,6 +1630,12 @@
             const jamKe = document.getElementById('siswa-guru-jam-ke')?.value;
             const tanggal = document.getElementById('siswa-guru-tanggal')?.value;
             const keterangan = document.getElementById('siswa-guru-keterangan')?.value;
+
+            let waktu = document.getElementById('siswa-guru-waktu')?.value;
+            if (!waktu) {
+                const now = new Date();
+                waktu = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            }
 
             if (!guruMapel || !jamKe || !tanggal || !keterangan) {
                 showToast('Mohon lengkapi seluruh field laporan guru!', 'error');
@@ -1625,6 +1650,7 @@
                 guruMapel: guruMapel,
                 jamKe: jamKe,
                 tanggal: tanggal,
+                waktu: waktu,
                 keterangan: keterangan,
                 pelapor: reporterNama,
                 kelasCode: window.appData.activeKelasCode,
@@ -1644,7 +1670,7 @@
             const inputKet = document.getElementById('siswa-guru-keterangan');
             if (inputJam) inputJam.value = '';
             if (inputKet) inputKet.value = '';
-            showToast(`Laporan guru tidak hadir dikirim oleh ${reporterNama}!`, 'success');
+            showToast(`Laporan guru tidak hadir pukul ${waktu} WITA dikirim oleh ${reporterNama}!`, 'success');
         }
 
         function renderDashLaporanSiswa() {
@@ -1672,7 +1698,7 @@
                         </div>
                         <p class="text-[11px] text-slate-400">${a.alasan || 'Tidak ada catatan.'}</p>
                         <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
-                            <span>Dilaporkan Oleh: <strong class="text-cyan-400 font-bold">${a.pelapor || '-'}</strong> • ${a.tanggal}</span>
+                            <span>Dilaporkan Oleh: <strong class="text-cyan-400 font-bold">${a.pelapor || '-'}</strong> • ${a.tanggal} <span class="text-emerald-400 font-mono font-bold">(${a.waktu || 'Realtime'})</span></span>
                             <div class="flex items-center gap-1">
                                 <button onclick="approveAbsensi('${a.id}')" class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white font-bold transition">Setujui</button>
                                 <button onclick="deleteAbsensi('${a.id}')" class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white font-bold transition">Hapus</button>
@@ -1703,7 +1729,7 @@
                     </div>
                     <p class="text-[11px] text-slate-400">${g.keterangan || 'Tidak ada keterangan.'}</p>
                     <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
-                        <span>Dilaporkan Oleh: <strong class="text-cyan-400 font-bold">${g.pelapor || '-'}</strong> • ${g.tanggal}</span>
+                        <span>Dilaporkan Oleh: <strong class="text-cyan-400 font-bold">${g.pelapor || '-'}</strong> • ${g.tanggal} <span class="text-amber-400 font-mono font-bold">(${g.waktu || 'Realtime'})</span></span>
                         <button onclick="deleteGuruAbsensi('${g.id}')" class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white font-bold transition">Hapus</button>
                     </div>
                 </div>
@@ -1779,7 +1805,7 @@
 
                 return `
                     <tr class="hover:bg-slate-800/50 transition">
-                        <td class="p-3 text-slate-400">${a.tanggal}</td>
+                        <td class="p-3 text-slate-400 font-mono">${a.tanggal} <span class="text-emerald-400 font-bold font-mono block text-[11px]">${a.waktu || '-'} WITA</span></td>
                         <td class="p-3 font-bold text-white">${namaSiswa}</td>
                         <td class="p-3 font-semibold text-rose-400">${a.kategori}</td>
                         <td class="p-3 text-slate-300">${a.alasan || '-'}</td>
@@ -1808,7 +1834,7 @@
 
             tbody.innerHTML = window.appData.guruAbsensiList.map(g => `
                 <tr class="hover:bg-slate-800/50 transition">
-                    <td class="p-3 text-slate-400">${g.tanggal}</td>
+                    <td class="p-3 text-slate-400 font-mono">${g.tanggal} <span class="text-amber-400 font-bold font-mono block text-[11px]">${g.waktu || '-'} WITA</span></td>
                     <td class="p-3 font-bold text-amber-400">${g.guruMapel}</td>
                     <td class="p-3 font-semibold text-slate-300">${g.jamKe || 'Jam 1-3'}</td>
                     <td class="p-3 text-slate-300">${g.keterangan || '-'}</td>
@@ -2314,7 +2340,7 @@
         }
 
         function exportCSV() {
-            let csv = 'NO,TANGGAL,NIS,NAMA SISWA,STATUS PRESENSI,ALASAN/KETERANGAN,PELAPOR,VERIFIKASI\n';
+            let csv = 'NO,TANGGAL,JAM/WAKTU,NIS,NAMA SISWA,STATUS PRESENSI,ALASAN/KETERANGAN,PELAPOR,VERIFIKASI\n';
             const list = window.appData.absensiList || [];
 
             if (list.length === 0) {
@@ -2326,7 +2352,7 @@
                 const s = (window.appData.siswaList || []).find(x => x.id === a.siswaId);
                 const nama = s ? s.nama : 'Siswa';
                 const nis = s ? (s.nis || '-') : '-';
-                csv += `"${i + 1}","${a.tanggal}","${nis}","${nama}","${a.kategori}","${a.alasan || '-'}","${a.pelapor || '-'}","${a.status || 'Disetujui'}"\n`;
+                csv += `"${i + 1}","${a.tanggal}","${a.waktu || '-'} WITA","${nis}","${nama}","${a.kategori}","${a.alasan || '-'}","${a.pelapor || '-'}","${a.status || 'Disetujui'}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -2354,6 +2380,25 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
 
             initMQTTWebSocket();
+
+            // Set Waktu Realtime Secara Otomatis
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const timeStr = `${hours}:${minutes}`;
+
+            const inputTanggal = document.getElementById('siswa-self-tanggal');
+            const inputWaktu = document.getElementById('siswa-self-waktu');
+            const inputGuruTanggal = document.getElementById('siswa-guru-tanggal');
+            const inputGuruWaktu = document.getElementById('siswa-guru-waktu');
+            const inputCatatanTanggal = document.getElementById('catatan-tanggal');
+
+            if (inputTanggal) inputTanggal.value = todayStr;
+            if (inputWaktu) inputWaktu.value = timeStr;
+            if (inputGuruTanggal) inputGuruTanggal.value = todayStr;
+            if (inputGuruWaktu) inputGuruWaktu.value = timeStr;
+            if (inputCatatanTanggal) inputCatatanTanggal.value = todayStr;
 
             // Handle URL Data Hydration (Instant Load on Student Phone)
             const urlParams = new URLSearchParams(window.location.search);
