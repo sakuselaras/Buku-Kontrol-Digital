@@ -157,7 +157,7 @@
             }
         };
 
-        // Notification sound
+        // Notification sound chime
         window.playNotificationChime = function() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -707,9 +707,14 @@
                             </div>
 
                             <div>
-                                <label class="block font-semibold text-slate-400 mb-1">NAMA SISWA PELAPOR (PENGIRIM LAPORAN)</label>
-                                <select id="siswa-self-pelapor-id" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-cyan-400 font-semibold focus:outline-none focus:border-emerald-500 transition" required>
-                                    <option value="" disabled selected>-- Pilih Pelapor --</option>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block font-semibold text-slate-400">NAMA SISWA PELAPOR (PENGIRIM LAPORAN)</label>
+                                    <span class="text-[10px] text-cyan-400 font-bold bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20 flex items-center gap-1">
+                                        <i data-lucide="lock" class="w-3 h-3"></i> TERKUNCI
+                                    </span>
+                                </div>
+                                <select id="siswa-self-pelapor-id" disabled class="w-full bg-[#0b0f19]/80 border border-slate-800/80 rounded-xl px-3 py-2 text-cyan-400 font-bold focus:outline-none cursor-not-allowed opacity-90" required>
+                                    <option value="" disabled selected>-- Pelapor Terkunci --</option>
                                 </select>
                             </div>
 
@@ -765,9 +770,14 @@
                             </div>
 
                             <div>
-                                <label class="block font-semibold text-slate-400 mb-1">NAMA SISWA PELAPOR (PENGIRIM LAPORAN)</label>
-                                <select id="siswa-guru-pelapor-id" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-cyan-400 font-semibold focus:outline-none focus:border-amber-500 transition" required>
-                                    <option value="" disabled selected>-- Pilih Pelapor --</option>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block font-semibold text-slate-400">NAMA SISWA PELAPOR (PENGIRIM LAPORAN)</label>
+                                    <span class="text-[10px] text-cyan-400 font-bold bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20 flex items-center gap-1">
+                                        <i data-lucide="lock" class="w-3 h-3"></i> TERKUNCI
+                                    </span>
+                                </div>
+                                <select id="siswa-guru-pelapor-id" disabled class="w-full bg-[#0b0f19]/80 border border-slate-800/80 rounded-xl px-3 py-2 text-cyan-400 font-bold focus:outline-none cursor-not-allowed opacity-90" required>
+                                    <option value="" disabled selected>-- Pelapor Terkunci --</option>
                                 </select>
                             </div>
 
@@ -970,7 +980,7 @@
 
             <div class="space-y-3 text-xs">
                 <p class="text-slate-300">
-                    Kirimkan link instan ini ke WhatsApp grup siswa. Ketika siswa mengklik link ini, HP mereka akan <strong>secara otomatis memuat nama siswa dan guru mapel secara instan</strong>!
+                    Kirimkan link ringkas ini ke WhatsApp grup siswa. Ketika siswa mengklik link ini, HP mereka akan <strong>secara otomatis memuat nama siswa dan guru mapel secara instan</strong>!
                 </p>
 
                 <div>
@@ -1422,13 +1432,16 @@
 
             if (msg) msg.classList.add('hidden');
 
-            const compressed = window.compressDataObj({
-                kelasCode: window.appData.activeKelasCode,
-                profile: window.appData.guruProfile,
-                siswa: window.appData.siswaList,
-                guruMapel: window.appData.guruMapelList
-            });
+            // Payload terkompresi ringkas (Short Payload) untuk link yang lebih pendek
+            const compactPayload = {
+                c: window.appData.activeKelasCode,
+                g: window.appData.guruProfile?.nama || '',
+                k: window.appData.guruProfile?.kelas || '',
+                s: (window.appData.siswaList || []).map(s => [s.id, s.nis || '', s.nama]),
+                m: (window.appData.guruMapelList || []).map(g => [g.id, g.nama, g.mapel])
+            };
 
+            const compressed = window.compressDataObj(compactPayload);
             const generated = `${window.location.origin}${window.location.pathname}?code=${window.appData.activeKelasCode}&d=${compressed}`;
             
             if (linkInput) linkInput.value = generated;
@@ -1546,12 +1559,22 @@
             if (catatanDropdown) catatanDropdown.innerHTML = optionsHtml;
             if (loginSelect) loginSelect.innerHTML = optionsHtml;
             if (siswaTargetAbsenDropdown) siswaTargetAbsenDropdown.innerHTML = optionsHtml;
-            if (siswaSelfPelaporDropdown) siswaSelfPelaporDropdown.innerHTML = optionsHtml;
-            if (siswaGuruPelaporDropdown) siswaGuruPelaporDropdown.innerHTML = optionsHtml;
 
-            if (window.appData.activeSiswaId) {
-                if (siswaSelfPelaporDropdown) siswaSelfPelaporDropdown.value = window.appData.activeSiswaId;
-                if (siswaGuruPelaporDropdown) siswaGuruPelaporDropdown.value = window.appData.activeSiswaId;
+            // Terkunci Otomatis untuk Nama Siswa Pelapor yang sedang login
+            if (siswaSelfPelaporDropdown) {
+                siswaSelfPelaporDropdown.innerHTML = optionsHtml;
+                if (window.appData.activeSiswaId) {
+                    siswaSelfPelaporDropdown.value = window.appData.activeSiswaId;
+                }
+                siswaSelfPelaporDropdown.disabled = true;
+            }
+
+            if (siswaGuruPelaporDropdown) {
+                siswaGuruPelaporDropdown.innerHTML = optionsHtml;
+                if (window.appData.activeSiswaId) {
+                    siswaGuruPelaporDropdown.value = window.appData.activeSiswaId;
+                }
+                siswaGuruPelaporDropdown.disabled = true;
             }
 
             if (filterDropdown) {
@@ -1577,24 +1600,20 @@
         function handleSiswaLaporAbsen(e) {
             e.preventDefault();
             const targetSiswaId = document.getElementById('siswa-target-absen-id')?.value;
-            const pelaporSiswaId = document.getElementById('siswa-self-pelapor-id')?.value || window.appData.activeSiswaId;
             const kategori = document.getElementById('siswa-self-kategori')?.value;
             const tanggal = document.getElementById('siswa-self-tanggal')?.value;
-            
-            // Format waktu presensi
-            let waktu = document.getElementById('siswa-self-waktu')?.value;
-            if (!waktu) {
-                const now = new Date();
-                waktu = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-            }
+            const waktu = document.getElementById('siswa-self-waktu')?.value || new Date().toTimeString().slice(0, 5);
+            const alasan = document.getElementById('siswa-self-alasan')?.value;
 
             if (!targetSiswaId || !tanggal) {
                 showToast('Pilih nama siswa dan tanggal presensi!', 'error');
                 return;
             }
 
-            const reporter = window.appData.siswaList.find(s => s.id === pelaporSiswaId) || window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
-            const reporterNama = reporter ? reporter.nama : 'Siswa';
+            // Selalu gunakan activeSiswaId dari sesi login siswa aktif
+            const pelaporSiswaId = window.appData.activeSiswaId || document.getElementById('siswa-self-pelapor-id')?.value;
+            const reporter = (window.appData.siswaList || []).find(s => s.id === pelaporSiswaId);
+            const reporterNama = reporter ? reporter.nama : 'Siswa Perwakilan';
 
             const newAbsen = {
                 id: 'abs-' + Date.now(),
@@ -1602,7 +1621,7 @@
                 kategori: kategori,
                 tanggal: tanggal,
                 waktu: waktu,
-                alasan: document.getElementById('siswa-self-alasan')?.value || '-',
+                alasan: alasan || '-',
                 pelapor: reporterNama,
                 status: 'Disetujui',
                 kelasCode: window.appData.activeKelasCode,
@@ -1626,24 +1645,20 @@
         function handleSiswaLaporGuru(e) {
             e.preventDefault();
             const guruMapel = document.getElementById('siswa-guru-nama-mapel')?.value;
-            const pelaporSiswaId = document.getElementById('siswa-guru-pelapor-id')?.value || window.appData.activeSiswaId;
             const jamKe = document.getElementById('siswa-guru-jam-ke')?.value;
             const tanggal = document.getElementById('siswa-guru-tanggal')?.value;
+            const waktu = document.getElementById('siswa-guru-waktu')?.value || new Date().toTimeString().slice(0, 5);
             const keterangan = document.getElementById('siswa-guru-keterangan')?.value;
-
-            let waktu = document.getElementById('siswa-guru-waktu')?.value;
-            if (!waktu) {
-                const now = new Date();
-                waktu = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-            }
 
             if (!guruMapel || !jamKe || !tanggal || !keterangan) {
                 showToast('Mohon lengkapi seluruh field laporan guru!', 'error');
                 return;
             }
 
-            const reporter = window.appData.siswaList.find(s => s.id === pelaporSiswaId) || window.appData.siswaList.find(s => s.id === window.appData.activeSiswaId);
-            const reporterNama = reporter ? reporter.nama : 'Siswa';
+            // Selalu gunakan activeSiswaId dari sesi login siswa aktif
+            const pelaporSiswaId = window.appData.activeSiswaId || document.getElementById('siswa-guru-pelapor-id')?.value;
+            const reporter = (window.appData.siswaList || []).find(s => s.id === pelaporSiswaId);
+            const reporterNama = reporter ? reporter.nama : 'Siswa Perwakilan';
 
             const newGuruAbsen = {
                 id: 'gabs-' + Date.now(),
@@ -2407,23 +2422,39 @@
 
             if (dataParam) {
                 const decompressed = window.decompressDataObj(dataParam);
-                if (decompressed && decompressed.kelasCode) {
+                if (decompressed) {
+                    const targetKelasCode = decompressed.c || decompressed.kelasCode;
+                    
                     window.appData.isLoggedIn = false;
                     window.appData.activeSiswaId = '';
                     window.appData.currentRole = 'SISWA';
 
-                    window.appData.activeKelasCode = decompressed.kelasCode;
-                    if (decompressed.profile) {
-                        window.appData.guruProfile = decompressed.profile;
-                        const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === decompressed.kelasCode);
-                        if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = decompressed.profile;
-                        else (window.appData.allKelasProfiles = window.appData.allKelasProfiles || []).push(decompressed.profile);
+                    window.appData.activeKelasCode = targetKelasCode;
+                    
+                    if (decompressed.g || decompressed.profile) {
+                        const profObj = decompressed.g ? { id: targetKelasCode, kelasCode: targetKelasCode, nama: decompressed.g, kelas: decompressed.k || '' } : decompressed.profile;
+                        window.appData.guruProfile = profObj;
+                        const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === targetKelasCode);
+                        if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = profObj;
+                        else (window.appData.allKelasProfiles = window.appData.allKelasProfiles || []).push(profObj);
                     }
-                    if (Array.isArray(decompressed.siswa)) {
-                        window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== decompressed.kelasCode).concat(decompressed.siswa);
+
+                    if (Array.isArray(decompressed.s) || Array.isArray(decompressed.siswa)) {
+                        const rawSiswa = decompressed.s || decompressed.siswa;
+                        const parsedSiswa = rawSiswa.map(item => Array.isArray(item) ? {
+                            id: item[0], kelasCode: targetKelasCode, nis: item[1], nama: item[2], kelas: item[3] || 'X', jurusan: item[4] || '', gender: item[5] || 'L', ipk: item[6] || '0.00', ortu: item[7] || ''
+                        } : item);
+
+                        window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== targetKelasCode).concat(parsedSiswa);
                     }
-                    if (Array.isArray(decompressed.guruMapel)) {
-                        window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== decompressed.kelasCode).concat(decompressed.guruMapel);
+
+                    if (Array.isArray(decompressed.m) || Array.isArray(decompressed.guruMapel)) {
+                        const rawMapel = decompressed.m || decompressed.guruMapel;
+                        const parsedMapel = rawMapel.map(item => Array.isArray(item) ? {
+                            id: item[0], kelasCode: targetKelasCode, nama: item[1], mapel: item[2]
+                        } : item);
+
+                        window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== targetKelasCode).concat(parsedMapel);
                     }
                     
                     window.syncFilteredData(false);
@@ -2432,12 +2463,12 @@
 
                     const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
                     if (siswaKelasSelect) {
-                        siswaKelasSelect.value = decompressed.kelasCode;
+                        siswaKelasSelect.value = targetKelasCode;
                         handleSiswaKelasChange();
                     }
 
                     showLoginScreen();
-                    showToast(`Data kelas ${decompressed.profile?.kelas || ''} berhasil dimuat. Silakan pilih nama Anda untuk masuk.`, 'info');
+                    showToast(`Data kelas ${window.appData.guruProfile?.kelas || ''} berhasil dimuat. Silakan pilih nama Anda untuk masuk.`, 'info');
                     return;
                 }
             } else if (codeParam) {
