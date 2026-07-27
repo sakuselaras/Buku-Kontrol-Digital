@@ -58,7 +58,7 @@
             currentRole: 'WALI',
             activeKelasCode: '',
             activeSiswaId: '',
-            isStudentLinkMode: false, // Flag khusus jika dibuka via link siswa
+            isStudentLinkMode: false,
             adminPin: 'admin123',
             guruProfile: { nama: "Guru Perwalian", nip: "-", kelas: "Kelas -", pin: "123456" },
             allKelasProfiles: [],
@@ -110,6 +110,13 @@
                 osc.start();
                 osc.stop(ctx.currentTime + 0.3);
             } catch (e) {}
+        };
+
+        window.getHariIndo = function(dateStr) {
+            if (!dateStr) return 'Senin';
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const d = new Date(dateStr);
+            return days[d.getDay()] || 'Senin';
         };
     </script>
 </head>
@@ -170,7 +177,7 @@
                     <p id="login-subtitle" class="text-xs text-slate-400">Pilih peran dan kelas untuk mengakses sistem • SMK Negeri 1 Marisa</p>
                 </div>
 
-                <!-- TAB SWITCHER PERAN (DISEMBUNYIKAN OTOMATIS JIKA DIBUKA LEWAT LINK SISWA) -->
+                <!-- TAB SWITCHER PERAN -->
                 <div id="login-role-tabs" class="grid grid-cols-3 gap-1 p-1 bg-[#0b0f19] rounded-xl border border-slate-800 text-[11px] font-bold">
                     <button id="tab-login-wali" onclick="switchLoginTab('WALI')" class="py-2.5 rounded-lg bg-rose-600 text-white shadow transition flex items-center justify-center gap-1">
                         <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Guru
@@ -242,7 +249,7 @@
                     </div>
                 </div>
 
-                <!-- Form Login Siswa (HANYA INI YANG TAMPIL SAAT LINK DIBUKA) -->
+                <!-- Form Login Siswa -->
                 <div id="form-login-siswa" class="hidden space-y-4">
                     <div id="container-select-kelas-siswa">
                         <label class="block text-xs font-semibold text-slate-400 mb-1">PILIH KELOMPOK PERWALIAN / KELAS</label>
@@ -523,7 +530,7 @@
                         <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-3 gap-3">
                             <div>
                                 <h3 class="text-sm font-bold text-white uppercase tracking-wide">Rekap Presensi & Ketidakhadiran Siswa</h3>
-                                <p class="text-xs text-slate-400">Pencatatan harian, mingguan, dan bulanan dari perwakilan siswa portal.</p>
+                                <p class="text-xs text-slate-400">Pencatatan harian, per jam mengajar, dan bulanan dari perwakilan siswa.</p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <label class="text-xs text-slate-400 font-semibold">FILTER PERIODE:</label>
@@ -539,12 +546,13 @@
                             <table class="w-full text-left text-xs border-collapse">
                                 <thead>
                                     <tr class="bg-[#0b0f19] text-slate-400 uppercase font-bold border-b border-slate-800">
-                                        <th class="p-3">TANGGAL & WAKTU</th>
+                                        <th class="p-3">HARI / TGL & WAKTU</th>
                                         <th class="p-3">NAMA SISWA</th>
+                                        <th class="p-3">GURU & MAPEL</th>
+                                        <th class="p-3">JAM KE</th>
                                         <th class="p-3">STATUS</th>
                                         <th class="p-3">ALASAN / CATATAN</th>
                                         <th class="p-3">PELAPOR</th>
-                                        <th class="p-3">VERIFIKASI</th>
                                         <th class="p-3 text-center">AKSI</th>
                                     </tr>
                                 </thead>
@@ -580,7 +588,7 @@
 
             </div>
 
-            <!-- VIEW FOR SISWA PORTAL (TAMPILAN TERISOLASI SISWA) -->
+            <!-- VIEW FOR SISWA PORTAL -->
             <div id="view-siswa" class="hidden space-y-6">
                 <div class="p-6 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-[#131b2e] border border-emerald-500/30 flex flex-wrap items-center justify-between gap-4">
                     <div class="space-y-1">
@@ -609,10 +617,11 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Form Checklist Massal Siswa (+ HARI, GURU MAPEL, MAPEL, JAM KE) -->
                     <div class="lg:col-span-2 p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
                         <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-3 gap-2">
                             <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
-                                <i data-lucide="users-check" class="w-4 h-4"></i> Lembar Presensi Kelas Massal (Checklist Siswa)
+                                <i data-lucide="users-check" class="w-4 h-4"></i> Presensi Kelas Per-Jam Mengajar (Perwakilan Siswa)
                             </div>
                             <button type="button" onclick="setAllStudentsPresent()" class="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 hover:text-white text-emerald-400 text-[11px] font-bold transition border border-emerald-500/20 flex items-center gap-1">
                                 <i data-lucide="check-check" class="w-3.5 h-3.5"></i> Tandai Semua Hadir
@@ -620,10 +629,12 @@
                         </div>
 
                         <form onsubmit="handleSiswaLaporAbsenBatch(event)" class="space-y-4 text-xs">
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#0b0f19] p-3 rounded-xl border border-slate-800">
+                            
+                            <!-- Grid Pilihan Lengkap: Hari, Tanggal, Jam, Guru & Mapel -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 bg-[#0b0f19] p-3.5 rounded-xl border border-slate-800">
                                 <div>
                                     <div class="flex items-center justify-between mb-1">
-                                        <label class="block font-semibold text-slate-400 text-[11px]">NAMA SISWA PELAPOR</label>
+                                        <label class="block font-semibold text-slate-400 text-[11px]">SISWA PELAPOR</label>
                                         <span class="text-[9px] text-cyan-400 font-bold bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20 flex items-center gap-1">
                                             <i data-lucide="lock" class="w-2.5 h-2.5"></i> TERKUNCI
                                         </span>
@@ -634,28 +645,43 @@
                                 </div>
 
                                 <div>
-                                    <label class="block font-semibold text-slate-400 text-[11px] mb-1">TANGGAL PRESENSI</label>
-                                    <input type="date" id="siswa-self-tanggal" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-500 transition text-xs" required>
+                                    <label class="block font-semibold text-slate-400 text-[11px] mb-1">TANGGAL & HARI</label>
+                                    <div class="flex gap-1.5">
+                                        <input type="date" id="siswa-self-tanggal" onchange="updateHariField()" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-500 transition text-xs" required>
+                                        <input type="text" id="siswa-self-hari" readonly class="w-20 bg-[#131b2e] border border-slate-800 rounded-lg px-2 text-center text-emerald-400 font-bold text-xs" uppercase>
+                                    </div>
                                 </div>
 
                                 <div>
                                     <label class="block font-semibold text-emerald-400 text-[11px] mb-1 flex items-center gap-1">
-                                        <i data-lucide="clock" class="w-3 h-3"></i> WAKTU / JAM MASUK (REALTIME)
+                                        <i data-lucide="clock" class="w-3 h-3"></i> JAM REALTIME
                                     </label>
                                     <input type="time" id="siswa-self-waktu" class="w-full bg-[#131b2e] border border-emerald-500/50 rounded-lg px-2.5 py-1.5 text-emerald-400 font-mono font-bold focus:outline-none focus:border-emerald-500 transition text-xs" required>
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label class="block font-semibold text-amber-400 text-[11px] mb-1">GURU & MATA PELAJARAN SAAT INI</label>
+                                    <select id="siswa-self-guru-mapel" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500 transition text-xs" required>
+                                        <option value="" disabled selected>-- Pilih Guru & Mapel --</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block font-semibold text-slate-400 text-[11px] mb-1">JAM PELAJARAN KE-</label>
+                                    <input type="text" id="siswa-self-jam-ke" placeholder="Contoh: Jam 1-2" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-500 transition text-xs" required>
                                 </div>
                             </div>
 
                             <div>
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-300 uppercase tracking-wide">Daftar Siswa Kelas & Status Kehadiran Jam Ini</span>
+                                    <span class="text-xs font-bold text-slate-300 uppercase tracking-wide">Daftar Siswa & Kehadiran Jam Pelajaran Ini</span>
                                     <span id="roster-count-badge" class="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full font-semibold">0 Siswa</span>
                                 </div>
                                 <div id="siswa-roster-container" class="space-y-2 max-h-[380px] overflow-y-auto pr-1"></div>
                             </div>
 
                             <button type="submit" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-black text-white text-xs transition shadow-lg shadow-emerald-600/20 uppercase tracking-wider flex items-center justify-center gap-2">
-                                <i data-lucide="send" class="w-4 h-4"></i> Kirim Presensi Kelas Ke Wali Kelas (Realtime)
+                                <i data-lucide="send" class="w-4 h-4"></i> Kirim Presensi Jam Mengajar Ke Admin / Wali Kelas
                             </button>
                         </form>
                     </div>
@@ -1018,7 +1044,7 @@
                         </div>
                         <div>
                             <div class="font-bold text-white text-xs">Export Log Presensi Detail (CSV)</div>
-                            <div class="text-[10px] text-slate-400">Daftar entri rincian tanggal, jam masuk, nama pelapor, dan catatan alasan</div>
+                            <div class="text-[10px] text-slate-400">Daftar entri rincian hari, tanggal, jam, guru, mapel, nama pelapor, dan catatan</div>
                         </div>
                     </button>
                 </div>
@@ -1407,6 +1433,14 @@
             });
         }
 
+        function updateHariField() {
+            const dateVal = document.getElementById('siswa-self-tanggal')?.value;
+            const hariInput = document.getElementById('siswa-self-hari');
+            if (hariInput) {
+                hariInput.value = window.getHariIndo(dateVal);
+            }
+        }
+
         function openModalShareLink() {
             const linkInput = document.getElementById('share-link-input');
             const msg = document.getElementById('share-copied-msg');
@@ -1482,7 +1516,6 @@
             document.getElementById('btn-share-link')?.classList.add('hidden');
             document.getElementById('btn-export-excel')?.classList.add('hidden');
 
-            // Jika dalam mode Link Siswa, sembunyikan Tab Guru dan Admin Global secara total
             if (window.appData.isStudentLinkMode) {
                 const roleTabs = document.getElementById('login-role-tabs');
                 const subtitle = document.getElementById('login-subtitle');
@@ -1490,7 +1523,7 @@
 
                 if (roleTabs) roleTabs.classList.add('hidden');
                 if (subtitle) subtitle.innerText = `Portal Mandiri Siswa • Kelas ${window.appData.guruProfile?.kelas || ''}`;
-                if (containerSelectKelas) containerSelectKelas.classList.add('hidden'); // Kunci kelas otomatis
+                if (containerSelectKelas) containerSelectKelas.classList.add('hidden');
 
                 switchLoginTab('SISWA');
             } else {
@@ -1564,14 +1597,16 @@
         }
 
         function populateGuruMapelDropdowns() {
-            const dropdown = document.getElementById('siswa-guru-nama-mapel');
-            if (!dropdown) return;
+            const dropdownLaporGuru = document.getElementById('siswa-guru-nama-mapel');
+            const dropdownSelfGuruMapel = document.getElementById('siswa-self-guru-mapel');
 
             let optionsHtml = (!window.appData.guruMapelList || window.appData.guruMapelList.length === 0) ?
                 '<option value="" disabled selected>-- Belum Ada Guru Mapel Terdaftar --</option>' :
-                '<option value="" disabled selected>-- Pilih Guru Mapel --</option>' +
+                '<option value="" disabled selected>-- Pilih Guru & Mapel --</option>' +
                 window.appData.guruMapelList.map(g => `<option value="${g.nama} (${g.mapel})">${g.nama} - ${g.mapel}</option>`).join('');
-            dropdown.innerHTML = optionsHtml;
+
+            if (dropdownLaporGuru) dropdownLaporGuru.innerHTML = optionsHtml;
+            if (dropdownSelfGuruMapel) dropdownSelfGuruMapel.innerHTML = optionsHtml;
         }
 
         function renderSiswaPresensiRoster() {
@@ -1650,9 +1685,15 @@
             if (list.length === 0) { showToast('Tidak ada daftar siswa!', 'error'); return; }
 
             const tanggal = document.getElementById('siswa-self-tanggal')?.value;
+            const hari = document.getElementById('siswa-self-hari')?.value || window.getHariIndo(tanggal);
             const waktu = document.getElementById('siswa-self-waktu')?.value || new Date().toTimeString().slice(0, 5);
+            const guruMapelVal = document.getElementById('siswa-self-guru-mapel')?.value;
+            const jamKe = document.getElementById('siswa-self-jam-ke')?.value.trim();
 
-            if (!tanggal || !waktu) { showToast('Pilih tanggal dan waktu!', 'error'); return; }
+            if (!tanggal || !waktu || !guruMapelVal || !jamKe) { 
+                showToast('Pilih Tanggal, Jam Realtime, Guru Mapel & Jam Ke-!', 'error'); 
+                return; 
+            }
 
             const reporter = (window.appData.siswaList || []).find(s => s.id === window.appData.activeSiswaId);
             const reporterNama = reporter ? reporter.nama : 'Perwakilan Siswa';
@@ -1672,9 +1713,18 @@
 
                 batchAbsensi.push({
                     id: 'abs-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
-                    siswaId: s.id, kategori: status, tanggal: tanggal, waktu: waktu,
-                    alasan: alasanInput || '-', pelapor: reporterNama, status: 'Disetujui',
-                    kelasCode: window.appData.activeKelasCode, timestamp: Date.now()
+                    siswaId: s.id, 
+                    kategori: status, 
+                    hari: hari,
+                    tanggal: tanggal, 
+                    waktu: waktu,
+                    guruMapel: guruMapelVal,
+                    jamKe: jamKe,
+                    alasan: alasanInput || '-', 
+                    pelapor: reporterNama, 
+                    status: 'Disetujui',
+                    kelasCode: window.appData.activeKelasCode, 
+                    timestamp: Date.now()
                 });
             });
 
@@ -1684,7 +1734,7 @@
 
             saveToStorage(false, true);
             publishMQTTAction('REPORT_SISWA', batchAbsensi);
-            showToast(`Presensi kelas dikirim! (H:${hC}, S:${sC}, I:${iC}, A:${aC}, B:${bC})`, 'success');
+            showToast(`Presensi jam mengajar (${jamKe}) dikirim! (H:${hC}, S:${sC}, I:${iC}, A:${aC}, B:${bC})`, 'success');
         }
 
         function handleSiswaLaporGuru(e) {
@@ -1811,14 +1861,18 @@
                     <div class="p-3 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2">
                         <div class="flex items-center justify-between">
                             <div>
-                                <span class="text-[10px] text-slate-500 uppercase block font-semibold">Siswa Dilaporkan:</span>
+                                <span class="text-[10px] text-slate-500 uppercase block font-semibold">${a.hari || 'Hari'} • ${a.tanggal} <strong class="text-emerald-400 font-mono">(${a.waktu || 'Realtime'})</strong></span>
                                 <span class="font-bold text-white text-xs">${namaSiswa}</span>
                             </div>
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${colorBadge}">${a.kategori}</span>
                         </div>
+                        <div class="text-[11px] text-amber-300 font-semibold bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20 flex items-center justify-between">
+                            <span>Guru & Mapel: ${a.guruMapel || '-'}</span>
+                            <span class="font-bold text-cyan-400">${a.jamKe || 'Jam -'}</span>
+                        </div>
                         <p class="text-[11px] text-slate-400">${a.alasan || 'Tidak ada catatan.'}</p>
                         <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
-                            <span>Dilaporkan Oleh: <strong class="text-cyan-400 font-bold">${a.pelapor || '-'}</strong> • ${a.tanggal} <span class="text-emerald-400 font-mono font-bold">(${a.waktu || 'Realtime'})</span></span>
+                            <span>Dilaporkan Oleh: <strong class="text-cyan-400 font-bold">${a.pelapor || '-'}</strong></span>
                             <div class="flex items-center gap-1">
                                 <button onclick="approveAbsensi('${a.id}')" class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white font-bold transition">Setujui</button>
                                 <button onclick="deleteAbsensi('${a.id}')" class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white font-bold transition">Hapus</button>
@@ -1912,29 +1966,26 @@
             }
 
             if (list.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-500 italic">Belum ada rekap presensi.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-slate-500 italic">Belum ada rekap presensi.</td></tr>';
                 return;
             }
 
             tbody.innerHTML = list.map(a => {
                 const s = window.appData.siswaList.find(x => x.id === a.siswaId);
                 const namaSiswa = s ? s.nama : 'Siswa';
-                const statusBadge = a.status === 'Disetujui' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : (a.status === 'Ditolak' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30');
+                const statusBadge = a.kategori === 'Hadir' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : (a.kategori === 'Sakit' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : (a.kategori === 'Ijin' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' : (a.kategori === 'Bolos' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-rose-500/20 text-rose-400 border-rose-500/30')));
 
                 return `
                     <tr class="hover:bg-slate-800/50 transition">
-                        <td class="p-3 text-slate-400 font-mono">${a.tanggal} <span class="text-emerald-400 font-bold font-mono block text-[11px]">${a.waktu || '-'} WITA</span></td>
+                        <td class="p-3 text-slate-300 font-semibold">${a.hari || 'Hari'}, ${a.tanggal} <span class="text-emerald-400 font-bold font-mono block text-[11px]">${a.waktu || '-'} WITA</span></td>
                         <td class="p-3 font-bold text-white">${namaSiswa}</td>
-                        <td class="p-3 font-semibold text-rose-400">${a.kategori}</td>
+                        <td class="p-3 text-amber-300 font-medium">${a.guruMapel || '-'}</td>
+                        <td class="p-3 text-cyan-400 font-bold font-mono">${a.jamKe || '-'}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${statusBadge}">${a.kategori}</span></td>
                         <td class="p-3 text-slate-300">${a.alasan || '-'}</td>
                         <td class="p-3 text-slate-400">${a.pelapor || '-'}</td>
-                        <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${statusBadge}">${a.status || 'Pending'}</span></td>
                         <td class="p-3 text-center">
-                            <div class="flex items-center justify-center gap-1">
-                                <button onclick="approveAbsensi('${a.id}')" class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white font-bold transition">Setujui</button>
-                                <button onclick="rejectAbsensi('${a.id}')" class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-white font-bold transition">Tolak</button>
-                                <button onclick="deleteAbsensi('${a.id}')" class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white font-bold transition">Hapus</button>
-                            </div>
+                            <button onclick="deleteAbsensi('${a.id}')" class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white font-bold transition">Hapus</button>
                         </td>
                     </tr>
                 `;
@@ -2357,14 +2408,6 @@
             }
         }
 
-        function rejectAbsensi(id) {
-            const idx = (window.appData.allAbsensiList || []).findIndex(a => a.id === id);
-            if (idx !== -1) {
-                window.appData.allAbsensiList[idx].status = 'Ditolak';
-                saveToStorage(true, true); showToast('Status presensi ditolak.', 'info');
-            }
-        }
-
         function deleteAbsensi(id) {
             showConfirmDialog('Hapus Presensi', 'Hapus entri presensi ini?', () => {
                 window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.id !== id);
@@ -2411,7 +2454,7 @@
                     <tr>
                         <th width="40">NO</th><th width="100">NIS</th><th width="220">NAMA LENGKAP SISWA</th><th width="50">JK</th>
                         <th width="60">HADIR (H)</th><th width="60">SAKIT (S)</th><th width="60">IJIN (I)</th><th width="60">ALPA (A)</th>
-                        <th width="60">BOLOS (B)</th><th width="80">TOTAL PERWALIAN</th><th width="100">% KEHADIRAN</th>
+                        <th width="60">BOLOS (B)</th><th width="80">TOTAL LOG</th><th width="100">% KEHADIRAN</th>
                     </tr>
             `;
 
@@ -2496,7 +2539,7 @@
         }
 
         function exportCSVLogDetail() {
-            let csv = '\uFEFFNO,TANGGAL,JAM/WAKTU,NIS,NAMA SISWA,STATUS PRESENSI,ALASAN/KETERANGAN,PELAPOR,VERIFIKASI\n';
+            let csv = '\uFEFFNO,HARI,TANGGAL,JAM REALTIME,GURU MAPEL & MAPEL,JAM KE,NIS,NAMA SISWA,STATUS,CATATAN,PELAPOR\n';
             const list = window.appData.absensiList || [];
 
             if (list.length === 0) { showToast('Tidak ada log presensi detail!', 'error'); return; }
@@ -2505,13 +2548,13 @@
                 const s = (window.appData.siswaList || []).find(x => x.id === a.siswaId);
                 const nama = s ? s.nama : 'Siswa';
                 const nis = s ? (s.nis || '-') : '-';
-                csv += `"${i + 1}","${a.tanggal}","${a.waktu || '-'} WITA","${nis}","${nama}","${a.kategori}","${a.alasan || '-'}","${a.pelapor || '-'}","${a.status || 'Disetujui'}"\n`;
+                csv += `"${i + 1}","${a.hari || '-'}","${a.tanggal}","${a.waktu || '-'} WITA","${a.guruMapel || '-'}","${a.jamKe || '-'}","${nis}","${nama}","${a.kategori}","${a.alasan || '-'}","${a.pelapor || '-'}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = `Log_Detail_Presensi_${window.appData.guruProfile?.kelas || 'Kelas'}_${Date.now()}.csv`;
+            a.href = url; a.download = `Log_Detail_Presensi_PerJam_${window.appData.guruProfile?.kelas || 'Kelas'}_${Date.now()}.csv`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
             closeModalExport(); showToast('Log Detail CSV diunduh!', 'success');
         }
@@ -2538,7 +2581,10 @@
             const inputGuruTanggal = document.getElementById('siswa-guru-tanggal');
             const inputCatatanTanggal = document.getElementById('catatan-tanggal');
 
-            if (inputTanggal) inputTanggal.value = todayStr;
+            if (inputTanggal) {
+                inputTanggal.value = todayStr;
+                updateHariField();
+            }
             if (inputWaktu) inputWaktu.value = timeStr;
             if (inputGuruTanggal) inputGuruTanggal.value = todayStr;
             if (inputCatatanTanggal) inputCatatanTanggal.value = todayStr;
@@ -2547,9 +2593,8 @@
             const codeParam = urlParams.get('code') || urlParams.get('c');
             const dataParam = urlParams.get('d');
 
-            // PENANGANAN KHUSUS APABILA DIBUKA DARI LINK WHATSAPP SISWA
             if (dataParam || codeParam) {
-                window.appData.isStudentLinkMode = true; // Tandai bahwa dibuka via link siswa
+                window.appData.isStudentLinkMode = true;
 
                 if (dataParam) {
                     const decompressed = window.decompressDataObj(dataParam);
