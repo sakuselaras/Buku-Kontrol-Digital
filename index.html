@@ -53,12 +53,12 @@
     </style>
 
     <script>
-        // State Awal Aplikasi
         window.defaultState = {
             isLoggedIn: false,
-            currentRole: 'WALI', // 'WALI' | 'SISWA' | 'ADMIN'
+            currentRole: 'WALI',
             activeKelasCode: '',
             activeSiswaId: '',
+            isStudentLinkMode: false, // Flag khusus jika dibuka via link siswa
             adminPin: 'admin123',
             guruProfile: { nama: "Guru Perwalian", nip: "-", kelas: "Kelas -", pin: "123456" },
             allKelasProfiles: [],
@@ -157,21 +157,21 @@
 
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
 
-        <!-- Login Portal Screen (DENGAN 3 TAB PERAN TERKUNCI) -->
+        <!-- Login Portal Screen -->
         <div id="login-screen" class="flex items-center justify-center p-4 my-6">
             <div class="max-w-md w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
                 <div class="absolute -top-12 -right-12 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl pointer-events-none"></div>
                 
                 <div class="text-center space-y-2 relative z-10">
-                    <div class="inline-flex items-center justify-center p-3 mb-1 w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 mx-auto">
+                    <div class="inline-flex items-center justify-center p-3 mb-1 w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 mx-auto">
                         <i data-lucide="school" class="w-10 h-10"></i>
                     </div>
                     <h2 class="text-xl font-black text-white tracking-tight uppercase">PORTAL MASUK PERWALIAN</h2>
-                    <p class="text-xs text-slate-400">Pilih peran dan kelas untuk mengakses sistem • SMK Negeri 1 Marisa</p>
+                    <p id="login-subtitle" class="text-xs text-slate-400">Pilih peran dan kelas untuk mengakses sistem • SMK Negeri 1 Marisa</p>
                 </div>
 
-                <!-- TAB SWITCHER 3 PERAN: GURU | SISWA | ADMIN GLOBAL -->
-                <div class="grid grid-cols-3 gap-1 p-1 bg-[#0b0f19] rounded-xl border border-slate-800 text-[11px] font-bold">
+                <!-- TAB SWITCHER PERAN (DISEMBUNYIKAN OTOMATIS JIKA DIBUKA LEWAT LINK SISWA) -->
+                <div id="login-role-tabs" class="grid grid-cols-3 gap-1 p-1 bg-[#0b0f19] rounded-xl border border-slate-800 text-[11px] font-bold">
                     <button id="tab-login-wali" onclick="switchLoginTab('WALI')" class="py-2.5 rounded-lg bg-rose-600 text-white shadow transition flex items-center justify-center gap-1">
                         <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Guru
                     </button>
@@ -242,9 +242,9 @@
                     </div>
                 </div>
 
-                <!-- Form Login Siswa -->
+                <!-- Form Login Siswa (HANYA INI YANG TAMPIL SAAT LINK DIBUKA) -->
                 <div id="form-login-siswa" class="hidden space-y-4">
-                    <div>
+                    <div id="container-select-kelas-siswa">
                         <label class="block text-xs font-semibold text-slate-400 mb-1">PILIH KELOMPOK PERWALIAN / KELAS</label>
                         <select id="login-siswa-kelas-select" onchange="handleSiswaKelasChange()" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition">
                             <option value="" disabled selected>-- Pilih Kelas / Guru Perwalian --</option>
@@ -254,7 +254,7 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1">PILIH NAMA SISWA (IDENTITAS ANDA)</label>
                         <select id="login-siswa-select" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition">
-                            <option value="" disabled selected>-- Pilih Kelas Terlebih Dahulu --</option>
+                            <option value="" disabled selected>-- Pilih Nama Anda --</option>
                         </select>
                     </div>
 
@@ -287,7 +287,6 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1">PIN KEAMANAN ADMIN GLOBAL</label>
                         <input type="password" id="login-admin-pin" placeholder="Masukkan PIN Admin" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition font-mono tracking-widest" onkeyup="if(event.key==='Enter') loginAdmin()">
-                        <p class="text-[11px] text-slate-500 mt-1">Default Admin PIN: <code class="text-purple-400 font-bold">admin123</code></p>
                     </div>
 
                     <button onclick="loginAdmin()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition shadow-lg shadow-purple-600/20 uppercase tracking-wider">
@@ -302,7 +301,6 @@
 
             <!-- VIEW FOR WALI KELAS -->
             <div id="view-wali-kelas" class="space-y-6">
-
                 <div id="hero-banner" class="p-6 rounded-2xl bg-gradient-to-r from-rose-950/60 to-[#131b2e] border border-rose-500/30 flex flex-wrap items-center justify-between gap-4">
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
@@ -582,7 +580,7 @@
 
             </div>
 
-            <!-- VIEW FOR SISWA PORTAL -->
+            <!-- VIEW FOR SISWA PORTAL (TAMPILAN TERISOLASI SISWA) -->
             <div id="view-siswa" class="hidden space-y-6">
                 <div class="p-6 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-[#131b2e] border border-emerald-500/30 flex flex-wrap items-center justify-between gap-4">
                     <div class="space-y-1">
@@ -1319,7 +1317,7 @@
         }
 
         function loginSiswa() {
-            const selectedKelasCode = document.getElementById('login-siswa-kelas-select')?.value;
+            const selectedKelasCode = document.getElementById('login-siswa-kelas-select')?.value || window.appData.activeKelasCode;
             const selectedSiswaId = document.getElementById('login-siswa-select')?.value;
             const nisInput = document.getElementById('login-siswa-nis')?.value.trim();
             const siswaError = document.getElementById('login-siswa-error');
@@ -1483,7 +1481,21 @@
             document.getElementById('user-badge-container')?.classList.add('hidden');
             document.getElementById('btn-share-link')?.classList.add('hidden');
             document.getElementById('btn-export-excel')?.classList.add('hidden');
-            populateWaliKelasDropdowns();
+
+            // Jika dalam mode Link Siswa, sembunyikan Tab Guru dan Admin Global secara total
+            if (window.appData.isStudentLinkMode) {
+                const roleTabs = document.getElementById('login-role-tabs');
+                const subtitle = document.getElementById('login-subtitle');
+                const containerSelectKelas = document.getElementById('container-select-kelas-siswa');
+
+                if (roleTabs) roleTabs.classList.add('hidden');
+                if (subtitle) subtitle.innerText = `Portal Mandiri Siswa • Kelas ${window.appData.guruProfile?.kelas || ''}`;
+                if (containerSelectKelas) containerSelectKelas.classList.add('hidden'); // Kunci kelas otomatis
+
+                switchLoginTab('SISWA');
+            } else {
+                populateWaliKelasDropdowns();
+            }
         }
 
         function logout() {
@@ -1525,7 +1537,7 @@
 
             let optionsHtml = (!window.appData.siswaList || window.appData.siswaList.length === 0) ?
                 '<option value="" disabled selected>-- Belum Ada Siswa Terdaftar --</option>' :
-                '<option value="" disabled selected>-- Pilih Nama Siswa --</option>' +
+                '<option value="" disabled selected>-- Pilih Nama Anda --</option>' +
                 window.appData.siswaList.map(s => `<option value="${s.id}">${s.nis ? s.nis + ' - ' : ''}${s.nama}</option>`).join('');
 
             if (catatanDropdown) catatanDropdown.innerHTML = optionsHtml;
@@ -2535,63 +2547,61 @@
             const codeParam = urlParams.get('code') || urlParams.get('c');
             const dataParam = urlParams.get('d');
 
-            if (dataParam) {
-                const decompressed = window.decompressDataObj(dataParam);
-                if (decompressed) {
-                    const targetKelasCode = decompressed.c || decompressed.kelasCode || codeParam;
-                    
-                    window.appData.isLoggedIn = false; window.appData.activeSiswaId = '';
-                    window.appData.currentRole = 'SISWA'; window.appData.activeKelasCode = targetKelasCode;
+            // PENANGANAN KHUSUS APABILA DIBUKA DARI LINK WHATSAPP SISWA
+            if (dataParam || codeParam) {
+                window.appData.isStudentLinkMode = true; // Tandai bahwa dibuka via link siswa
 
-                    if (decompressed.g || decompressed.profile) {
-                        const profObj = decompressed.g ? { id: targetKelasCode, kelasCode: targetKelasCode, nama: decompressed.g, kelas: decompressed.k || '' } : decompressed.profile;
-                        window.appData.guruProfile = profObj;
-                        const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === targetKelasCode);
-                        if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = profObj;
-                        else (window.appData.allKelasProfiles = window.appData.allKelasProfiles || []).push(profObj);
+                if (dataParam) {
+                    const decompressed = window.decompressDataObj(dataParam);
+                    if (decompressed) {
+                        const targetKelasCode = decompressed.c || decompressed.kelasCode || codeParam;
+                        
+                        window.appData.isLoggedIn = false; 
+                        window.appData.activeSiswaId = '';
+                        window.appData.currentRole = 'SISWA'; 
+                        window.appData.activeKelasCode = targetKelasCode;
+
+                        if (decompressed.g || decompressed.profile) {
+                            const profObj = decompressed.g ? { id: targetKelasCode, kelasCode: targetKelasCode, nama: decompressed.g, kelas: decompressed.k || '' } : decompressed.profile;
+                            window.appData.guruProfile = profObj;
+                            const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === targetKelasCode);
+                            if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = profObj;
+                            else (window.appData.allKelasProfiles = window.appData.allKelasProfiles || []).push(profObj);
+                        }
+
+                        if (Array.isArray(decompressed.s) || Array.isArray(decompressed.siswa)) {
+                            const rawSiswa = decompressed.s || decompressed.siswa;
+                            const parsedSiswa = rawSiswa.map(item => Array.isArray(item) ? {
+                                id: item[0], kelasCode: targetKelasCode, nis: item[1], nama: item[2], kelas: item[3], jurusan: item[4], gender: item[5], ipk: item[6], ortu: item[7]
+                            } : item);
+
+                            window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== targetKelasCode).concat(parsedSiswa);
+                        }
+
+                        if (Array.isArray(decompressed.m) || Array.isArray(decompressed.guruMapel)) {
+                            const rawMapel = decompressed.m || decompressed.guruMapel;
+                            const parsedMapel = rawMapel.map(item => Array.isArray(item) ? {
+                                id: item[0], kelasCode: targetKelasCode, nama: item[1], mapel: item[2]
+                            } : item);
+
+                            window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== targetKelasCode).concat(parsedMapel);
+                        }
                     }
-
-                    if (Array.isArray(decompressed.s) || Array.isArray(decompressed.siswa)) {
-                        const rawSiswa = decompressed.s || decompressed.siswa;
-                        const parsedSiswa = rawSiswa.map(item => Array.isArray(item) ? {
-                            id: item[0], kelasCode: targetKelasCode, nis: item[1], nama: item[2], kelas: item[3], jurusan: item[4], gender: item[5], ipk: item[6], ortu: item[7]
-                        } : item);
-
-                        window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== targetKelasCode).concat(parsedSiswa);
-                    }
-
-                    if (Array.isArray(decompressed.m) || Array.isArray(decompressed.guruMapel)) {
-                        const rawMapel = decompressed.m || decompressed.guruMapel;
-                        const parsedMapel = rawMapel.map(item => Array.isArray(item) ? {
-                            id: item[0], kelasCode: targetKelasCode, nama: item[1], mapel: item[2]
-                        } : item);
-
-                        window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== targetKelasCode).concat(parsedMapel);
-                    }
-
-                    window.syncFilteredData(false); switchLoginTab('SISWA'); populateWaliKelasDropdowns();
-
-                    const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
-                    if (siswaKelasSelect) {
-                        siswaKelasSelect.value = targetKelasCode; handleSiswaKelasChange();
-                    }
-
-                    showLoginScreen();
-                    showToast(`Data kelas ${window.appData.guruProfile?.kelas || ''} berhasil dimuat.`, 'info');
-                    return;
+                } else if (codeParam) {
+                    window.appData.isLoggedIn = false; 
+                    window.appData.activeSiswaId = '';
+                    window.appData.currentRole = 'SISWA'; 
+                    window.appData.activeKelasCode = codeParam;
                 }
-            } else if (codeParam) {
-                window.appData.isLoggedIn = false; window.appData.activeSiswaId = '';
-                window.appData.currentRole = 'SISWA'; window.appData.activeKelasCode = codeParam;
 
-                switchLoginTab('SISWA'); populateWaliKelasDropdowns();
-                const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
-                if (siswaKelasSelect) {
-                    siswaKelasSelect.value = codeParam; handleSiswaKelasChange();
-                }
+                window.syncFilteredData(false);
                 showLoginScreen();
+                populateSiswaDropdowns();
+                populateGuruMapelDropdowns();
+                showToast(`Portal Mandiri Siswa Kelompok ${window.appData.guruProfile?.kelas || ''} Berhasil Dimuat.`, 'info');
                 return;
             } else {
+                window.appData.isStudentLinkMode = false;
                 populateWaliKelasDropdowns();
             }
 
