@@ -1587,7 +1587,29 @@
                 return;
             }
 
-            container.innerHTML = list.map((s, idx) => `
+            const currentTanggal = document.getElementById('siswa-self-tanggal')?.value || new Date().toISOString().split('T')[0];
+            const hasLogsToday = (window.appData.allAbsensiList || []).some(a => a.kelasCode === window.appData.activeKelasCode && a.tanggal === currentTanggal);
+
+            let headerBanner = '';
+            if (hasLogsToday) {
+                headerBanner = `
+                    <div class="p-3 mb-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="zap" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                            <span><strong>Mode Jam Pelajaran Berikutnya:</strong> Presensi awal hari ini sudah tercatat. Pada jam ini, <strong>cukup tandai siswa yang Bolos / Sakit / Ijin / Alpa</strong>. Siswa yang tetap Hadir tidak akan dikirim ulang.</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                headerBanner = `
+                    <div class="p-3 mb-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px] flex items-center gap-2">
+                        <i data-lucide="calendar-check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                        <span><strong>Presensi Pertama Hari Ini:</strong> Seluruh status siswa akan dicatat sebagai basis kehadiran harian.</span>
+                    </div>
+                `;
+            }
+
+            const rosterCards = list.map((s, idx) => `
                 <div class="p-3 rounded-xl bg-[#0b0f19] border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
                     <div class="flex items-center gap-2">
                         <span class="w-5 h-5 rounded-full bg-slate-800 text-slate-400 font-bold text-[10px] flex items-center justify-center">${idx + 1}</span>
@@ -1625,6 +1647,89 @@
                     </div>
                 </div>
             `).join('');
+
+            container.innerHTML = headerBanner + rosterCards;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function handleSiswaLaporAbsenBatch(e) {
+            e.preventDefault();
+            const list = window.appData.siswaList || [];
+            if (list.length === 0) { showToast('Tidak ada daftar siswa!', 'error'); return; }
+
+            const tanggal = document.getElementById('siswa-self-tanggal')?.value;
+            const hari = document.getElementById('siswa-self-hari')?.value || window.getHariIndo(tanggal);
+            const waktu = document.getElementById('siswa-self-waktu')?.value || new Date().toTimeString().slice(0, 5);
+            const guruMapelVal = document.getElementById('siswa-self-guru-mapel')?.value;
+            const jamKe = document.getElementById('siswa-self-jam-ke')?.value.trim();
+
+            if (!tanggal || !waktu || !guruMapelVal || !jamKe) { 
+                showToast('Pilih Tanggal, Jam Realtime, Guru Mapel & Jam Ke-!', 'error'); 
+                return; 
+            }
+
+            const reporter = (window.appData.siswaList || []).find(s => s.id === window.appData.activeSiswaId);
+            const reporterNama = reporter ? reporter.nama : 'Perwakilan Siswa';
+
+            let batchAbsensi = [];
+            let hC = 0, sC = 0, iC = 0, aC = 0, bC = 0;
+
+            list.forEach(s => {
+                const status = document.querySelector(`input[name="roster-status-${s.id}"]:checked`)?.value || 'Hadir';
+                const alasanInput = document.getElementById(`roster-alasan-${s.id}`)?.value.trim();
+
+                if (status === 'Hadir') hC++;
+                else if (status === 'Sakit') sC++;
+                else if (status === 'Ijin') iC++;
+                else if (status === 'Alpa') aC++;
+                else if (status === 'Bolos') bC++;
+
+                batchAbsensi.push({
+                    id: 'abs-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+                    siswaId: s.id, 
+                    kategori: status, 
+                    hari: hari,
+                    tanggal: tanggal, 
+                    waktu: waktu,
+                    guruMapel: guruMapelVal,
+                    jamKe: jamKe,
+                    alasan: alasanInput || '-', 
+                    pelapor: reporterNama, 
+                    status: 'Disetujui',
+                    kelasCode: window.appData.activeKelasCode, 
+                    timestamp: Date.now()
+                });
+            });
+
+            // ATURAN CERDAS PER-JAM MENGAJAR:
+            // Cek apakah presensi pertama hari ini sudah pernah dikirim untuk tanggal ini
+            const hasLogsToday = (window.appData.allAbsensiList || []).some(a => a.kelasCode === window.appData.activeKelasCode && a.tanggal === tanggal);
+
+            if (hasLogsToday) {
+                // Pada pergantian jam/mapel berikutnya, HANYA kirim siswa yang Bolos/Sakit/Ijin/Alpa
+                batchAbsensi = batchAbsensi.filter(a => a.kategori !== 'Hadir');
+
+                if (batchAbsensi.length === 0) {
+                    showToast('Semua siswa masih Hadir. Tidak ada laporan Bolos/Sakit/Ijin/Alpa yang perlu dikirim pada jam ini.', 'info');
+                    return;
+                }
+            }
+
+            window.appData.absensiList = window.appData.absensiList || [];
+            window.appData.absensiList = batchAbsensi.concat(window.appData.absensiList);
+            window.appData.allAbsensiList = (window.appData.allAbsensiList || []).concat(batchAbsensi);
+
+            saveToStorage(false, true);
+            publishMQTTAction('REPORT_SISWA', batchAbsensi);
+
+            if (hasLogsToday) {
+                showToast(`📢 Laporan ${batchAbsensi.length} siswa (Bolos/Absen) jam ${jamKe} (${guruMapelVal}) berhasil dikirim!`, 'success');
+            } else {
+                showToast(`📢 Presensi awal hari ini (${jamKe}) berhasil dikirim! (H:${hC}, S:${sC}, I:${iC}, A:${aC}, B:${bC})`, 'success');
+            }
+
+            // Reset checklist ke Hadir setelah kirim
+            setAllStudentsPresent();
         }
 
         function setAllStudentsPresent() {
