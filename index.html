@@ -524,7 +524,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 5: REKAP ABSENSI SISWA & GURU -->
+                <!-- TAB 5: REKAP ABSENSI SISWA & GURU (DENGAN TOMBOL EXPORT REKAP SESUAI GAMBAR REFERENSI) -->
                 <div id="wali-sec-presensi" class="hidden space-y-6">
                     <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
                         <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-3 gap-3">
@@ -532,13 +532,18 @@
                                 <h3 class="text-sm font-bold text-white uppercase tracking-wide">Rekap Presensi & Ketidakhadiran Siswa</h3>
                                 <p class="text-xs text-slate-400">Pencatatan harian, per jam mengajar, dan bulanan dari perwakilan siswa.</p>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <label class="text-xs text-slate-400 font-semibold">FILTER PERIODE:</label>
-                                <select id="filter-presensi-periode" onchange="renderAbsensiTable()" class="bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500">
-                                    <option value="ALL">Semua Tanggal</option>
-                                    <option value="MINGGU">Minggu Ini</option>
-                                    <option value="BULAN">Bulan Ini</option>
-                                </select>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <button onclick="exportCSVLogDetail()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20">
+                                    <i data-lucide="download" class="w-3.5 h-3.5"></i> Export Rekap Excel (.xls)
+                                </button>
+                                <div class="flex items-center gap-1 ml-2">
+                                    <label class="text-xs text-slate-400 font-semibold">PERIODE:</label>
+                                    <select id="filter-presensi-periode" onchange="renderAbsensiTable()" class="bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500">
+                                        <option value="ALL">Semua Tanggal</option>
+                                        <option value="MINGGU">Minggu Ini</option>
+                                        <option value="BULAN">Bulan Ini</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
@@ -617,7 +622,6 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Form Checklist Massal Siswa (+ HARI, GURU MAPEL, MAPEL, JAM KE) -->
                     <div class="lg:col-span-2 p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
                         <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-3 gap-2">
                             <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
@@ -629,8 +633,6 @@
                         </div>
 
                         <form onsubmit="handleSiswaLaporAbsenBatch(event)" class="space-y-4 text-xs">
-                            
-                            <!-- Grid Pilihan Lengkap: Hari, Tanggal, Jam, Guru & Mapel -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 bg-[#0b0f19] p-3.5 rounded-xl border border-slate-800">
                                 <div>
                                     <div class="flex items-center justify-between mb-1">
@@ -668,7 +670,7 @@
 
                                 <div>
                                     <label class="block font-semibold text-slate-400 text-[11px] mb-1">JAM PELAJARAN KE-</label>
-                                    <input type="text" id="siswa-self-jam-ke" placeholder="Contoh: Jam 1-2" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-500 transition text-xs" required>
+                                    <input type="text" id="siswa-self-jam-ke" placeholder="Contoh: 7-9" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-500 transition text-xs" required>
                                 </div>
                             </div>
 
@@ -1012,7 +1014,7 @@
         </div>
     </div>
 
-    <!-- MODAL EXPORT EXCEL REKAP MATRIKS -->
+    <!-- MODAL EXPORT EXCEL REKAP MATRIKS / TABEL DETAIL -->
     <div id="modal-export-excel" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="max-w-md w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -1028,23 +1030,23 @@
                 </p>
 
                 <div class="space-y-2">
+                    <button onclick="exportCSVLogDetail()" class="w-full p-3 rounded-xl bg-[#0b0f19] hover:bg-emerald-950/40 border border-slate-800 hover:border-emerald-500/50 text-left transition flex items-center gap-3 group">
+                        <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition">
+                            <i data-lucide="table-properties" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-white text-xs">Rekap Presensi Harian / Per-Jam (Format Sesuai Tabel)</div>
+                            <div class="text-[10px] text-slate-400">Format persis sesuai tampilan tabel rekap (Hari/Tgl, Nama, Guru, Mapel, Jam Ke, Status, Alasan, Pelapor)</div>
+                        </div>
+                    </button>
+
                     <button onclick="exportExcelMatrixCurrent()" class="w-full p-3 rounded-xl bg-[#0b0f19] hover:bg-cyan-950/40 border border-slate-800 hover:border-cyan-500/50 text-left transition flex items-center gap-3 group">
                         <div class="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition">
                             <i data-lucide="table" class="w-5 h-5"></i>
                         </div>
                         <div>
                             <div class="font-bold text-white text-xs">Rekap Matriks Bulanan (Tabel Rapi Excel)</div>
-                            <div class="text-[10px] text-slate-400">Format matriks siswa dengan total Hadir, Sakit, Ijin, Alpa, Bolos & % Kehadiran</div>
-                        </div>
-                    </button>
-
-                    <button onclick="exportCSVLogDetail()" class="w-full p-3 rounded-xl bg-[#0b0f19] hover:bg-emerald-950/40 border border-slate-800 hover:border-emerald-500/50 text-left transition flex items-center gap-3 group">
-                        <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition">
-                            <i data-lucide="list" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <div class="font-bold text-white text-xs">Export Log Presensi Detail (CSV)</div>
-                            <div class="text-[10px] text-slate-400">Daftar entri rincian hari, tanggal, jam, guru, mapel, nama pelapor, dan catatan</div>
+                            <div class="text-[10px] text-slate-400">Format matriks per-siswa dengan akumulasi total Hadir, Sakit, Ijin, Alpa, Bolos & % Kehadiran</div>
                         </div>
                     </button>
                 </div>
@@ -1603,7 +1605,7 @@
             let optionsHtml = (!window.appData.guruMapelList || window.appData.guruMapelList.length === 0) ?
                 '<option value="" disabled selected>-- Belum Ada Guru Mapel Terdaftar --</option>' :
                 '<option value="" disabled selected>-- Pilih Guru & Mapel --</option>' +
-                window.appData.guruMapelList.map(g => `<option value="${g.nama} (${g.mapel})">${g.nama} - ${g.mapel}</option>`).join('');
+                window.appData.guruMapelList.map(g => `<option value="${g.nama} (${g.mapel})">${g.nama} (${g.mapel})</option>`).join('');
 
             if (dropdownLaporGuru) dropdownLaporGuru.innerHTML = optionsHtml;
             if (dropdownSelfGuruMapel) dropdownSelfGuruMapel.innerHTML = optionsHtml;
@@ -1861,14 +1863,14 @@
                     <div class="p-3 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2">
                         <div class="flex items-center justify-between">
                             <div>
-                                <span class="text-[10px] text-slate-500 uppercase block font-semibold">${a.hari || 'Hari'} • ${a.tanggal} <strong class="text-emerald-400 font-mono">(${a.waktu || 'Realtime'})</strong></span>
+                                <span class="text-[10px] text-slate-500 uppercase block font-semibold">${a.hari || 'Hari'}, ${a.tanggal} <strong class="text-emerald-400 font-mono">(${a.waktu || 'Realtime'})</strong></span>
                                 <span class="font-bold text-white text-xs">${namaSiswa}</span>
                             </div>
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${colorBadge}">${a.kategori}</span>
                         </div>
                         <div class="text-[11px] text-amber-300 font-semibold bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20 flex items-center justify-between">
                             <span>Guru & Mapel: ${a.guruMapel || '-'}</span>
-                            <span class="font-bold text-cyan-400">${a.jamKe || 'Jam -'}</span>
+                            <span class="font-bold text-cyan-400">Jam ${a.jamKe || '-'}</span>
                         </div>
                         <p class="text-[11px] text-slate-400">${a.alasan || 'Tidak ada catatan.'}</p>
                         <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
@@ -2422,6 +2424,86 @@
             });
         }
 
+        // EXPORT REKAP PRESENSI EXCEL SESUAI GAMBAR REFERENSI PRESISI 100%
+        function exportCSVLogDetail() {
+            const currentKelas = window.appData.guruProfile?.kelas || 'Kelas';
+            const list = window.appData.absensiList || [];
+
+            if (list.length === 0) { showToast('Tidak ada log presensi untuk diekspor!', 'error'); return; }
+
+            let htmlTable = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head><meta charset="utf-8">
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    table { border-collapse: collapse; width: 100%; }
+                    th, td { border: 1px solid #1e293b; padding: 8px; text-align: left; }
+                    th { background-color: #0f172a; color: #ffffff; font-weight: bold; text-align: center; }
+                    .header-row { background-color: #be123c; color: #ffffff; font-size: 16px; font-weight: bold; text-align: center; }
+                    .sub-header { background-color: #1e293b; color: #ffffff; text-align: left; }
+                    .center { text-align: center; }
+                    .bold { font-weight: bold; }
+                    .bg-hadir { background-color: #dcfce7; color: #166534; font-weight: bold; text-align: center; }
+                    .bg-sakit { background-color: #fef3c7; color: #92400e; font-weight: bold; text-align: center; }
+                    .bg-ijin { background-color: #cff4fe; color: #155e75; font-weight: bold; text-align: center; }
+                    .bg-alpa { background-color: #ffe4e6; color: #9f1239; font-weight: bold; text-align: center; }
+                    .bg-bolos { background-color: #f3e8ff; color: #6b21a8; font-weight: bold; text-align: center; }
+                </style>
+                </head>
+                <body>
+                <table>
+                    <tr class="header-row"><td colspan="8">REKAP DETAIL LOG PRESENSI PERWALIAN - SMK NEGERI 1 MARISA</td></tr>
+                    <tr class="sub-header"><td colspan="8">KELAS: ${currentKelas} | GURU PERWALIAN: ${window.appData.guruProfile?.nama || '-'}</td></tr>
+                    <tr>
+                        <th width="40">NO</th>
+                        <th width="200">HARI / TGL & WAKTU</th>
+                        <th width="200">NAMA SISWA</th>
+                        <th width="260">GURU & MAPEL</th>
+                        <th width="80">JAM KE</th>
+                        <th width="90">STATUS</th>
+                        <th width="180">ALASAN / CATATAN</th>
+                        <th width="160">PELAPOR</th>
+                    </tr>
+            `;
+
+            list.forEach((a, idx) => {
+                const s = (window.appData.siswaList || []).find(x => x.id === a.siswaId);
+                const nama = s ? s.nama : 'Siswa';
+                const hariTglWaktu = `${a.hari || 'Hari'}, ${a.tanggal} ${a.waktu || ''} WITA`;
+                let statusClass = 'bg-hadir';
+                if (a.kategori === 'Sakit') statusClass = 'bg-sakit';
+                else if (a.kategori === 'Ijin') statusClass = 'bg-ijin';
+                else if (a.kategori === 'Alpa') statusClass = 'bg-alpa';
+                else if (a.kategori === 'Bolos') statusClass = 'bg-bolos';
+
+                htmlTable += `
+                    <tr>
+                        <td class="center">${idx + 1}</td>
+                        <td>${hariTglWaktu}</td>
+                        <td class="bold">${nama}</td>
+                        <td>${a.guruMapel || '-'}</td>
+                        <td class="center font-mono bold">${a.jamKe || '-'}</td>
+                        <td class="${statusClass}">${a.kategori}</td>
+                        <td>${a.alasan || '-'}</td>
+                        <td>${a.pelapor || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            htmlTable += `</table></body></html>`;
+
+            const blob = new Blob([htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `REKAP_PRESENSI_PERWALIAN_${currentKelas.replace(/\s+/g, '_')}_${Date.now()}.xls`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            closeModalExport();
+            showToast('File Rekap Presensi Excel berhasil diunduh!', 'success');
+        }
+
         function exportExcelMatrixCurrent() {
             const currentKelas = window.appData.guruProfile?.kelas || 'Kelas';
             const siswaList = window.appData.siswaList || [];
@@ -2536,27 +2618,6 @@
             link.href = url; link.download = `REKAP_GLOBAL_ADMIN_SMKN1MARISA_${Date.now()}.xls`;
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
             showToast('Rekap Global Excel diunduh!', 'success');
-        }
-
-        function exportCSVLogDetail() {
-            let csv = '\uFEFFNO,HARI,TANGGAL,JAM REALTIME,GURU MAPEL & MAPEL,JAM KE,NIS,NAMA SISWA,STATUS,CATATAN,PELAPOR\n';
-            const list = window.appData.absensiList || [];
-
-            if (list.length === 0) { showToast('Tidak ada log presensi detail!', 'error'); return; }
-
-            list.forEach((a, i) => {
-                const s = (window.appData.siswaList || []).find(x => x.id === a.siswaId);
-                const nama = s ? s.nama : 'Siswa';
-                const nis = s ? (s.nis || '-') : '-';
-                csv += `"${i + 1}","${a.hari || '-'}","${a.tanggal}","${a.waktu || '-'} WITA","${a.guruMapel || '-'}","${a.jamKe || '-'}","${nis}","${nama}","${a.kategori}","${a.alasan || '-'}","${a.pelapor || '-'}"\n`;
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = `Log_Detail_Presensi_PerJam_${window.appData.guruProfile?.kelas || 'Kelas'}_${Date.now()}.csv`;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            closeModalExport(); showToast('Log Detail CSV diunduh!', 'success');
         }
 
         function handleSiswaKelasChange() {
