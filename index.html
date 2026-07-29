@@ -736,8 +736,33 @@
                                 </div>
 
                                 <div>
-                                    <label class="block font-semibold text-slate-400 text-[11px] mb-1">JAM PELAJARAN KE-</label>
-                                    <input type="text" id="siswa-self-jam-ke" placeholder="Contoh: 7-9" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-500 transition text-xs" required>
+                                    <label class="block font-semibold text-slate-400 text-[11px] mb-1">JAM PELAJARAN</label>
+                                    <div class="grid grid-cols-2 gap-1.5">
+                                        <select id="siswa-self-jam-dari" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2 py-1.5 text-white focus:outline-none focus:border-emerald-500 transition text-xs" required>
+                                            <option value="Jam Ke - 1">Jam Ke - 1</option>
+                                            <option value="Jam Ke - 2">Jam Ke - 2</option>
+                                            <option value="Jam Ke - 3">Jam Ke - 3</option>
+                                            <option value="Jam Ke - 4">Jam Ke - 4</option>
+                                            <option value="Jam Ke - 5">Jam Ke - 5</option>
+                                            <option value="Jam Ke - 6">Jam Ke - 6</option>
+                                            <option value="Jam Ke - 7">Jam Ke - 7</option>
+                                            <option value="Jam Ke - 8">Jam Ke - 8</option>
+                                            <option value="Jam Ke - 9">Jam Ke - 9</option>
+                                            <option value="Jam Ke - 10">Jam Ke - 10</option>
+                                        </select>
+                                        <select id="siswa-self-jam-sampai" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2 py-1.5 text-white focus:outline-none focus:border-emerald-500 transition text-xs" required>
+                                            <option value="Jam Ke - 1">s/d Jam Ke - 1</option>
+                                            <option value="Jam Ke - 2" selected>s/d Jam Ke - 2</option>
+                                            <option value="Jam Ke - 3">s/d Jam Ke - 3</option>
+                                            <option value="Jam Ke - 4">s/d Jam Ke - 4</option>
+                                            <option value="Jam Ke - 5">s/d Jam Ke - 5</option>
+                                            <option value="Jam Ke - 6">s/d Jam Ke - 6</option>
+                                            <option value="Jam Ke - 7">s/d Jam Ke - 7</option>
+                                            <option value="Jam Ke - 8">s/d Jam Ke - 8</option>
+                                            <option value="Jam Ke - 9">s/d Jam Ke - 9</option>
+                                            <option value="Jam Ke - 10">s/d Jam Ke - 10</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 
@@ -784,7 +809,32 @@
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
                                         <label class="block font-semibold text-slate-400 mb-1">JAM PELAJARAN</label>
-                                        <input type="text" id="siswa-guru-jam-ke" placeholder="Jam ke 1-3" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition" required>
+                                        <div class="grid grid-cols-2 gap-1.5">
+                                            <select id="siswa-guru-jam-dari" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-2 py-2 text-white focus:outline-none focus:border-amber-500 transition text-xs" required>
+                                                <option value="Jam Ke - 1">Jam Ke - 1</option>
+                                                <option value="Jam Ke - 2">Jam Ke - 2</option>
+                                                <option value="Jam Ke - 3">Jam Ke - 3</option>
+                                                <option value="Jam Ke - 4">Jam Ke - 4</option>
+                                                <option value="Jam Ke - 5">Jam Ke - 5</option>
+                                                <option value="Jam Ke - 6">Jam Ke - 6</option>
+                                                <option value="Jam Ke - 7">Jam Ke - 7</option>
+                                                <option value="Jam Ke - 8">Jam Ke - 8</option>
+                                                <option value="Jam Ke - 9">Jam Ke - 9</option>
+                                                <option value="Jam Ke - 10">Jam Ke - 10</option>
+                                            </select>
+                                            <select id="siswa-guru-jam-sampai" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-2 py-2 text-white focus:outline-none focus:border-amber-500 transition text-xs" required>
+                                                <option value="Jam Ke - 1">s/d Jam Ke - 1</option>
+                                                <option value="Jam Ke - 2" selected>s/d Jam Ke - 2</option>
+                                                <option value="Jam Ke - 3">s/d Jam Ke - 3</option>
+                                                <option value="Jam Ke - 4">s/d Jam Ke - 4</option>
+                                                <option value="Jam Ke - 5">s/d Jam Ke - 5</option>
+                                                <option value="Jam Ke - 6">s/d Jam Ke - 6</option>
+                                                <option value="Jam Ke - 7">s/d Jam Ke - 7</option>
+                                                <option value="Jam Ke - 8">s/d Jam Ke - 8</option>
+                                                <option value="Jam Ke - 9">s/d Jam Ke - 9</option>
+                                                <option value="Jam Ke - 10">s/d Jam Ke - 10</option>
+                                            </select>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="block font-semibold text-slate-400 mb-1">TANGGAL LAPOR</label>
@@ -1991,7 +2041,18 @@
             const hari = document.getElementById('siswa-self-hari')?.value || window.getHariIndo(tanggal);
             const waktu = document.getElementById('siswa-self-waktu')?.value || new Date().toTimeString().slice(0, 5);
             const guruMapelVal = document.getElementById('siswa-self-guru-mapel')?.value;
-            const jamKe = document.getElementById('siswa-self-jam-ke')?.value.trim();
+
+            const jamDari = document.getElementById('siswa-self-jam-dari')?.value;
+            const jamSampai = document.getElementById('siswa-self-jam-sampai')?.value;
+
+            let jamKe = jamDari;
+            if (jamDari && jamSampai && jamDari !== jamSampai) {
+                const numDari = jamDari.replace(/[^0-9]/g, '');
+                const numSampai = jamSampai.replace(/[^0-9]/g, '');
+                jamKe = `Jam Ke - ${numDari} s/d ${numSampai}`;
+            } else if (jamDari) {
+                jamKe = jamDari;
+            }
 
             if (!tanggal || !waktu || !guruMapelVal || !jamKe) { 
                 showToast('Pilih Tanggal, Jam Realtime, Guru Mapel & Jam Ke-!', 'error'); 
@@ -2043,10 +2104,21 @@
         function handleSiswaLaporGuru(e) {
             e.preventDefault();
             const guruMapel = document.getElementById('siswa-guru-nama-mapel')?.value;
-            const jamKe = document.getElementById('siswa-guru-jam-ke')?.value;
             const tanggal = document.getElementById('siswa-guru-tanggal')?.value;
             const waktu = document.getElementById('siswa-guru-waktu')?.value || new Date().toTimeString().slice(0, 5);
             const keterangan = document.getElementById('siswa-guru-keterangan')?.value;
+
+            const jamDari = document.getElementById('siswa-guru-jam-dari')?.value;
+            const jamSampai = document.getElementById('siswa-guru-jam-sampai')?.value;
+
+            let jamKe = jamDari;
+            if (jamDari && jamSampai && jamDari !== jamSampai) {
+                const numDari = jamDari.replace(/[^0-9]/g, '');
+                const numSampai = jamSampai.replace(/[^0-9]/g, '');
+                jamKe = `Jam Ke - ${numDari} s/d ${numSampai}`;
+            } else if (jamDari) {
+                jamKe = jamDari;
+            }
 
             if (!guruMapel || !jamKe || !tanggal || !keterangan) { showToast('Lengkapi seluruh field laporan guru!', 'error'); return; }
 
