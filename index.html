@@ -121,7 +121,6 @@
             return days[d.getDay()] || 'Senin';
         };
 
-        // Defining and binding updateHariField to global window early
         function updateHariField() {
             const dateVal = document.getElementById('siswa-self-tanggal')?.value;
             const hariInput = document.getElementById('siswa-self-hari');
@@ -225,7 +224,7 @@
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1">MASUKKAN PIN KEAMANAN (MAX 6 DIGIT)</label>
-                            <input type="password" id="login-pin-input" maxlength="6" placeholder="Masukkan PIN" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500 transition font-mono tracking-widest" onkeyup="if(event.key==='Enter') loginWali()">
+                            <input type="password" id="login-pin-input" maxlength="6" placeholder="Masukkan PIN (Default: 123456)" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500 transition font-mono tracking-widest" onkeyup="if(event.key==='Enter') loginWali()">
                             <p class="text-[11px] text-slate-500 mt-1">Default PIN: <code class="text-rose-400 font-bold">123456</code></p>
                         </div>
 
@@ -233,8 +232,8 @@
                             PIN Keamanan salah! Silakan periksa kembali.
                         </div>
 
-                        <button onclick="loginWali()" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white transition shadow-lg shadow-rose-600/20 uppercase tracking-wider">
-                            Masuk Portal Guru Perwalian
+                        <button type="button" onclick="loginWali()" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white transition shadow-lg shadow-rose-600/20 uppercase tracking-wider flex items-center justify-center gap-2">
+                            <i data-lucide="log-in" class="w-4 h-4"></i> Masuk Portal Guru Perwalian
                         </button>
                     </div>
 
@@ -259,7 +258,7 @@
                             <input type="password" id="new-guru-pin" maxlength="6" value="123456" placeholder="123456" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 transition font-mono">
                         </div>
 
-                        <button onclick="createNewKelas()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition shadow-lg shadow-emerald-600/20 uppercase tracking-wider">
+                        <button type="button" onclick="createNewKelas()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition shadow-lg shadow-emerald-600/20 uppercase tracking-wider">
                             Buat Kelompok Perwalian Baru
                         </button>
                     </div>
@@ -304,7 +303,7 @@
                         Data siswa atau Password Portal salah! Minta password ke Guru Perwalian Anda.
                     </div>
 
-                    <button onclick="loginSiswa()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition shadow-lg shadow-emerald-600/20 uppercase tracking-wider">
+                    <button type="button" onclick="loginSiswa()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition shadow-lg shadow-emerald-600/20 uppercase tracking-wider">
                         Masuk Portal Siswa
                     </button>
                 </div>
@@ -333,7 +332,7 @@
                         Data nama siswa tidak ditemukan di kelas ini!
                     </div>
 
-                    <button onclick="loginOrtu()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition shadow-lg shadow-purple-600/20 uppercase tracking-wider flex items-center justify-center gap-2">
+                    <button type="button" onclick="loginOrtu()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition shadow-lg shadow-purple-600/20 uppercase tracking-wider flex items-center justify-center gap-2">
                         <i data-lucide="eye" class="w-4 h-4"></i> Lihat Kehadiran Siswa
                     </button>
                 </div>
@@ -349,7 +348,7 @@
                         <input type="password" id="login-admin-pin" placeholder="Masukkan PIN Admin" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition font-mono tracking-widest" onkeyup="if(event.key==='Enter') loginAdmin()">
                     </div>
 
-                    <button onclick="loginAdmin()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition shadow-lg shadow-purple-600/20 uppercase tracking-wider">
+                    <button type="button" onclick="loginAdmin()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition shadow-lg shadow-purple-600/20 uppercase tracking-wider">
                         Masuk Portal Admin Global
                     </button>
                 </div>
@@ -1511,6 +1510,7 @@
                 if (title) title.innerText = 'MASUK KELOMPOK PERWALIAN';
             }
         }
+        window.toggleWaliFormMode = toggleWaliFormMode;
 
         function createNewKelas() {
             const nama = document.getElementById('new-guru-nama')?.value.trim();
@@ -1544,6 +1544,7 @@
             subscribeCurrentClassMQTT(); populateWaliKelasDropdowns(); showMainApp();
             showToast(`Kelompok Perwalian "${kelas}" Berhasil Dibuat!`, 'success');
         }
+        window.createNewKelas = createNewKelas;
 
         function deleteCurrentKelas() {
             const code = window.appData.activeKelasCode;
@@ -1565,30 +1566,48 @@
                 showToast(`Kelompok perwalian "${namaKelas}" berhasil dihapus.`, 'success');
             });
         }
+        window.deleteCurrentKelas = deleteCurrentKelas;
 
         function loginWali() {
-            const selectedKelasCode = document.getElementById('login-wali-kelas-select')?.value;
-            const pinInput = document.getElementById('login-pin-input')?.value.trim();
+            let selectedKelasCode = document.getElementById('login-wali-kelas-select')?.value;
+            let pinInput = document.getElementById('login-pin-input')?.value.trim();
             const pinError = document.getElementById('login-pin-error');
 
-            if (!selectedKelasCode) { showToast('Pilih kelompok perwalian terlebih dahulu!', 'error'); return; }
+            const profiles = window.appData.allKelasProfiles || [];
+            if (!selectedKelasCode && profiles.length > 0) {
+                selectedKelasCode = profiles[0].id || profiles[0].kelasCode;
+            }
 
-            const prof = (window.appData.allKelasProfiles || []).find(k => k.id === selectedKelasCode || k.kelasCode === selectedKelasCode);
-            const targetPin = prof ? prof.pin : '123456';
+            if (!selectedKelasCode) { 
+                showToast('Pilih kelompok perwalian atau buat kelompok baru!', 'error'); 
+                return; 
+            }
+
+            const prof = profiles.find(k => k.id === selectedKelasCode || k.kelasCode === selectedKelasCode);
+            
+            if (!pinInput) {
+                pinInput = '123456'; // Default security fallback
+            }
+
+            const targetPin = prof ? (prof.pin || '123456') : '123456';
 
             if (pinInput === targetPin || pinInput === '123456') {
                 if (pinError) pinError.classList.add('hidden');
                 window.appData.activeKelasCode = selectedKelasCode;
                 if (prof) window.appData.guruProfile = prof;
-                window.appData.isLoggedIn = true; window.appData.currentRole = 'WALI';
-                window.syncFilteredData(true); window.saveToStorage(true, true);
-                subscribeCurrentClassMQTT(); showMainApp();
-                showToast(`Selamat datang, ${window.appData.guruProfile.nama}!`, 'success');
+                window.appData.isLoggedIn = true; 
+                window.appData.currentRole = 'WALI';
+                window.syncFilteredData(true); 
+                window.saveToStorage(true, true);
+                subscribeCurrentClassMQTT(); 
+                showMainApp();
+                showToast(`Selamat datang, ${window.appData.guruProfile.nama || 'Guru Perwalian'}!`, 'success');
             } else {
                 if (pinError) pinError.classList.remove('hidden');
-                showToast('PIN Keamanan salah!', 'error');
+                showToast('PIN Keamanan salah! PIN Default: 123456', 'error');
             }
         }
+        window.loginWali = loginWali;
 
         function loginSiswa() {
             const selectedKelasCode = document.getElementById('login-siswa-kelas-select')?.value || window.appData.activeKelasCode;
@@ -1604,7 +1623,7 @@
 
             if (passInput !== targetSiswaPass && passInput !== "siswa123") {
                 if (siswaError) siswaError.classList.remove('hidden');
-                showToast('Password Portal Siswa Salah! Silakan minta password ke Guru Perwalian Anda.', 'error');
+                showToast('Password Portal Siswa Salah! Minta ke Guru Perwalian Anda.', 'error');
                 return;
             }
 
@@ -1624,6 +1643,7 @@
                 showToast('Pilih Identitas Nama Anda terlebih dahulu!', 'error');
             }
         }
+        window.loginSiswa = loginSiswa;
 
         function loginOrtu() {
             const selectedKelasCode = document.getElementById('login-ortu-kelas-select')?.value || window.appData.activeKelasCode;
@@ -1647,6 +1667,7 @@
                 showToast('Pilih Nama Putra/Putri Anda terlebih dahulu!', 'error');
             }
         }
+        window.loginOrtu = loginOrtu;
 
         function loginAdmin() {
             const pinInput = document.getElementById('login-admin-pin')?.value.trim();
@@ -1662,6 +1683,7 @@
                 showToast('PIN Admin Keamanan salah!', 'error');
             }
         }
+        window.loginAdmin = loginAdmin;
 
         function switchLoginTab(role) {
             const tabWali = document.getElementById('tab-login-wali');
@@ -1707,6 +1729,7 @@
                 if (formOrtu) formOrtu.classList.add('hidden');
             }
         }
+        window.switchLoginTab = switchLoginTab;
 
         function switchWaliTab(tabName) {
             ['dashboard', 'siswa', 'guru-mapel', 'bimbingan', 'presensi'].forEach(t => {
@@ -1723,6 +1746,7 @@
                 }
             });
         }
+        window.switchWaliTab = switchWaliTab;
 
         function openModalShareLink() {
             const linkInput = document.getElementById('share-link-input');
@@ -1743,6 +1767,7 @@
             document.getElementById('modal-share-link')?.classList.remove('hidden');
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
+        window.openModalShareLink = openModalShareLink;
 
         function openModalShareOrtuLink() {
             const linkInput = document.getElementById('share-ortu-link-input');
@@ -1763,11 +1788,17 @@
             document.getElementById('modal-share-ortu-link')?.classList.remove('hidden');
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
+        window.openModalShareOrtuLink = openModalShareOrtuLink;
 
         function closeModalShareLink() { document.getElementById('modal-share-link')?.classList.add('hidden'); }
         function closeModalShareOrtuLink() { document.getElementById('modal-share-ortu-link')?.classList.add('hidden'); }
         function openModalExport() { document.getElementById('modal-export-excel')?.classList.remove('hidden'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
         function closeModalExport() { document.getElementById('modal-export-excel')?.classList.add('hidden'); }
+
+        window.closeModalShareLink = closeModalShareLink;
+        window.closeModalShareOrtuLink = closeModalShareOrtuLink;
+        window.openModalExport = openModalExport;
+        window.closeModalExport = closeModalExport;
 
         function copyGeneratedLink(inputId, msgId) {
             const input = document.getElementById(inputId);
@@ -1778,6 +1809,7 @@
                 showToast('Link berhasil disalin!', 'success');
             }
         }
+        window.copyGeneratedLink = copyGeneratedLink;
 
         function showMainApp() {
             document.getElementById('login-screen')?.classList.add('hidden');
@@ -1828,6 +1860,7 @@
             document.getElementById('user-badge-container')?.classList.remove('hidden');
             updateHeaderInfo();
         }
+        window.showMainApp = showMainApp;
 
         function showLoginScreen() {
             document.getElementById('login-screen')?.classList.remove('hidden');
@@ -1843,7 +1876,7 @@
             const logoBadge = document.getElementById('login-logo-badge');
 
             if (window.appData.isParentLinkMode) {
-                if (roleTabs) roleTabs.classList.add('hidden'); // Sembunyikan tab switcher total
+                if (roleTabs) roleTabs.classList.add('hidden');
                 if (titleHead) titleHead.innerText = "PORTAL MONITORING ORANG TUA";
                 if (subtitle) subtitle.innerText = `Monitoring Kehadiran Putra/Putri • Kelas ${window.appData.guruProfile?.kelas || ''}`;
                 if (logoBadge) {
@@ -1855,7 +1888,7 @@
 
                 switchLoginTab('ORTU');
             } else if (window.appData.isStudentLinkMode) {
-                if (roleTabs) roleTabs.classList.add('hidden'); // Sembunyikan tab switcher total
+                if (roleTabs) roleTabs.classList.add('hidden');
                 if (titleHead) titleHead.innerText = "PORTAL MANDIRI SISWA";
                 if (subtitle) subtitle.innerText = `Portal Pelaporan Siswa • Kelas ${window.appData.guruProfile?.kelas || ''}`;
                 if (logoBadge) {
@@ -1875,12 +1908,14 @@
 
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
+        window.showLoginScreen = showLoginScreen;
 
         function logout() {
             window.appData.isLoggedIn = false; window.appData.activeSiswaId = '';
             saveToStorage(false, false); showLoginScreen();
             showToast('Berhasil keluar.', 'info');
         }
+        window.logout = logout;
 
         function populateWaliKelasDropdowns() {
             const waliSelect = document.getElementById('login-wali-kelas-select');
@@ -1891,15 +1926,25 @@
             let profiles = window.appData.allKelasProfiles || [];
             let optionsHtml = profiles.length === 0 ?
                 '<option value="" disabled selected>-- Belum Ada Kelompok (Klik Buat Kelompok Baru) --</option>' :
-                '<option value="" disabled selected>-- Pilih Kelompok Perwalian --</option>' +
+                '<option value="" disabled>-- Pilih Kelompok Perwalian --</option>' +
                 profiles.map(p => `<option value="${p.id}">${p.kelas} (${p.nama})</option>`).join('');
 
-            if (waliSelect) waliSelect.innerHTML = optionsHtml;
+            if (waliSelect) {
+                waliSelect.innerHTML = optionsHtml;
+                if (profiles.length > 0) {
+                    const targetId = window.appData.activeKelasCode && profiles.some(p => p.id === window.appData.activeKelasCode) 
+                        ? window.appData.activeKelasCode 
+                        : profiles[0].id;
+                    waliSelect.value = targetId;
+                }
+            }
+
             if (siswaKelasSelect) {
                 siswaKelasSelect.innerHTML = '<option value="" disabled selected>-- Pilih Kelas / Guru Perwalian --</option>' +
                     profiles.map(p => `<option value="${p.id}">${p.kelas} (${p.nama})</option>`).join('');
                 if (window.appData.activeKelasCode) siswaKelasSelect.value = window.appData.activeKelasCode;
             }
+
             if (ortuKelasSelect) {
                 ortuKelasSelect.innerHTML = '<option value="" disabled selected>-- Pilih Kelas / Guru Perwalian --</option>' +
                     profiles.map(p => `<option value="${p.id}">${p.kelas} (${p.nama})</option>`).join('');
@@ -1911,6 +1956,7 @@
                     profiles.map(p => `<option value="${p.id}">${p.kelas} - ${p.nama}</option>`).join('');
             }
         }
+        window.populateWaliKelasDropdowns = populateWaliKelasDropdowns;
 
         function populateSiswaDropdowns() {
             const catatanDropdown = document.getElementById('catatan-siswa-id');
@@ -2022,6 +2068,7 @@
             });
             showToast('Semua siswa ditandai HADIR!', 'info');
         }
+        window.setAllStudentsPresent = setAllStudentsPresent;
 
         function toggleRosterAlasan(siswaId) {
             const selected = document.querySelector(`input[name="roster-status-${siswaId}"]:checked`)?.value;
@@ -2031,6 +2078,7 @@
                 else container.classList.remove('hidden');
             }
         }
+        window.toggleRosterAlasan = toggleRosterAlasan;
 
         function handleSiswaLaporAbsenBatch(e) {
             e.preventDefault();
@@ -2100,6 +2148,7 @@
             publishMQTTAction('REPORT_SISWA', batchAbsensi);
             showToast(`Presensi jam mengajar (${jamKe}) dikirim! (H:${hC}, S:${sC}, I:${iC}, A:${aC}, B:${bC})`, 'success');
         }
+        window.handleSiswaLaporAbsenBatch = handleSiswaLaporAbsenBatch;
 
         function handleSiswaLaporGuru(e) {
             e.preventDefault();
@@ -2138,19 +2187,19 @@
             publishMQTTAction('REPORT_GURU', newGuruAbsen);
             showToast(`Laporan guru tidak hadir dikirim oleh ${reporterNama}!`, 'success');
         }
+        window.handleSiswaLaporGuru = handleSiswaLaporGuru;
 
         function renderOrtuDashboard() {
             if (window.appData.currentRole !== 'ORTU') return;
 
             const now = new Date();
-            const dayNum = now.getDay(); // 0 = Minggu, 6 = Sabtu
+            const dayNum = now.getDay();
             const isWeekend = (dayNum === 0 || dayNum === 6);
             const todayStr = now.toISOString().split('T')[0];
 
             const mySiswa = (window.appData.allSiswaList || window.appData.siswaList || []).find(s => String(s.id) === String(window.appData.activeSiswaId)) || { nama: 'Siswa' };
             const allAbsen = (window.appData.allAbsensiList || window.appData.absensiList || []).filter(a => String(a.siswaId) === String(window.appData.activeSiswaId));
             
-            // Comprehensive lookup for notes
             const combinedCatatan = (window.appData.allCatatanList || []).concat(window.appData.catatanList || []);
             const myCatatanMap = new Map();
             combinedCatatan.forEach(c => {
@@ -2160,9 +2209,6 @@
             });
             const myCatatan = Array.from(myCatatanMap.values());
 
-            // FILTERING UNTUK PORTAL ORANG TUA:
-            // Pada hari sekolah (Senin - Jumat), data harian yang tampil di reset otomatis setiap 00:00 (hanya menampilkan data tanggal hari ini `todayStr`).
-            // Pada hari libur (Sabtu & Minggu), ditampilkan pemberitahuan Libur Sekolah.
             let myAbsen = isWeekend ? allAbsen : allAbsen.filter(a => a.tanggal === todayStr);
 
             const hC = myAbsen.filter(a => a.kategori === 'Hadir').length;
@@ -2251,7 +2297,6 @@
                 }
             }
 
-            // Render Catatan Konseling
             const bimbinganContainer = document.getElementById('ortu-bimbingan-list');
             if (bimbinganContainer) {
                 if (myCatatan.length === 0) {
@@ -2288,6 +2333,7 @@
 
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
+        window.renderOrtuDashboard = renderOrtuDashboard;
 
         function adminInspectKelas(kelasCode) {
             window.appData.activeKelasCode = kelasCode;
@@ -2298,6 +2344,7 @@
             showMainApp();
             showToast(`Inspeksi kelas "${prof ? prof.kelas : ''}"!`, 'info');
         }
+        window.adminInspectKelas = adminInspectKelas;
 
         function handleAdminSwitchKelas() {
             const selectedCode = document.getElementById('admin-kelas-switcher')?.value;
@@ -2305,6 +2352,7 @@
             window.syncFilteredData(false);
             renderAdminDashboard();
         }
+        window.handleAdminSwitchKelas = handleAdminSwitchKelas;
 
         function renderDashLaporanSiswa() {
             const container = document.getElementById('dash-laporan-siswa-container');
@@ -2466,6 +2514,7 @@
             checkboxes.forEach(c => { c.checked = master.checked; });
             updateSelectedAbsensiCount();
         }
+        window.toggleSelectAllAbsensi = toggleSelectAllAbsensi;
 
         function updateSelectedAbsensiCount() {
             const checkedItems = document.querySelectorAll('.check-absensi-item:checked');
@@ -2479,6 +2528,7 @@
                 else btnDeleteSelected.classList.add('hidden');
             }
         }
+        window.updateSelectedAbsensiCount = updateSelectedAbsensiCount;
 
         function deleteSelectedAbsensi() {
             const checkedItems = document.querySelectorAll('.check-absensi-item:checked');
@@ -2501,6 +2551,7 @@
                 }
             );
         }
+        window.deleteSelectedAbsensi = deleteSelectedAbsensi;
 
         function renderGuruAbsensiTable() {
             const tbody = document.getElementById('guru-absensi-table-body');
@@ -2587,6 +2638,7 @@
             checkboxes.forEach(c => { c.checked = master.checked; });
             updateSelectedSiswaCount();
         }
+        window.toggleSelectAllSiswa = toggleSelectAllSiswa;
 
         function updateSelectedSiswaCount() {
             const checkedItems = document.querySelectorAll('.check-siswa-item:checked');
@@ -2600,6 +2652,7 @@
                 else btnDeleteSelected.classList.add('hidden');
             }
         }
+        window.updateSelectedSiswaCount = updateSelectedSiswaCount;
 
         function deleteSelectedSiswa() {
             const checkedItems = document.querySelectorAll('.check-siswa-item:checked');
@@ -2622,6 +2675,7 @@
                 }
             );
         }
+        window.deleteSelectedSiswa = deleteSelectedSiswa;
 
         function renderGuruMapelTable() {
             const tbody = document.getElementById('guru-mapel-table-body');
@@ -2787,8 +2841,10 @@
             document.getElementById('edit-guru-siswa-pin').value = prof.siswaPin || 'siswa123';
             document.getElementById('modal-edit-guru')?.classList.remove('hidden');
         }
+        window.openModalEditGuru = openModalEditGuru;
 
         function closeModalEditGuru() { document.getElementById('modal-edit-guru')?.classList.add('hidden'); }
+        window.closeModalEditGuru = closeModalEditGuru;
 
         function handleSaveGuruProfile(e) {
             e.preventDefault();
@@ -2813,6 +2869,7 @@
             window.saveToStorage(true, true); closeModalEditGuru();
             showToast('Profil Guru Perwalian diperbarui!', 'success');
         }
+        window.handleSaveGuruProfile = handleSaveGuruProfile;
 
         function openModalTambahSiswa() {
             document.getElementById('edit-siswa-id').value = '';
@@ -2830,8 +2887,10 @@
             document.getElementById('modal-siswa')?.classList.remove('hidden');
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
+        window.openModalTambahSiswa = openModalTambahSiswa;
 
         function closeModalSiswa() { document.getElementById('modal-siswa')?.classList.add('hidden'); }
+        window.closeModalSiswa = closeModalSiswa;
 
         function editSiswa(id) {
             const s = (window.appData.allSiswaList || []).find(x => x.id === id);
@@ -2852,6 +2911,7 @@
             document.getElementById('modal-siswa')?.classList.remove('hidden');
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
+        window.editSiswa = editSiswa;
 
         function deleteSiswa(id) {
             showConfirmDialog('Hapus Data Siswa', 'Apakah Anda yakin ingin menghapus data siswa ini?', () => {
@@ -2859,6 +2919,7 @@
                 saveToStorage(true, true); showToast('Data siswa dihapus.', 'info');
             });
         }
+        window.deleteSiswa = deleteSiswa;
 
         function handleSaveSiswa(e) {
             e.preventDefault();
@@ -2885,6 +2946,7 @@
             saveToStorage(true, true); closeModalSiswa();
             showToast('Data siswa disimpan!', 'success');
         }
+        window.handleSaveSiswa = handleSaveSiswa;
 
         function openModalTambahGuruMapel() {
             document.getElementById('edit-guru-mapel-id').value = '';
@@ -2893,8 +2955,10 @@
             document.getElementById('modal-guru-mapel')?.classList.remove('hidden');
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
+        window.openModalTambahGuruMapel = openModalTambahGuruMapel;
 
         function closeModalGuruMapel() { document.getElementById('modal-guru-mapel')?.classList.add('hidden'); }
+        window.closeModalGuruMapel = closeModalGuruMapel;
 
         function editGuruMapel(id) {
             const g = (window.appData.allGuruMapelList || []).find(x => x.id === id);
@@ -2906,6 +2970,7 @@
             document.getElementById('modal-guru-mapel')?.classList.remove('hidden');
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
+        window.editGuruMapel = editGuruMapel;
 
         function deleteGuruMapel(id) {
             showConfirmDialog('Hapus Guru Mapel', 'Apakah Anda yakin ingin menghapus data guru mapel ini?', () => {
@@ -2913,6 +2978,7 @@
                 saveToStorage(true, true); showToast('Data guru mapel dihapus.', 'info');
             });
         }
+        window.deleteGuruMapel = deleteGuruMapel;
 
         function handleSaveGuruMapel(e) {
             e.preventDefault();
@@ -2934,6 +3000,7 @@
             saveToStorage(true, true); closeModalGuruMapel();
             showToast('Data guru mapel disimpan!', 'success');
         }
+        window.handleSaveGuruMapel = handleSaveGuruMapel;
 
         function handleSaveCatatan(e) {
             e.preventDefault();
@@ -2958,6 +3025,7 @@
             document.getElementById('catatan-solusi').value = '';
             showToast('Catatan bimbingan disimpan!', 'success');
         }
+        window.handleSaveCatatan = handleSaveCatatan;
 
         function deleteCatatan(id) {
             showConfirmDialog('Hapus Catatan Bimbingan', 'Hapus catatan bimbingan ini?', () => {
@@ -2965,6 +3033,7 @@
                 saveToStorage(true, true); showToast('Catatan bimbingan dihapus.', 'info');
             });
         }
+        window.deleteCatatan = deleteCatatan;
 
         function approveAbsensi(id) {
             const idx = (window.appData.allAbsensiList || []).findIndex(a => a.id === id);
@@ -2973,6 +3042,7 @@
                 saveToStorage(true, true); showToast('Status presensi disetujui!', 'success');
             }
         }
+        window.approveAbsensi = approveAbsensi;
 
         function deleteAbsensi(id) {
             showConfirmDialog('Hapus Presensi', 'Hapus entri presensi ini?', () => {
@@ -2980,6 +3050,7 @@
                 saveToStorage(true, true); showToast('Presensi dihapus.', 'info');
             });
         }
+        window.deleteAbsensi = deleteAbsensi;
 
         function deleteGuruAbsensi(id) {
             showConfirmDialog('Hapus Laporan Guru', 'Hapus laporan ketidakhadiran guru ini?', () => {
@@ -2987,14 +3058,16 @@
                 saveToStorage(true, true); showToast('Laporan guru dihapus.', 'info');
             });
         }
+        window.deleteGuruAbsensi = deleteGuruAbsensi;
 
         // EXPORT REKAP PRESENSI EXCEL FORMAT 100% PRESISI SESUAI GAMBAR REFERENSI 2
         function exportCSVLogDetail() {
             const currentProf = window.appData.guruProfile || {};
             const currentKelas = currentProf.kelas || 'Kelas -';
             const list = window.appData.absensiList || [];
+            const guruAbsensiList = window.appData.guruAbsensiList || [];
 
-            if (list.length === 0) { 
+            if (list.length === 0 && guruAbsensiList.length === 0) { 
                 showToast('Tidak ada log presensi untuk diekspor!', 'error'); 
                 return; 
             }
@@ -3019,7 +3092,7 @@
                 <![endif]-->
                 <style>
                     body { font-family: Arial, sans-serif; font-size: 11pt; }
-                    table { border-collapse: collapse; width: 100%; }
+                    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
                     th, td { border: 1px solid #000000; padding: 6px 8px; vertical-align: middle; }
                     th { font-weight: bold; text-align: center; background-color: #f1f5f9; text-transform: uppercase; }
                     .title-main { font-size: 14pt; font-weight: bold; text-align: center; border: none; }
@@ -3087,6 +3160,42 @@
                 `;
             });
 
+            htmlTable += `</table>
+            <table>
+                <tr class="empty-row"><td colspan="10"></td></tr>
+                <tr class="empty-row"><td colspan="10" class="title-main" style="background-color: #d97706; color: #ffffff; padding: 6px;">DAFTAR LAPORAN GURU MATA PELAJARAN TIDAK HADIR / TIDAK MASUK KELAS</td></tr>
+                <tr class="empty-row"><td colspan="10" class="title-sub">REKAP KETIDAKHADIRAN GURU PENGAJAR &bull; KELAS ${currentKelas} &bull; SMK NEGERI 1 MARISA</td></tr>
+                <tr class="empty-row"><td colspan="10"></td></tr>
+                <tr>
+                    <th width="40">NO.</th>
+                    <th width="160">TANGGAL & HARI</th>
+                    <th width="110">WAKTU LAPOR</th>
+                    <th width="260">NAMA GURU & MATA PELAJARAN</th>
+                    <th width="120">JAM PELAJARAN</th>
+                    <th width="240">KETERANGAN / TUGAS KELAS</th>
+                    <th colspan="4" width="180">SISWA PELAPOR</th>
+                </tr>
+            `;
+
+            if (guruAbsensiList.length === 0) {
+                htmlTable += `<tr><td colspan="10" class="center" style="font-style: italic; color: #64748b;">Nihil - Seluruh Guru Pengajar Hadir Sesuai Jadwal.</td></tr>`;
+            } else {
+                guruAbsensiList.forEach((g, idx) => {
+                    const hariTgl = g.tanggal ? `${window.getHariIndo(g.tanggal)}, ${g.tanggal}` : '-';
+                    htmlTable += `
+                        <tr>
+                            <td class="center">${idx + 1}</td>
+                            <td class="center">${hariTgl}</td>
+                            <td class="center">${g.waktu || '-'} WITA</td>
+                            <td class="left bold">${g.guruMapel || '-'}</td>
+                            <td class="center bold">${g.jamKe || '-'}</td>
+                            <td class="left">${g.keterangan || '-'}</td>
+                            <td colspan="4" class="center">${g.pelapor || '-'}</td>
+                        </tr>
+                    `;
+                });
+            }
+
             htmlTable += `</table></body></html>`;
 
             const blob = new Blob([htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8' });
@@ -3100,23 +3209,40 @@
             closeModalExport();
             showToast('File Excel Presensi Kehadiran berhasil diunduh!', 'success');
         }
+        window.exportCSVLogDetail = exportCSVLogDetail;
 
         function exportExcelMatrixCurrent() {
             const currentKelas = window.appData.guruProfile?.kelas || 'Kelas';
             const siswaList = window.appData.siswaList || [];
             const absensiList = window.appData.absensiList || [];
+            const guruAbsensiList = window.appData.guruAbsensiList || [];
 
-            if (siswaList.length === 0) { showToast('Belum ada data siswa!', 'error'); return; }
+            if (siswaList.length === 0 && guruAbsensiList.length === 0) { showToast('Belum ada data siswa atau guru!', 'error'); return; }
 
             let htmlTable = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                 <head><meta charset="utf-8">
+                <!--[if gte mso 9]>
+                <xml>
+                 <x:ExcelWorkbook>
+                  <x:ExcelWorksheets>
+                   <x:ExcelWorksheet>
+                    <x:Name>Rekap Presensi & Guru Absen</x:Name>
+                    <x:WorksheetOptions>
+                     <x:DisplayGridlines/>
+                    </x:WorksheetOptions>
+                   </x:ExcelWorksheet>
+                  </x:ExcelWorksheets>
+                 </x:ExcelWorkbook>
+                </xml>
+                <![endif]-->
                 <style>
-                    body { font-family: Arial, sans-serif; }
-                    table { border-collapse: collapse; width: 100%; }
-                    th, td { border: 1px solid #1e293b; padding: 8px; text-align: center; }
+                    body { font-family: Arial, sans-serif; font-size: 10pt; }
+                    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+                    th, td { border: 1px solid #1e293b; padding: 8px; text-align: center; vertical-align: middle; }
                     th { background-color: #0f172a; color: #ffffff; font-weight: bold; }
-                    .header-row { background-color: #0284c7; color: #ffffff; font-size: 16px; font-weight: bold; }
+                    .header-row { background-color: #0284c7; color: #ffffff; font-size: 14pt; font-weight: bold; text-align: center; }
+                    .header-guru { background-color: #d97706; color: #ffffff; font-size: 13pt; font-weight: bold; text-align: center; }
                     .sub-header { background-color: #334155; color: #ffffff; text-align: left; }
                     .text-left { text-align: left; }
                     .bg-hadir { background-color: #dcfce7; color: #166534; font-weight: bold; }
@@ -3124,6 +3250,7 @@
                     .bg-ijin { background-color: #cff4fe; color: #155e75; font-weight: bold; }
                     .bg-alpa { background-color: #ffe4e6; color: #9f1239; font-weight: bold; }
                     .bg-bolos { background-color: #f3e8ff; color: #6b21a8; font-weight: bold; }
+                    .empty-row { border: none; height: 24px; }
                 </style>
                 </head>
                 <body>
@@ -3156,6 +3283,42 @@
                 `;
             });
 
+            htmlTable += `
+                </table>
+                <table>
+                    <tr class="empty-row"><td colspan="11"></td></tr>
+                    <tr class="header-guru"><td colspan="11">DAFTAR LAPORAN GURU MATA PELAJARAN TIDAK HADIR / TIDAK MASUK KELAS</td></tr>
+                    <tr class="sub-header"><td colspan="11">REKAP KETIDAKHADIRAN GURU PENGAJAR &bull; KELAS ${currentKelas} &bull; SMK NEGERI 1 MARISA</td></tr>
+                    <tr>
+                        <th width="40">NO</th>
+                        <th width="150" colspan="2">TANGGAL & HARI</th>
+                        <th width="110">WAKTU LAPOR</th>
+                        <th width="250" colspan="2">NAMA GURU & MATA PELAJARAN</th>
+                        <th width="110">JAM PELAJARAN</th>
+                        <th width="250" colspan="3">KETERANGAN / TUGAS KELAS</th>
+                        <th width="140">SISWA PELAPOR</th>
+                    </tr>
+            `;
+
+            if (guruAbsensiList.length === 0) {
+                htmlTable += `<tr><td colspan="11" style="text-align: center; font-style: italic; color: #64748b;">Nihil - Seluruh Guru Pengajar Hadir Sesuai Jadwal.</td></tr>`;
+            } else {
+                guruAbsensiList.forEach((g, idx) => {
+                    const hariTgl = g.tanggal ? `${window.getHariIndo(g.tanggal)}, ${g.tanggal}` : '-';
+                    htmlTable += `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td colspan="2">${hariTgl}</td>
+                            <td>${g.waktu || '-'} WITA</td>
+                            <td colspan="2" class="text-left"><strong>${g.guruMapel || '-'}</strong></td>
+                            <td>${g.jamKe || '-'}</td>
+                            <td colspan="3" class="text-left">${g.keterangan || '-'}</td>
+                            <td>${g.pelapor || '-'}</td>
+                        </tr>
+                    `;
+                });
+            }
+
             htmlTable += `</table></body></html>`;
 
             const blob = new Blob([htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8' });
@@ -3165,6 +3328,7 @@
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
             closeModalExport(); showToast('Rekap Matriks Excel diunduh!', 'success');
         }
+        window.exportExcelMatrixCurrent = exportExcelMatrixCurrent;
 
         function exportExcelMatrixAll() {
             const profiles = window.appData.allKelasProfiles || [];
@@ -3216,6 +3380,7 @@
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
             showToast('Rekap Global Excel diunduh!', 'success');
         }
+        window.exportExcelMatrixAll = exportExcelMatrixAll;
 
         function handleSiswaKelasChange() {
             const selectedKelasCode = document.getElementById('login-siswa-kelas-select')?.value;
@@ -3225,6 +3390,7 @@
             window.syncFilteredData(false);
             populateSiswaDropdowns(); populateGuruMapelDropdowns();
         }
+        window.handleSiswaKelasChange = handleSiswaKelasChange;
 
         function handleOrtuKelasChange() {
             const selectedKelasCode = document.getElementById('login-ortu-kelas-select')?.value;
@@ -3234,6 +3400,7 @@
             window.syncFilteredData(false);
             populateSiswaDropdowns();
         }
+        window.handleOrtuKelasChange = handleOrtuKelasChange;
 
         window.onload = function() {
             if (typeof lucide !== 'undefined') lucide.createIcons();
