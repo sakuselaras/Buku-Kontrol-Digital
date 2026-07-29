@@ -316,7 +316,7 @@
                     </div>
 
                     <div id="container-select-kelas-ortu">
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">PILIH KELAS / KELOMPOK PERWALIAN</label>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">KELAS / KELOMPOK PERWALIAN</label>
                         <select id="login-ortu-kelas-select" onchange="handleOrtuKelasChange()" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition">
                             <option value="" disabled selected>-- Pilih Kelas / Guru Perwalian --</option>
                         </select>
@@ -329,23 +329,12 @@
                         </select>
                     </div>
 
-                    <div class="relative flex py-1 items-center">
-                        <div class="flex-grow border-t border-slate-800"></div>
-                        <span class="flex-shrink mx-3 text-[10px] font-bold text-slate-500 uppercase">Atau Cari Dengan NIS</span>
-                        <div class="flex-grow border-t border-slate-800"></div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">MASUKKAN NIS ANANDA (NOMOR INDUK SISWA)</label>
-                        <input type="text" id="login-ortu-nis" placeholder="Contoh: 2026101" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition font-mono" onkeyup="if(event.key==='Enter') loginOrtu()">
-                    </div>
-
                     <div id="login-ortu-error" class="hidden text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl font-semibold">
                         Data nama siswa tidak ditemukan di kelas ini!
                     </div>
 
                     <button onclick="loginOrtu()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition shadow-lg shadow-purple-600/20 uppercase tracking-wider flex items-center justify-center gap-2">
-                        <i data-lucide="eye" class="w-4 h-4"></i> Masuk Monitoring Orang Tua
+                        <i data-lucide="eye" class="w-4 h-4"></i> Lihat Kehadiran Siswa
                     </button>
                 </div>
 
@@ -834,7 +823,7 @@
             <!-- VIEW FOR PORTAL ORANG TUA -->
             <div id="view-ortu" class="hidden space-y-6">
                 <div class="p-6 rounded-2xl bg-gradient-to-r from-purple-950/70 to-[#131b2e] border border-purple-500/40 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-                    <div class="space-y-1">
+                    <div class="space-y-2">
                         <div class="flex items-center gap-2">
                             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase flex items-center gap-1">
                                 <i data-lucide="heart-handshake" class="w-3 h-3"></i> PORTAL ORANG TUA SISWA
@@ -844,15 +833,27 @@
                             </span>
                         </div>
                         <h2 id="ortu-portal-nama-siswa" class="text-xl font-black text-white uppercase">Siswa: -</h2>
-                        <p id="ortu-portal-nis" class="text-xs text-slate-400">NIS: - | SMK Negeri 1 Marisa</p>
-                        <div class="flex items-center gap-2 pt-1">
-                            <span class="text-xs text-slate-400 font-medium">Guru Perwalian:</span>
-                            <span id="ortu-portal-guru-nama" class="text-xs font-bold text-purple-300 bg-purple-500/10 px-2.5 py-0.5 rounded-lg border border-purple-500/20">-</span>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 text-xs">
+                            <div class="flex items-center gap-2 bg-[#0b0f19]/80 p-2.5 rounded-xl border border-slate-800">
+                                <i data-lucide="user-check" class="w-4 h-4 text-rose-400"></i>
+                                <div>
+                                    <span class="text-[10px] text-slate-500 block font-semibold uppercase">GURU PERWALIAN</span>
+                                    <span id="ortu-portal-guru-nama" class="font-bold text-rose-300">-</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 bg-[#0b0f19]/80 p-2.5 rounded-xl border border-slate-800">
+                                <i data-lucide="book-open" class="w-4 h-4 text-amber-400"></i>
+                                <div>
+                                    <span class="text-[10px] text-slate-500 block font-semibold uppercase">GURU MAPEL JAM BERJALAN</span>
+                                    <span id="ortu-portal-guru-berjalan" class="font-bold text-amber-300">-</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="bg-[#0b0f19] p-3.5 rounded-xl border border-slate-800 text-center min-w-[120px]">
-                        <div class="text-[10px] font-bold text-slate-500 uppercase">STATUS HARI INI</div>
+                        <div class="text-[10px] font-bold text-slate-500 uppercase">STATUS KEHADIRAN</div>
                         <div id="ortu-portal-status-today" class="text-lg font-black text-emerald-400 uppercase mt-0.5">HADIR</div>
                     </div>
                 </div>
@@ -889,7 +890,7 @@
                     <div class="lg:col-span-2 p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
                         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                             <h3 class="text-sm font-bold text-white uppercase tracking-wide flex items-center gap-2">
-                                <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i> Pantauan Kehadiran Jam Mengajar (Realtime)
+                                <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i> Kehadiran Siswa Sesuai Mapel Terjadwal Hari Ini / Realtime
                             </h3>
                             <span class="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">TERHUBUNG WEBSOCKET</span>
                         </div>
@@ -899,7 +900,7 @@
 
                     <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
                         <div class="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase tracking-wider border-b border-slate-800 pb-3">
-                            <i data-lucide="book-open" class="w-4 h-4"></i> Catatan Bimbingan Perwalian Ananda
+                            <i data-lucide="book-open" class="w-4 h-4"></i> Catatan Konseling dari Guru Perwalian
                         </div>
                         <div id="ortu-bimbingan-list" class="space-y-3 max-h-[420px] overflow-y-auto pr-1"></div>
                     </div>
@@ -1577,14 +1578,12 @@
         function loginOrtu() {
             const selectedKelasCode = document.getElementById('login-ortu-kelas-select')?.value || window.appData.activeKelasCode;
             const selectedSiswaId = document.getElementById('login-ortu-siswa-select')?.value;
-            const nisInput = document.getElementById('login-ortu-nis')?.value.trim();
             const ortuError = document.getElementById('login-ortu-error');
 
             if (!selectedKelasCode) { showToast('Pilih kelompok perwalian / kelas terlebih dahulu!', 'error'); return; }
 
             let targetSiswa = null;
             if (selectedSiswaId) targetSiswa = window.appData.siswaList.find(s => s.id === selectedSiswaId);
-            else if (nisInput) targetSiswa = window.appData.siswaList.find(s => s.nis === nisInput);
 
             if (targetSiswa) {
                 if (ortuError) ortuError.classList.add('hidden');
@@ -2071,28 +2070,39 @@
         function renderOrtuDashboard() {
             if (window.appData.currentRole !== 'ORTU') return;
 
-            const mySiswa = (window.appData.siswaList || []).find(s => s.id === window.appData.activeSiswaId) || { nama: 'Siswa', nis: '-' };
+            const mySiswa = (window.appData.siswaList || []).find(s => s.id === window.appData.activeSiswaId) || { nama: 'Siswa' };
             const myAbsen = (window.appData.absensiList || []).filter(a => a.siswaId === window.appData.activeSiswaId);
             const myCatatan = (window.appData.catatanList || []).filter(c => c.siswaId === window.appData.activeSiswaId);
 
             const hC = myAbsen.filter(a => a.kategori === 'Hadir').length;
             const sC = myAbsen.filter(a => a.kategori === 'Sakit').length;
-            const iC = myAbsen.filter(a => a.kategori === 'Ijin').length;
+            const iC = myAbsen.filter(a => a.kategori === 'Ijin' || a.kategori === 'Izin').length;
             const aC = myAbsen.filter(a => a.kategori === 'Alpa').length;
             const bC = myAbsen.filter(a => a.kategori === 'Bolos').length;
 
             const elNama = document.getElementById('ortu-portal-nama-siswa');
-            const elNis = document.getElementById('ortu-portal-nis');
             const elGuru = document.getElementById('ortu-portal-guru-nama');
             const elBadge = document.getElementById('ortu-portal-kelas-badge');
             const elToday = document.getElementById('ortu-portal-status-today');
+            const elGuruBerjalan = document.getElementById('ortu-portal-guru-berjalan');
 
             if (elNama) elNama.innerText = `Siswa: ${mySiswa.nama}`;
-            if (elNis) elNis.innerText = `NIS: ${mySiswa.nis || '-'} | SMK Negeri 1 Marisa`;
             if (elGuru) elGuru.innerText = window.appData.guruProfile?.nama || 'Guru Perwalian';
             if (elBadge) elBadge.innerText = `KELAS: ${window.appData.guruProfile?.kelas || '-'}`;
 
-            const latestAbsen = myAbsen[0];
+            // Ambil data sesi jam mengajar terbeli hari ini
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayAbsen = myAbsen.filter(a => a.tanggal === todayStr);
+            const latestAbsen = todayAbsen.length > 0 ? todayAbsen[0] : myAbsen[0];
+
+            if (elGuruBerjalan) {
+                if (latestAbsen && latestAbsen.guruMapel) {
+                    elGuruBerjalan.innerText = latestAbsen.guruMapel;
+                } else {
+                    elGuruBerjalan.innerText = 'Belum Ada Sesi Mengajar Hari Ini';
+                }
+            }
+
             if (elToday) {
                 if (latestAbsen) {
                     elToday.innerText = latestAbsen.kategori;
@@ -2115,18 +2125,18 @@
                     presensiContainer.innerHTML = '<div class="p-4 text-center text-slate-500 text-xs italic bg-[#0b0f19] rounded-xl border border-slate-800">Belum ada riwayat presensi tercatat untuk Ananda.</div>';
                 } else {
                     presensiContainer.innerHTML = myAbsen.map(a => {
-                        const colorBadge = a.kategori === 'Hadir' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : (a.kategori === 'Sakit' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : (a.kategori === 'Ijin' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' : (a.kategori === 'Bolos' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-rose-500/20 text-rose-400 border-rose-500/30')));
+                        const colorBadge = a.kategori === 'Hadir' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : (a.kategori === 'Sakit' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : (a.kategori === 'Ijin' || a.kategori === 'Izin' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' : (a.kategori === 'Bolos' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-rose-500/20 text-rose-400 border-rose-500/30')));
                         return `
                             <div class="p-3.5 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2 text-xs">
                                 <div class="flex items-center justify-between">
-                                    <span class="font-bold text-slate-300">${a.hari || 'Hari'}, ${a.tanggal} <span class="text-emerald-400 font-mono font-bold">(${a.waktu || 'Realtime'})</span></span>
+                                    <span class="font-bold text-slate-300">${a.hari || window.getHariIndo(a.tanggal)}, ${a.tanggal} <span class="text-emerald-400 font-mono font-bold">(${a.waktu || 'Realtime'})</span></span>
                                     <span class="px-2.5 py-0.5 rounded text-[10px] font-bold border ${colorBadge}">${a.kategori}</span>
                                 </div>
-                                <div class="text-[11px] text-amber-300 font-semibold bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20 flex items-center justify-between">
-                                    <span>Pelajaran: ${a.guruMapel || '-'}</span>
-                                    <span class="font-bold text-cyan-400">Jam ${a.jamKe || '-'}</span>
+                                <div class="text-[11px] text-amber-300 font-semibold bg-amber-500/10 px-2.5 py-1.5 rounded-lg border border-amber-500/20 flex items-center justify-between">
+                                    <span>Guru & Mapel: <strong>${a.guruMapel || '-'}</strong></span>
+                                    <span class="font-bold text-cyan-400">Jam ke-${a.jamKe || '-'}</span>
                                 </div>
-                                <p class="text-[11px] text-slate-400">Catatan: ${a.alasan || '-'}</p>
+                                <p class="text-[11px] text-slate-400">Catatan/Alasan: ${a.alasan || '-'}</p>
                             </div>
                         `;
                     }).join('');
@@ -2144,7 +2154,7 @@
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/20">${c.kategori}</span>
                                 <span class="text-[10px] text-slate-500">${c.tanggal}</span>
                             </div>
-                            <p class="text-slate-300"><strong>Kendala:</strong> ${c.topik}</p>
+                            <p class="text-slate-300"><strong>Kendala/Topik:</strong> ${c.topik}</p>
                             <p class="text-emerald-400"><strong>Rencana Tindak Lanjut:</strong> ${c.solusi}</p>
                         </div>
                     `).join('');
