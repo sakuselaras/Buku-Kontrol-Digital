@@ -49,7 +49,6 @@
         ::-webkit-scrollbar-thumb:hover { background: #334155; }
     </style>
 
-<!-- STREAMING_CHUNK:Configuring application state and LZString compression... -->
     <script>
         window.defaultState = {
             isLoggedIn: false,
@@ -77,6 +76,10 @@
         try {
             savedData = localStorage.getItem('PERWALIAN_SMK_MARISA_DATA');
             savedData = savedData ? JSON.parse(savedData) : null;
+            if (savedData) {
+                delete savedData.isStudentLinkMode;
+                delete savedData.isParentLinkMode;
+            }
         } catch (e) {
             savedData = null;
         }
@@ -117,13 +120,22 @@
             const d = new Date(dateStr);
             return days[d.getDay()] || 'Senin';
         };
+
+        // Defining and binding updateHariField to global window early
+        function updateHariField() {
+            const dateVal = document.getElementById('siswa-self-tanggal')?.value;
+            const hariInput = document.getElementById('siswa-self-hari');
+            if (hariInput) {
+                hariInput.value = window.getHariIndo(dateVal);
+            }
+        }
+        window.updateHariField = updateHariField;
     </script>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-rose-500 selection:text-white relative">
 
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
-<!-- STREAMING_CHUNK:Rendering navigation header bar... -->
     <!-- Header Section -->
     <header class="bg-[#10172a] border-b border-slate-800 sticky top-0 z-30 px-4 py-3 shadow-xl">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
@@ -168,7 +180,6 @@
 
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
 
-<!-- STREAMING_CHUNK:Rendering login screens without Ortu tab on main login... -->
         <!-- Login Portal Screen -->
         <div id="login-screen" class="flex items-center justify-center p-4 my-6">
             <div class="max-w-md w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
@@ -234,8 +245,8 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">NIP / NIDN</label>
-                            <input type="text" id="new-guru-nip" placeholder="198501..." class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 transition">
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">NIP / NIDN (OPSIONAL)</label>
+                            <input type="text" id="new-guru-nip" placeholder="198501... (Boleh dikosongkan)" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 transition">
                         </div>
 
                         <div>
@@ -298,7 +309,7 @@
                     </button>
                 </div>
 
-                <!-- Form Login Orang Tua Siswa (HANYA AKTIF SAAT DIBUKA VIA LINK ORANG TUA) -->
+                <!-- Form Login Orang Tua Siswa -->
                 <div id="form-login-ortu" class="hidden space-y-4">
                     <div class="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300">
                         <i data-lucide="info" class="w-3.5 h-3.5 inline mr-1"></i> <strong>Portal Monitoring Orang Tua:</strong> Pantau kehadiran dan perkembangan belajar putra/putri Anda secara langsung di sekolah.
@@ -357,7 +368,6 @@
             </div>
         </div>
 
-<!-- STREAMING_CHUNK:Rendering main dashboards for Wali, Siswa, Ortu, and Admin... -->
         <div id="main-app-content" class="hidden space-y-6">
 
             <!-- VIEW FOR WALI KELAS -->
@@ -821,7 +831,7 @@
                 </div>
             </div>
 
-            <!-- VIEW FOR PORTAL ORANG TUA (READ-ONLY MONITORING ISOLATED VIEW) -->
+            <!-- VIEW FOR PORTAL ORANG TUA -->
             <div id="view-ortu" class="hidden space-y-6">
                 <div class="p-6 rounded-2xl bg-gradient-to-r from-purple-950/70 to-[#131b2e] border border-purple-500/40 flex flex-wrap items-center justify-between gap-4 shadow-xl">
                     <div class="space-y-1">
@@ -1220,8 +1230,8 @@
                             <i data-lucide="table-properties" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <div class="font-bold text-white text-xs">Rekap Presensi Harian / Per-Jam (Format Ref 2)</div>
-                            <div class="text-[10px] text-slate-400">Format persis sesuai tampilan tabel rekap dengan grid, centang `✓`, dan header ber-subkolom</div>
+                            <div class="font-bold text-white text-xs">Rekap Presensi Kehadiran Siswa (Format Ref 2)</div>
+                            <div class="text-[10px] text-slate-400">Tabel ber-grid rapi dengan judul, kolom Hadir, Izin, Sakit, Bolos, Alpa & simbol ✓</div>
                         </div>
                     </button>
 
@@ -1231,7 +1241,7 @@
                         </div>
                         <div>
                             <div class="font-bold text-white text-xs">Rekap Matriks Bulanan (Tabel Accumulasi)</div>
-                            <div class="text-[10px] text-slate-400">Format matriks per-siswa dengan akumulasi total Hadir, Sakit, Ijin, Alpa, Bolos & % Kehadiran</div>
+                            <div class="text-[10px] text-slate-400">Format matriks per-siswa dengan total Hadir, Sakit, Ijin, Alpa, Bolos & % Kehadiran</div>
                         </div>
                     </button>
                 </div>
@@ -1263,7 +1273,6 @@
         </div>
     </div>
 
-<!-- STREAMING_CHUNK:Implementing isolated Parent Link handling logic in showLoginScreen... -->
     <script>
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
@@ -1664,6 +1673,61 @@
                         'px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-2 whitespace-nowrap transition';
                 }
             });
+        }
+
+        function openModalShareLink() {
+            const linkInput = document.getElementById('share-link-input');
+            const msg = document.getElementById('share-copied-msg');
+            if (msg) msg.classList.add('hidden');
+
+            const baseUrl = window.location.origin + window.location.pathname;
+            const compactPayload = {
+                c: window.appData.activeKelasCode,
+                g: window.appData.guruProfile?.nama || '',
+                k: window.appData.guruProfile?.kelas || '',
+                s: (window.appData.siswaList || []).map(s => [s.id, s.nis || '', s.nama, s.kelas || '', s.jurusan || '', s.gender || 'L', s.ipk || '0.00', s.ortu || '']),
+                m: (window.appData.guruMapelList || []).map(g => [g.id, g.nama, g.mapel])
+            };
+
+            const compressed = window.compressDataObj(compactPayload);
+            if (linkInput) linkInput.value = `${baseUrl}?code=${window.appData.activeKelasCode}&d=${compressed}`;
+            document.getElementById('modal-share-link')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function openModalShareOrtuLink() {
+            const linkInput = document.getElementById('share-ortu-link-input');
+            const msg = document.getElementById('share-ortu-copied-msg');
+            if (msg) msg.classList.add('hidden');
+
+            const baseUrl = window.location.origin + window.location.pathname;
+            const compactPayload = {
+                c: window.appData.activeKelasCode,
+                role: 'ortu',
+                g: window.appData.guruProfile?.nama || '',
+                k: window.appData.guruProfile?.kelas || '',
+                s: (window.appData.siswaList || []).map(s => [s.id, s.nis || '', s.nama, s.kelas || '', s.jurusan || '', s.gender || 'L', s.ipk || '0.00', s.ortu || ''])
+            };
+
+            const compressed = window.compressDataObj(compactPayload);
+            if (linkInput) linkInput.value = `${baseUrl}?role=ortu&code=${window.appData.activeKelasCode}&d=${compressed}`;
+            document.getElementById('modal-share-ortu-link')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeModalShareLink() { document.getElementById('modal-share-link')?.classList.add('hidden'); }
+        function closeModalShareOrtuLink() { document.getElementById('modal-share-ortu-link')?.classList.add('hidden'); }
+        function openModalExport() { document.getElementById('modal-export-excel')?.classList.remove('hidden'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
+        function closeModalExport() { document.getElementById('modal-export-excel')?.classList.add('hidden'); }
+
+        function copyGeneratedLink(inputId, msgId) {
+            const input = document.getElementById(inputId);
+            const msg = document.getElementById(msgId);
+            if (input && input.value) {
+                input.select(); document.execCommand('copy');
+                if (msg) msg.classList.remove('hidden');
+                showToast('Link berhasil disalin!', 'success');
+            }
         }
 
         function showMainApp() {
@@ -2849,6 +2913,7 @@
             });
         }
 
+        // EXPORT REKAP PRESENSI EXCEL FORMAT 100% PRESISI SESUAI GAMBAR REFERENSI 2
         function exportCSVLogDetail() {
             const currentProf = window.appData.guruProfile || {};
             const currentKelas = currentProf.kelas || 'Kelas -';
