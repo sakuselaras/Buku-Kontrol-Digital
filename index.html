@@ -49,13 +49,15 @@
         ::-webkit-scrollbar-thumb:hover { background: #334155; }
     </style>
 
+<!-- STREAMING_CHUNK:Configuring state and local storage functions... -->
     <script>
         window.defaultState = {
             isLoggedIn: false,
-            currentRole: 'WALI',
+            currentRole: 'WALI', // 'WALI' | 'SISWA' | 'ADMIN' | 'ORTU'
             activeKelasCode: '',
             activeSiswaId: '',
             isStudentLinkMode: false,
+            isParentLinkMode: false,
             adminPin: 'admin123',
             guruProfile: { nama: "Guru Perwalian", nip: "-", kelas: "Kelas -", pin: "123456", siswaPin: "siswa123" },
             allKelasProfiles: [],
@@ -121,6 +123,8 @@
 
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
+<!-- STREAMING_CHUNK:Rendering navigation header bar and share buttons... -->
+    <!-- Header Section -->
     <header class="bg-[#10172a] border-b border-slate-800 sticky top-0 z-30 px-4 py-3 shadow-xl">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -151,6 +155,10 @@
                     <i data-lucide="share-2" class="w-3.5 h-3.5"></i> Bagikan Link Ke Siswa
                 </button>
 
+                <button id="btn-share-ortu" onclick="openModalShareOrtuLink()" class="hidden px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white flex items-center gap-1.5 transition shadow-lg shadow-purple-600/20">
+                    <i data-lucide="heart-handshake" class="w-3.5 h-3.5"></i> Bagikan Link Orang Tua
+                </button>
+
                 <button id="btn-export-excel" onclick="openModalExport()" class="hidden px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 border border-cyan-500/30 text-xs font-bold text-white flex items-center gap-1.5 transition shadow-lg shadow-cyan-600/20">
                     <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Export Excel Rekap
                 </button>
@@ -160,28 +168,33 @@
 
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
 
+<!-- STREAMING_CHUNK:Rendering login screens and role switcher tabs... -->
+        <!-- Login Portal Screen -->
         <div id="login-screen" class="flex items-center justify-center p-4 my-6">
             <div class="max-w-md w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
                 <div class="absolute -top-12 -right-12 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl pointer-events-none"></div>
                 
                 <div class="text-center space-y-2 relative z-10">
-                    <div class="inline-flex items-center justify-center p-3 mb-1 w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 mx-auto">
+                    <div id="login-logo-badge" class="inline-flex items-center justify-center p-3 mb-1 w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 mx-auto">
                         <i data-lucide="school" class="w-10 h-10"></i>
                     </div>
-                    <h2 class="text-xl font-black text-white tracking-tight uppercase">PORTAL MASUK PERWALIAN</h2>
+                    <h2 id="login-title-head" class="text-xl font-black text-white tracking-tight uppercase">PORTAL MASUK PERWALIAN</h2>
                     <p id="login-subtitle" class="text-xs text-slate-400">Pilih peran dan kelas untuk mengakses sistem • SMK Negeri 1 Marisa</p>
                 </div>
 
                 <!-- TAB SWITCHER PERAN -->
-                <div id="login-role-tabs" class="grid grid-cols-3 gap-1 p-1 bg-[#0b0f19] rounded-xl border border-slate-800 text-[11px] font-bold">
+                <div id="login-role-tabs" class="grid grid-cols-4 gap-1 p-1 bg-[#0b0f19] rounded-xl border border-slate-800 text-[10px] sm:text-[11px] font-bold">
                     <button id="tab-login-wali" onclick="switchLoginTab('WALI')" class="py-2.5 rounded-lg bg-rose-600 text-white shadow transition flex items-center justify-center gap-1">
                         <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Guru
                     </button>
                     <button id="tab-login-siswa" onclick="switchLoginTab('SISWA')" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-1">
                         <i data-lucide="users" class="w-3.5 h-3.5"></i> Siswa
                     </button>
+                    <button id="tab-login-ortu" onclick="switchLoginTab('ORTU')" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-1">
+                        <i data-lucide="heart-handshake" class="w-3.5 h-3.5"></i> Ortu
+                    </button>
                     <button id="tab-login-admin" onclick="switchLoginTab('ADMIN')" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-1">
-                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Admin Global
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Admin
                     </button>
                 </div>
 
@@ -244,7 +257,7 @@
                     </div>
                 </div>
 
-                <!-- Form Login Siswa (DENGAN PASSWORD PORTAL SISWA) -->
+                <!-- Form Login Siswa -->
                 <div id="form-login-siswa" class="hidden space-y-4">
                     <div id="container-select-kelas-siswa">
                         <label class="block text-xs font-semibold text-slate-400 mb-1">PILIH KELOMPOK PERWALIAN / KELAS</label>
@@ -262,7 +275,7 @@
 
                     <div class="relative flex py-1 items-center">
                         <div class="flex-grow border-t border-slate-800"></div>
-                        <span class="flex-shrink mx-3 text-[10px] font-bold text-slate-500 uppercase">Atau Masuk Dengan NIS (Opsional)</span>
+                        <span class="flex-shrink mx-3 text-[10px] font-bold text-slate-500 uppercase">Atau Masuk Dengan NIS</span>
                         <div class="flex-grow border-t border-slate-800"></div>
                     </div>
 
@@ -273,18 +286,58 @@
 
                     <div>
                         <label class="block text-xs font-semibold text-emerald-400 mb-1 flex items-center gap-1">
-                            <i data-lucide="key-round" class="w-3.5 h-3.5"></i> PASSWORD PORTAL SISWA (DIBERIKAN GURU PERWALIAN)
+                            <i data-lucide="key-round" class="w-3.5 h-3.5"></i> PASSWORD PORTAL SISWA
                         </label>
                         <input type="password" id="login-siswa-pass" placeholder="Masukkan Password Portal Siswa" class="w-full bg-[#0b0f19] border border-emerald-500/50 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition font-mono tracking-wider" onkeyup="if(event.key==='Enter') loginSiswa()">
                         <p class="text-[10px] text-slate-500 mt-1">Akses khusus perwakilan siswa yang ditunjuk oleh Guru Perwalian.</p>
                     </div>
 
                     <div id="login-siswa-error" class="hidden text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl font-semibold">
-                        Data siswa atau Password Portal salah! Silakan minta password ke Guru Perwalian Anda.
+                        Data siswa atau Password Portal salah! Minta password ke Guru Perwalian Anda.
                     </div>
 
                     <button onclick="loginSiswa()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition shadow-lg shadow-emerald-600/20 uppercase tracking-wider">
                         Masuk Portal Siswa
+                    </button>
+                </div>
+
+                <!-- Form Login Orang Tua Siswa (DENGAN AKSES TERISOLASI READ-ONLY) -->
+                <div id="form-login-ortu" class="hidden space-y-4">
+                    <div class="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300">
+                        <i data-lucide="info" class="w-3.5 h-3.5 inline mr-1"></i> <strong>Portal Monitoring Orang Tua:</strong> Pantau kehadiran dan perkembangan belajar putra/putri Anda secara langsung di sekolah.
+                    </div>
+
+                    <div id="container-select-kelas-ortu">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">PILIH KELAS / KELOMPOK PERWALIAN</label>
+                        <select id="login-ortu-kelas-select" onchange="handleOrtuKelasChange()" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition">
+                            <option value="" disabled selected>-- Pilih Kelas / Guru Perwalian --</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">PILIH NAMA PUTRA / PUTRI ANDA</label>
+                        <select id="login-ortu-siswa-select" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition">
+                            <option value="" disabled selected>-- Pilih Nama Putra/Putri Anda --</option>
+                        </select>
+                    </div>
+
+                    <div class="relative flex py-1 items-center">
+                        <div class="flex-grow border-t border-slate-800"></div>
+                        <span class="flex-shrink mx-3 text-[10px] font-bold text-slate-500 uppercase">Atau Cari Dengan NIS</span>
+                        <div class="flex-grow border-t border-slate-800"></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">MASUKKAN NIS ANANDA (NOMOR INDUK SISWA)</label>
+                        <input type="text" id="login-ortu-nis" placeholder="Contoh: 2026101" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition font-mono" onkeyup="if(event.key==='Enter') loginOrtu()">
+                    </div>
+
+                    <div id="login-ortu-error" class="hidden text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl font-semibold">
+                        Data nama siswa tidak ditemukan di kelas ini!
+                    </div>
+
+                    <button onclick="loginOrtu()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition shadow-lg shadow-purple-600/20 uppercase tracking-wider flex items-center justify-center gap-2">
+                        <i data-lucide="eye" class="w-4 h-4"></i> Masuk Monitoring Orang Tua
                     </button>
                 </div>
 
@@ -307,8 +360,10 @@
             </div>
         </div>
 
+<!-- STREAMING_CHUNK:Rendering Wali Kelas view and Teacher tools... -->
         <div id="main-app-content" class="hidden space-y-6">
 
+            <!-- VIEW FOR WALI KELAS -->
             <div id="view-wali-kelas" class="space-y-6">
                 <div id="hero-banner" class="p-6 rounded-2xl bg-gradient-to-r from-rose-950/60 to-[#131b2e] border border-rose-500/30 flex flex-wrap items-center justify-between gap-4">
                     <div class="space-y-1">
@@ -409,7 +464,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: DATA SISWA MANAGEMENT (WITH MASSIVE DELETE CHECKBOX) -->
+                <!-- TAB 2: DATA SISWA MANAGEMENT -->
                 <div id="wali-sec-siswa" class="hidden space-y-4">
                     <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
                         <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-3">
@@ -534,6 +589,7 @@
                     </div>
                 </div>
 
+                <!-- TAB 5: REKAP ABSENSI SISWA & GURU -->
                 <div id="wali-sec-presensi" class="hidden space-y-6">
                     <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
                         <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-3 gap-3">
@@ -608,6 +664,8 @@
 
             </div>
 
+<!-- STREAMING_CHUNK:Rendering Student Portal and Parent Monitoring Portal views... -->
+            <!-- VIEW FOR SISWA PORTAL -->
             <div id="view-siswa" class="hidden space-y-6">
                 <div class="p-6 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-[#131b2e] border border-emerald-500/30 flex flex-wrap items-center justify-between gap-4">
                     <div class="space-y-1">
@@ -767,6 +825,84 @@
                 </div>
             </div>
 
+            <!-- VIEW FOR PORTAL ORANG TUA (READ-ONLY MONITORING ISOLATED VIEW) -->
+            <div id="view-ortu" class="hidden space-y-6">
+                <div class="p-6 rounded-2xl bg-gradient-to-r from-purple-950/70 to-[#131b2e] border border-purple-500/40 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase flex items-center gap-1">
+                                <i data-lucide="heart-handshake" class="w-3 h-3"></i> PORTAL ORANG TUA SISWA
+                            </span>
+                            <span id="ortu-portal-kelas-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 uppercase">
+                                KELAS: -
+                            </span>
+                        </div>
+                        <h2 id="ortu-portal-nama-siswa" class="text-xl font-black text-white uppercase">Siswa: -</h2>
+                        <p id="ortu-portal-nis" class="text-xs text-slate-400">NIS: - | SMK Negeri 1 Marisa</p>
+                        <div class="flex items-center gap-2 pt-1">
+                            <span class="text-xs text-slate-400 font-medium">Guru Perwalian:</span>
+                            <span id="ortu-portal-guru-nama" class="text-xs font-bold text-purple-300 bg-purple-500/10 px-2.5 py-0.5 rounded-lg border border-purple-500/20">-</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#0b0f19] p-3.5 rounded-xl border border-slate-800 text-center min-w-[120px]">
+                        <div class="text-[10px] font-bold text-slate-500 uppercase">STATUS HARI INI</div>
+                        <div id="ortu-portal-status-today" class="text-lg font-black text-emerald-400 uppercase mt-0.5">HADIR</div>
+                    </div>
+                </div>
+
+                <!-- Parents Realtime Monitoring Dashboard Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">HADIR</span>
+                        <div id="ortu-stat-hadir" class="text-2xl font-black text-emerald-400">0</div>
+                        <span class="text-[10px] text-slate-400 block font-medium">Sesi Pelajaran</span>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">SAKIT</span>
+                        <div id="ortu-stat-sakit" class="text-2xl font-black text-amber-400">0</div>
+                        <span class="text-[10px] text-slate-400 block font-medium">Laporan Izin</span>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">IZIN</span>
+                        <div id="ortu-stat-ijin" class="text-2xl font-black text-cyan-400">0</div>
+                        <span class="text-[10px] text-slate-400 block font-medium">Laporan Izin</span>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">ALPA</span>
+                        <div id="ortu-stat-alpa" class="text-2xl font-black text-rose-400">0</div>
+                        <span class="text-[10px] text-slate-400 block font-medium">Tanpa Keterangan</span>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1 col-span-2 md:col-span-1">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">BOLOS</span>
+                        <div id="ortu-stat-bolos" class="text-2xl font-black text-purple-400">0</div>
+                        <span class="text-[10px] text-purple-400 block font-medium">Meninggalkan Jam</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <h3 class="text-sm font-bold text-white uppercase tracking-wide flex items-center gap-2">
+                                <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i> Pantauan Kehadiran Jam Mengajar (Realtime)
+                            </h3>
+                            <span class="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">TERHUBUNG WEBSOCKET</span>
+                        </div>
+
+                        <div id="ortu-presensi-list" class="space-y-3 max-h-[420px] overflow-y-auto pr-1"></div>
+                    </div>
+
+                    <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
+                        <div class="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase tracking-wider border-b border-slate-800 pb-3">
+                            <i data-lucide="book-open" class="w-4 h-4"></i> Catatan Bimbingan Perwalian Ananda
+                        </div>
+                        <div id="ortu-bimbingan-list" class="space-y-3 max-h-[420px] overflow-y-auto pr-1"></div>
+                    </div>
+                </div>
+            </div>
+
+<!-- STREAMING_CHUNK:Rendering Super Admin monitoring view... -->
+            <!-- VIEW FOR GLOBAL ADMIN -->
             <div id="view-admin" class="hidden space-y-6">
                 <div class="p-6 rounded-2xl bg-gradient-to-r from-purple-950/70 to-[#131b2e] border border-purple-500/40 flex flex-wrap items-center justify-between gap-4 shadow-xl">
                     <div class="space-y-1">
@@ -851,6 +987,7 @@
 
     </main>
 
+<!-- STREAMING_CHUNK:Rendering modals for editing profiles, adding students, and parent links... -->
     <!-- MODAL EDIT PROFIL GURU WALI KELAS -->
     <div id="modal-edit-guru" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="max-w-md w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
@@ -1016,7 +1153,7 @@
                     <label class="block font-semibold text-slate-400 mb-1">LINK AKSES PORTAL SISWA (SUPER RINGKAS)</label>
                     <div class="flex gap-2">
                         <input type="text" id="share-link-input" readonly class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-emerald-400 font-mono text-[11px] focus:outline-none">
-                        <button onclick="copyGeneratedLink()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-xl whitespace-nowrap transition flex items-center gap-1">
+                        <button onclick="copyGeneratedLink('share-link-input', 'share-copied-msg')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-xl whitespace-nowrap transition flex items-center gap-1">
                             <i data-lucide="copy" class="w-3.5 h-3.5"></i> Salin Link
                         </button>
                     </div>
@@ -1029,6 +1166,42 @@
 
             <div class="flex justify-end pt-2">
                 <button type="button" onclick="closeModalShareLink()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL BAGIKAN LINK KE ORANG TUA SISWA -->
+    <div id="modal-share-ortu-link" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
+                    <i data-lucide="heart-handshake" class="w-4 h-4 text-purple-400"></i> Bagikan Link Akses Orang Tua
+                </h3>
+                <button onclick="closeModalShareOrtuLink()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <p class="text-slate-300">
+                    Kirimkan link ini ke WhatsApp Orang Tua Siswa. Tampilan portal orang tua <strong>sepenuhnya terisolasi (read-only)</strong> sehingga orang tua hanya bisa memantau kehadiran dan bimbingan anaknya tanpa akses ke dashboard guru maupun siswa.
+                </p>
+
+                <div>
+                    <label class="block font-semibold text-slate-400 mb-1">LINK MONITORING ORANG TUA</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="share-ortu-link-input" readonly class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-purple-300 font-mono text-[11px] focus:outline-none">
+                        <button onclick="copyGeneratedLink('share-ortu-link-input', 'share-ortu-copied-msg')" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 font-bold text-white rounded-xl whitespace-nowrap transition flex items-center gap-1">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i> Salin Link
+                        </button>
+                    </div>
+                </div>
+
+                <div id="share-ortu-copied-msg" class="hidden p-2.5 rounded-xl bg-purple-500/20 text-purple-300 text-center font-semibold text-xs border border-purple-500/30">
+                    Link Orang Tua berhasil disalin! Kirimkan ke WhatsApp Orang Tua Siswa.
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button type="button" onclick="closeModalShareOrtuLink()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs">Tutup</button>
             </div>
         </div>
     </div>
@@ -1054,8 +1227,8 @@
                             <i data-lucide="table-properties" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <div class="font-bold text-white text-xs">Rekap Presensi Kehadiran Siswa (Format Ref 2)</div>
-                            <div class="text-[10px] text-slate-400">Tabel ber-grid rapi dengan judul, kolom Hadir, Izin, Sakit, Bolos, Alpa & simbol ✓</div>
+                            <div class="font-bold text-white text-xs">Rekap Presensi Harian / Per-Jam (Format Ref 2)</div>
+                            <div class="text-[10px] text-slate-400">Format persis sesuai tampilan tabel rekap dengan grid, centang `✓`, dan header ber-subkolom</div>
                         </div>
                     </button>
 
@@ -1065,7 +1238,7 @@
                         </div>
                         <div>
                             <div class="font-bold text-white text-xs">Rekap Matriks Bulanan (Tabel Accumulasi)</div>
-                            <div class="text-[10px] text-slate-400">Format matriks per-siswa dengan total Hadir, Sakit, Ijin, Alpa, Bolos & % Kehadiran</div>
+                            <div class="text-[10px] text-slate-400">Format matriks per-siswa dengan akumulasi total Hadir, Sakit, Ijin, Alpa, Bolos & % Kehadiran</div>
                         </div>
                     </button>
                 </div>
@@ -1097,6 +1270,7 @@
         </div>
     </div>
 
+<!-- STREAMING_CHUNK:Implementing event handlers, MQTT WebSocket engine, and Parent Portal logic... -->
     <script>
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
@@ -1138,7 +1312,6 @@
         }
         window.showConfirmDialog = showConfirmDialog;
 
-        /* MQTT WEBSOCKET REALTIME ENGINE */
         let mqttClient = null;
 
         function initMQTTWebSocket() {
@@ -1179,7 +1352,7 @@
 
                                 if (newCount > 0) {
                                     window.saveToStorage(true, true);
-                                    if (window.appData.currentRole === 'WALI' || window.appData.currentRole === 'ADMIN') {
+                                    if (window.appData.currentRole === 'WALI' || window.appData.currentRole === 'ADMIN' || window.appData.currentRole === 'ORTU') {
                                         window.playNotificationChime();
                                         window.showToast(`📢 ${newCount} Presensi kelas baru diterima via WebSocket!`, 'success');
                                     }
@@ -1259,7 +1432,7 @@
                 populateSiswaDropdowns(); populateGuruMapelDropdowns(); renderSiswaTable();
                 renderGuruMapelTable(); renderBimbinganList(); renderAbsensiTable();
                 renderGuruAbsensiTable(); renderDashLaporanSiswa(); renderDashLaporanGuru();
-                renderSiswaPortalBimbingan(); renderSiswaPresensiRoster(); renderAdminDashboard();
+                renderSiswaPortalBimbingan(); renderSiswaPresensiRoster(); renderOrtuDashboard(); renderAdminDashboard();
                 renderCharts(); updateHeaderInfo();
             }
         };
@@ -1399,6 +1572,31 @@
             }
         }
 
+        function loginOrtu() {
+            const selectedKelasCode = document.getElementById('login-ortu-kelas-select')?.value || window.appData.activeKelasCode;
+            const selectedSiswaId = document.getElementById('login-ortu-siswa-select')?.value;
+            const nisInput = document.getElementById('login-ortu-nis')?.value.trim();
+            const ortuError = document.getElementById('login-ortu-error');
+
+            if (!selectedKelasCode) { showToast('Pilih kelompok perwalian / kelas terlebih dahulu!', 'error'); return; }
+
+            let targetSiswa = null;
+            if (selectedSiswaId) targetSiswa = window.appData.siswaList.find(s => s.id === selectedSiswaId);
+            else if (nisInput) targetSiswa = window.appData.siswaList.find(s => s.nis === nisInput);
+
+            if (targetSiswa) {
+                if (ortuError) ortuError.classList.add('hidden');
+                window.appData.activeKelasCode = selectedKelasCode;
+                window.appData.activeSiswaId = targetSiswa.id;
+                window.appData.isLoggedIn = true; window.appData.currentRole = 'ORTU';
+                saveToStorage(false, true); subscribeCurrentClassMQTT(); showMainApp();
+                showToast(`Selamat datang Orang Tua dari ${targetSiswa.nama}!`, 'success');
+            } else {
+                if (ortuError) ortuError.classList.remove('hidden');
+                showToast('Pilih Nama Putra/Putri Anda terlebih dahulu!', 'error');
+            }
+        }
+
         function loginAdmin() {
             const pinInput = document.getElementById('login-admin-pin')?.value.trim();
             const targetPin = window.appData.adminPin || 'admin123';
@@ -1417,9 +1615,12 @@
         function switchLoginTab(role) {
             const tabWali = document.getElementById('tab-login-wali');
             const tabSiswa = document.getElementById('tab-login-siswa');
+            const tabOrtu = document.getElementById('tab-login-ortu');
             const tabAdmin = document.getElementById('tab-login-admin');
+            
             const formWali = document.getElementById('form-login-wali');
             const formSiswa = document.getElementById('form-login-siswa');
+            const formOrtu = document.getElementById('form-login-ortu');
             const formAdmin = document.getElementById('form-login-admin');
 
             const activeClass = 'py-2.5 rounded-lg text-white shadow transition flex items-center justify-center gap-1 font-bold ';
@@ -1428,24 +1629,39 @@
             if (role === 'WALI') {
                 if (tabWali) tabWali.className = activeClass + 'bg-rose-600';
                 if (tabSiswa) tabSiswa.className = inactiveClass;
+                if (tabOrtu) tabOrtu.className = inactiveClass;
                 if (tabAdmin) tabAdmin.className = inactiveClass;
                 if (formWali) formWali.classList.remove('hidden');
                 if (formSiswa) formSiswa.classList.add('hidden');
+                if (formOrtu) formOrtu.classList.add('hidden');
                 if (formAdmin) formAdmin.classList.add('hidden');
             } else if (role === 'SISWA') {
                 if (tabSiswa) tabSiswa.className = activeClass + 'bg-emerald-600';
                 if (tabWali) tabWali.className = inactiveClass;
+                if (tabOrtu) tabOrtu.className = inactiveClass;
                 if (tabAdmin) tabAdmin.className = inactiveClass;
                 if (formSiswa) formSiswa.classList.remove('hidden');
                 if (formWali) formWali.classList.add('hidden');
+                if (formOrtu) formOrtu.classList.add('hidden');
+                if (formAdmin) formAdmin.classList.add('hidden');
+            } else if (role === 'ORTU') {
+                if (tabOrtu) tabOrtu.className = activeClass + 'bg-purple-600';
+                if (tabWali) tabWali.className = inactiveClass;
+                if (tabSiswa) tabSiswa.className = inactiveClass;
+                if (tabAdmin) tabAdmin.className = inactiveClass;
+                if (formOrtu) formOrtu.classList.remove('hidden');
+                if (formWali) formWali.classList.add('hidden');
+                if (formSiswa) formSiswa.classList.add('hidden');
                 if (formAdmin) formAdmin.classList.add('hidden');
             } else if (role === 'ADMIN') {
                 if (tabAdmin) tabAdmin.className = activeClass + 'bg-purple-600';
                 if (tabWali) tabWali.className = inactiveClass;
                 if (tabSiswa) tabSiswa.className = inactiveClass;
+                if (tabOrtu) tabOrtu.className = inactiveClass;
                 if (formAdmin) formAdmin.classList.remove('hidden');
                 if (formWali) formWali.classList.add('hidden');
                 if (formSiswa) formSiswa.classList.add('hidden');
+                if (formOrtu) formOrtu.classList.add('hidden');
             }
         }
 
@@ -1493,13 +1709,34 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
+        function openModalShareOrtuLink() {
+            const linkInput = document.getElementById('share-ortu-link-input');
+            const msg = document.getElementById('share-ortu-copied-msg');
+            if (msg) msg.classList.add('hidden');
+
+            const baseUrl = window.location.origin + window.location.pathname;
+            const compactPayload = {
+                c: window.appData.activeKelasCode,
+                role: 'ortu',
+                g: window.appData.guruProfile?.nama || '',
+                k: window.appData.guruProfile?.kelas || '',
+                s: (window.appData.siswaList || []).map(s => [s.id, s.nis || '', s.nama, s.kelas || '', s.jurusan || '', s.gender || 'L', s.ipk || '0.00', s.ortu || ''])
+            };
+
+            const compressed = window.compressDataObj(compactPayload);
+            if (linkInput) linkInput.value = `${baseUrl}?role=ortu&code=${window.appData.activeKelasCode}&d=${compressed}`;
+            document.getElementById('modal-share-ortu-link')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
         function closeModalShareLink() { document.getElementById('modal-share-link')?.classList.add('hidden'); }
+        function closeModalShareOrtuLink() { document.getElementById('modal-share-ortu-link')?.classList.add('hidden'); }
         function openModalExport() { document.getElementById('modal-export-excel')?.classList.remove('hidden'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
         function closeModalExport() { document.getElementById('modal-export-excel')?.classList.add('hidden'); }
 
-        function copyGeneratedLink() {
-            const input = document.getElementById('share-link-input');
-            const msg = document.getElementById('share-copied-msg');
+        function copyGeneratedLink(inputId, msgId) {
+            const input = document.getElementById(inputId);
+            const msg = document.getElementById(msgId);
             if (input && input.value) {
                 input.select(); document.execCommand('copy');
                 if (msg) msg.classList.remove('hidden');
@@ -1513,27 +1750,43 @@
 
             const viewWali = document.getElementById('view-wali-kelas');
             const viewSiswa = document.getElementById('view-siswa');
+            const viewOrtu = document.getElementById('view-ortu');
             const viewAdmin = document.getElementById('view-admin');
             const btnShare = document.getElementById('btn-share-link');
+            const btnShareOrtu = document.getElementById('btn-share-ortu');
             const btnExport = document.getElementById('btn-export-excel');
 
             if (window.appData.currentRole === 'WALI') {
                 if (viewWali) viewWali.classList.remove('hidden');
                 if (viewSiswa) viewSiswa.classList.add('hidden');
+                if (viewOrtu) viewOrtu.classList.add('hidden');
                 if (viewAdmin) viewAdmin.classList.add('hidden');
                 if (btnShare) btnShare.classList.remove('hidden');
+                if (btnShareOrtu) btnShareOrtu.classList.remove('hidden');
                 if (btnExport) btnExport.classList.remove('hidden');
             } else if (window.appData.currentRole === 'SISWA') {
                 if (viewSiswa) viewSiswa.classList.remove('hidden');
                 if (viewWali) viewWali.classList.add('hidden');
+                if (viewOrtu) viewOrtu.classList.add('hidden');
                 if (viewAdmin) viewAdmin.classList.add('hidden');
                 if (btnShare) btnShare.classList.add('hidden');
+                if (btnShareOrtu) btnShareOrtu.classList.add('hidden');
+                if (btnExport) btnExport.classList.add('hidden');
+            } else if (window.appData.currentRole === 'ORTU') {
+                if (viewOrtu) viewOrtu.classList.remove('hidden');
+                if (viewWali) viewWali.classList.add('hidden');
+                if (viewSiswa) viewSiswa.classList.add('hidden');
+                if (viewAdmin) viewAdmin.classList.add('hidden');
+                if (btnShare) btnShare.classList.add('hidden');
+                if (btnShareOrtu) btnShareOrtu.classList.add('hidden');
                 if (btnExport) btnExport.classList.add('hidden');
             } else if (window.appData.currentRole === 'ADMIN') {
                 if (viewAdmin) viewAdmin.classList.remove('hidden');
                 if (viewWali) viewWali.classList.add('hidden');
                 if (viewSiswa) viewSiswa.classList.add('hidden');
+                if (viewOrtu) viewOrtu.classList.add('hidden');
                 if (btnShare) btnShare.classList.add('hidden');
+                if (btnShareOrtu) btnShareOrtu.classList.add('hidden');
                 if (btnExport) btnExport.classList.remove('hidden');
             }
 
@@ -1546,9 +1799,20 @@
             document.getElementById('main-app-content')?.classList.add('hidden');
             document.getElementById('user-badge-container')?.classList.add('hidden');
             document.getElementById('btn-share-link')?.classList.add('hidden');
+            document.getElementById('btn-share-ortu')?.classList.add('hidden');
             document.getElementById('btn-export-excel')?.classList.add('hidden');
 
-            if (window.appData.isStudentLinkMode) {
+            if (window.appData.isParentLinkMode) {
+                const roleTabs = document.getElementById('login-role-tabs');
+                const subtitle = document.getElementById('login-subtitle');
+                const containerSelectKelas = document.getElementById('container-select-kelas-ortu');
+
+                if (roleTabs) roleTabs.classList.add('hidden');
+                if (subtitle) subtitle.innerText = `Portal Monitoring Orang Tua • Kelas ${window.appData.guruProfile?.kelas || ''}`;
+                if (containerSelectKelas) containerSelectKelas.classList.add('hidden');
+
+                switchLoginTab('ORTU');
+            } else if (window.appData.isStudentLinkMode) {
                 const roleTabs = document.getElementById('login-role-tabs');
                 const subtitle = document.getElementById('login-subtitle');
                 const containerSelectKelas = document.getElementById('container-select-kelas-siswa');
@@ -1572,6 +1836,7 @@
         function populateWaliKelasDropdowns() {
             const waliSelect = document.getElementById('login-wali-kelas-select');
             const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
+            const ortuKelasSelect = document.getElementById('login-ortu-kelas-select');
             const adminSwitcher = document.getElementById('admin-kelas-switcher');
 
             let profiles = window.appData.allKelasProfiles || [];
@@ -1586,6 +1851,11 @@
                     profiles.map(p => `<option value="${p.id}">${p.kelas} (${p.nama})</option>`).join('');
                 if (window.appData.activeKelasCode) siswaKelasSelect.value = window.appData.activeKelasCode;
             }
+            if (ortuKelasSelect) {
+                ortuKelasSelect.innerHTML = '<option value="" disabled selected>-- Pilih Kelas / Guru Perwalian --</option>' +
+                    profiles.map(p => `<option value="${p.id}">${p.kelas} (${p.nama})</option>`).join('');
+                if (window.appData.activeKelasCode) ortuKelasSelect.value = window.appData.activeKelasCode;
+            }
 
             if (adminSwitcher) {
                 adminSwitcher.innerHTML = '<option value="ALL">-- SEMUA KELAS (GLOBAL) --</option>' +
@@ -1597,16 +1867,18 @@
             const catatanDropdown = document.getElementById('catatan-siswa-id');
             const filterDropdown = document.getElementById('filter-bimbingan-siswa');
             const loginSelect = document.getElementById('login-siswa-select');
+            const loginOrtuSelect = document.getElementById('login-ortu-siswa-select');
             const siswaSelfPelaporDropdown = document.getElementById('siswa-self-pelapor-id');
             const siswaGuruPelaporDropdown = document.getElementById('siswa-guru-pelapor-id');
 
             let optionsHtml = (!window.appData.siswaList || window.appData.siswaList.length === 0) ?
                 '<option value="" disabled selected>-- Belum Ada Siswa Terdaftar --</option>' :
-                '<option value="" disabled selected>-- Pilih Nama Anda --</option>' +
+                '<option value="" disabled selected>-- Pilih Nama Anda / Ananda --</option>' +
                 window.appData.siswaList.map(s => `<option value="${s.id}">${s.nis ? s.nis + ' - ' : ''}${s.nama}</option>`).join('');
 
             if (catatanDropdown) catatanDropdown.innerHTML = optionsHtml;
             if (loginSelect) loginSelect.innerHTML = optionsHtml;
+            if (loginOrtuSelect) loginOrtuSelect.innerHTML = optionsHtml;
 
             if (siswaSelfPelaporDropdown) {
                 siswaSelfPelaporDropdown.innerHTML = optionsHtml;
@@ -1794,6 +2066,93 @@
             saveToStorage(false, true);
             publishMQTTAction('REPORT_GURU', newGuruAbsen);
             showToast(`Laporan guru tidak hadir dikirim oleh ${reporterNama}!`, 'success');
+        }
+
+        function renderOrtuDashboard() {
+            if (window.appData.currentRole !== 'ORTU') return;
+
+            const mySiswa = (window.appData.siswaList || []).find(s => s.id === window.appData.activeSiswaId) || { nama: 'Siswa', nis: '-' };
+            const myAbsen = (window.appData.absensiList || []).filter(a => a.siswaId === window.appData.activeSiswaId);
+            const myCatatan = (window.appData.catatanList || []).filter(c => c.siswaId === window.appData.activeSiswaId);
+
+            const hC = myAbsen.filter(a => a.kategori === 'Hadir').length;
+            const sC = myAbsen.filter(a => a.kategori === 'Sakit').length;
+            const iC = myAbsen.filter(a => a.kategori === 'Ijin').length;
+            const aC = myAbsen.filter(a => a.kategori === 'Alpa').length;
+            const bC = myAbsen.filter(a => a.kategori === 'Bolos').length;
+
+            const elNama = document.getElementById('ortu-portal-nama-siswa');
+            const elNis = document.getElementById('ortu-portal-nis');
+            const elGuru = document.getElementById('ortu-portal-guru-nama');
+            const elBadge = document.getElementById('ortu-portal-kelas-badge');
+            const elToday = document.getElementById('ortu-portal-status-today');
+
+            if (elNama) elNama.innerText = `Siswa: ${mySiswa.nama}`;
+            if (elNis) elNis.innerText = `NIS: ${mySiswa.nis || '-'} | SMK Negeri 1 Marisa`;
+            if (elGuru) elGuru.innerText = window.appData.guruProfile?.nama || 'Guru Perwalian';
+            if (elBadge) elBadge.innerText = `KELAS: ${window.appData.guruProfile?.kelas || '-'}`;
+
+            // Check latest attendance status
+            const latestAbsen = myAbsen[0];
+            if (elToday) {
+                if (latestAbsen) {
+                    elToday.innerText = latestAbsen.kategori;
+                    elToday.className = latestAbsen.kategori === 'Hadir' ? 'text-lg font-black text-emerald-400 uppercase mt-0.5' : (latestAbsen.kategori === 'Bolos' ? 'text-lg font-black text-purple-400 uppercase mt-0.5' : 'text-lg font-black text-rose-400 uppercase mt-0.5');
+                } else {
+                    elToday.innerText = 'BELUM DIABSEN';
+                    elToday.className = 'text-lg font-black text-slate-400 uppercase mt-0.5';
+                }
+            }
+
+            document.getElementById('ortu-stat-hadir').innerText = hC;
+            document.getElementById('ortu-stat-sakit').innerText = sC;
+            document.getElementById('ortu-stat-ijin').innerText = iC;
+            document.getElementById('ortu-stat-alpa').innerText = aC;
+            document.getElementById('ortu-stat-bolos').innerText = bC;
+
+            // Render attendance log
+            const presensiContainer = document.getElementById('ortu-presensi-list');
+            if (presensiContainer) {
+                if (myAbsen.length === 0) {
+                    presensiContainer.innerHTML = '<div class="p-4 text-center text-slate-500 text-xs italic bg-[#0b0f19] rounded-xl border border-slate-800">Belum ada riwayat presensi tercatat untuk Ananda.</div>';
+                } else {
+                    presensiContainer.innerHTML = myAbsen.map(a => {
+                        const colorBadge = a.kategori === 'Hadir' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : (a.kategori === 'Sakit' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : (a.kategori === 'Ijin' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' : (a.kategori === 'Bolos' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-rose-500/20 text-rose-400 border-rose-500/30')));
+                        return `
+                            <div class="p-3.5 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2 text-xs">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-bold text-slate-300">${a.hari || 'Hari'}, ${a.tanggal} <span class="text-emerald-400 font-mono font-bold">(${a.waktu || 'Realtime'})</span></span>
+                                    <span class="px-2.5 py-0.5 rounded text-[10px] font-bold border ${colorBadge}">${a.kategori}</span>
+                                </div>
+                                <div class="text-[11px] text-amber-300 font-semibold bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20 flex items-center justify-between">
+                                    <span>Pelajaran: ${a.guruMapel || '-'}</span>
+                                    <span class="font-bold text-cyan-400">Jam ${a.jamKe || '-'}</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400">Catatan: ${a.alasan || '-'}</p>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // Render counselling notes
+            const bimbinganContainer = document.getElementById('ortu-bimbingan-list');
+            if (bimbinganContainer) {
+                if (myCatatan.length === 0) {
+                    bimbinganContainer.innerHTML = '<div class="p-4 text-center text-slate-500 text-xs italic bg-[#0b0f19] rounded-xl border border-slate-800">Belum ada catatan bimbingan perwalian untuk Ananda.</div>';
+                } else {
+                    bimbinganContainer.innerHTML = myCatatan.map(c => `
+                        <div class="p-3.5 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2 text-xs">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/20">${c.kategori}</span>
+                                <span class="text-[10px] text-slate-500">${c.tanggal}</span>
+                            </div>
+                            <p class="text-slate-300"><strong>Kendala:</strong> ${c.topik}</p>
+                            <p class="text-emerald-400"><strong>Rencana Tindak Lanjut:</strong> ${c.solusi}</p>
+                        </div>
+                    `).join('');
+                }
+            }
         }
 
         function renderAdminDashboard() {
@@ -2240,6 +2599,13 @@
                     badgeRole.className = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30';
                 }
                 if (badgeUser) badgeUser.innerText = 'Admin Sekolah';
+            } else if (window.appData.currentRole === 'ORTU') {
+                const s = window.appData.siswaList.find(x => x.id === window.appData.activeSiswaId) || { nama: 'Siswa' };
+                if (badgeRole) {
+                    badgeRole.innerText = 'ORANG TUA';
+                    badgeRole.className = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30';
+                }
+                if (badgeUser) badgeUser.innerText = `Ortu ${s.nama}`;
             } else {
                 const s = window.appData.siswaList.find(x => x.id === window.appData.activeSiswaId) || { nama: 'Siswa', nis: '-', ipk: '0.00' };
                 if (badgeRole) {
@@ -2788,6 +3154,15 @@
             populateSiswaDropdowns(); populateGuruMapelDropdowns();
         }
 
+        function handleOrtuKelasChange() {
+            const selectedKelasCode = document.getElementById('login-ortu-kelas-select')?.value;
+            if (!selectedKelasCode) return;
+
+            window.appData.activeKelasCode = selectedKelasCode;
+            window.syncFilteredData(false);
+            populateSiswaDropdowns();
+        }
+
         window.onload = function() {
             if (typeof lucide !== 'undefined') lucide.createIcons();
             initMQTTWebSocket();
@@ -2810,11 +3185,18 @@
             if (inputCatatanTanggal) inputCatatanTanggal.value = todayStr;
 
             const urlParams = new URLSearchParams(window.location.search);
+            const roleParam = urlParams.get('role');
             const codeParam = urlParams.get('code') || urlParams.get('c');
             const dataParam = urlParams.get('d');
 
             if (dataParam || codeParam) {
-                window.appData.isStudentLinkMode = true;
+                if (roleParam === 'ortu') {
+                    window.appData.isParentLinkMode = true;
+                    window.appData.isStudentLinkMode = false;
+                } else {
+                    window.appData.isStudentLinkMode = true;
+                    window.appData.isParentLinkMode = false;
+                }
 
                 if (dataParam) {
                     const decompressed = window.decompressDataObj(dataParam);
@@ -2823,7 +3205,7 @@
                         
                         window.appData.isLoggedIn = false; 
                         window.appData.activeSiswaId = '';
-                        window.appData.currentRole = 'SISWA'; 
+                        window.appData.currentRole = (roleParam === 'ortu' || decompressed.role === 'ortu') ? 'ORTU' : 'SISWA'; 
                         window.appData.activeKelasCode = targetKelasCode;
 
                         if (decompressed.g || decompressed.profile) {
@@ -2855,7 +3237,7 @@
                 } else if (codeParam) {
                     window.appData.isLoggedIn = false; 
                     window.appData.activeSiswaId = '';
-                    window.appData.currentRole = 'SISWA'; 
+                    window.appData.currentRole = (roleParam === 'ortu') ? 'ORTU' : 'SISWA'; 
                     window.appData.activeKelasCode = codeParam;
                 }
 
@@ -2863,10 +3245,11 @@
                 showLoginScreen();
                 populateSiswaDropdowns();
                 populateGuruMapelDropdowns();
-                showToast(`Portal Mandiri Siswa Kelompok ${window.appData.guruProfile?.kelas || ''} Berhasil Dimuat.`, 'info');
+                showToast(`Portal Perwalian ${window.appData.guruProfile?.kelas || ''} Berhasil Dimuat.`, 'info');
                 return;
             } else {
                 window.appData.isStudentLinkMode = false;
+                window.appData.isParentLinkMode = false;
                 populateWaliKelasDropdowns();
             }
 
