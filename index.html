@@ -49,7 +49,7 @@
         ::-webkit-scrollbar-thumb:hover { background: #334155; }
     </style>
 
-<!-- STREAMING_CHUNK:Configuring state and local storage functions... -->
+<!-- STREAMING_CHUNK:Configuring application state and LZString compression... -->
     <script>
         window.defaultState = {
             isLoggedIn: false,
@@ -123,7 +123,7 @@
 
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
-<!-- STREAMING_CHUNK:Rendering navigation header bar and share buttons... -->
+<!-- STREAMING_CHUNK:Rendering navigation header bar... -->
     <!-- Header Section -->
     <header class="bg-[#10172a] border-b border-slate-800 sticky top-0 z-30 px-4 py-3 shadow-xl">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
@@ -168,33 +168,30 @@
 
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
 
-<!-- STREAMING_CHUNK:Rendering login screens and role switcher tabs... -->
+<!-- STREAMING_CHUNK:Rendering login screens without Ortu tab on main login... -->
         <!-- Login Portal Screen -->
         <div id="login-screen" class="flex items-center justify-center p-4 my-6">
             <div class="max-w-md w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
                 <div class="absolute -top-12 -right-12 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl pointer-events-none"></div>
                 
                 <div class="text-center space-y-2 relative z-10">
-                    <div id="login-logo-badge" class="inline-flex items-center justify-center p-3 mb-1 w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 mx-auto">
+                    <div id="login-logo-badge" class="inline-flex items-center justify-center p-3 mb-1 w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 mx-auto">
                         <i data-lucide="school" class="w-10 h-10"></i>
                     </div>
                     <h2 id="login-title-head" class="text-xl font-black text-white tracking-tight uppercase">PORTAL MASUK PERWALIAN</h2>
                     <p id="login-subtitle" class="text-xs text-slate-400">Pilih peran dan kelas untuk mengakses sistem • SMK Negeri 1 Marisa</p>
                 </div>
 
-                <!-- TAB SWITCHER PERAN -->
-                <div id="login-role-tabs" class="grid grid-cols-4 gap-1 p-1 bg-[#0b0f19] rounded-xl border border-slate-800 text-[10px] sm:text-[11px] font-bold">
+                <!-- TAB SWITCHER 3 PERAN UTAMA (GURU | SISWA | ADMIN GLOBAL) -->
+                <div id="login-role-tabs" class="grid grid-cols-3 gap-1 p-1 bg-[#0b0f19] rounded-xl border border-slate-800 text-[11px] font-bold">
                     <button id="tab-login-wali" onclick="switchLoginTab('WALI')" class="py-2.5 rounded-lg bg-rose-600 text-white shadow transition flex items-center justify-center gap-1">
                         <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Guru
                     </button>
                     <button id="tab-login-siswa" onclick="switchLoginTab('SISWA')" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-1">
                         <i data-lucide="users" class="w-3.5 h-3.5"></i> Siswa
                     </button>
-                    <button id="tab-login-ortu" onclick="switchLoginTab('ORTU')" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-1">
-                        <i data-lucide="heart-handshake" class="w-3.5 h-3.5"></i> Ortu
-                    </button>
                     <button id="tab-login-admin" onclick="switchLoginTab('ADMIN')" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-1">
-                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Admin
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Admin Global
                     </button>
                 </div>
 
@@ -301,7 +298,7 @@
                     </button>
                 </div>
 
-                <!-- Form Login Orang Tua Siswa (DENGAN AKSES TERISOLASI READ-ONLY) -->
+                <!-- Form Login Orang Tua Siswa (HANYA AKTIF SAAT DIBUKA VIA LINK ORANG TUA) -->
                 <div id="form-login-ortu" class="hidden space-y-4">
                     <div class="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300">
                         <i data-lucide="info" class="w-3.5 h-3.5 inline mr-1"></i> <strong>Portal Monitoring Orang Tua:</strong> Pantau kehadiran dan perkembangan belajar putra/putri Anda secara langsung di sekolah.
@@ -360,7 +357,7 @@
             </div>
         </div>
 
-<!-- STREAMING_CHUNK:Rendering Wali Kelas view and Teacher tools... -->
+<!-- STREAMING_CHUNK:Rendering main dashboards for Wali, Siswa, Ortu, and Admin... -->
         <div id="main-app-content" class="hidden space-y-6">
 
             <!-- VIEW FOR WALI KELAS -->
@@ -664,7 +661,6 @@
 
             </div>
 
-<!-- STREAMING_CHUNK:Rendering Student Portal and Parent Monitoring Portal views... -->
             <!-- VIEW FOR SISWA PORTAL -->
             <div id="view-siswa" class="hidden space-y-6">
                 <div class="p-6 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-[#131b2e] border border-emerald-500/30 flex flex-wrap items-center justify-between gap-4">
@@ -851,7 +847,6 @@
                     </div>
                 </div>
 
-                <!-- Parents Realtime Monitoring Dashboard Grid -->
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                     <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
                         <span class="text-[10px] font-bold text-slate-500 uppercase">HADIR</span>
@@ -901,7 +896,6 @@
                 </div>
             </div>
 
-<!-- STREAMING_CHUNK:Rendering Super Admin monitoring view... -->
             <!-- VIEW FOR GLOBAL ADMIN -->
             <div id="view-admin" class="hidden space-y-6">
                 <div class="p-6 rounded-2xl bg-gradient-to-r from-purple-950/70 to-[#131b2e] border border-purple-500/40 flex flex-wrap items-center justify-between gap-4 shadow-xl">
@@ -987,7 +981,6 @@
 
     </main>
 
-<!-- STREAMING_CHUNK:Rendering modals for editing profiles, adding students, and parent links... -->
     <!-- MODAL EDIT PROFIL GURU WALI KELAS -->
     <div id="modal-edit-guru" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="max-w-md w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
@@ -1270,7 +1263,7 @@
         </div>
     </div>
 
-<!-- STREAMING_CHUNK:Implementing event handlers, MQTT WebSocket engine, and Parent Portal logic... -->
+<!-- STREAMING_CHUNK:Implementing isolated Parent Link handling logic in showLoginScreen... -->
     <script>
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
@@ -1615,7 +1608,6 @@
         function switchLoginTab(role) {
             const tabWali = document.getElementById('tab-login-wali');
             const tabSiswa = document.getElementById('tab-login-siswa');
-            const tabOrtu = document.getElementById('tab-login-ortu');
             const tabAdmin = document.getElementById('tab-login-admin');
             
             const formWali = document.getElementById('form-login-wali');
@@ -1629,7 +1621,6 @@
             if (role === 'WALI') {
                 if (tabWali) tabWali.className = activeClass + 'bg-rose-600';
                 if (tabSiswa) tabSiswa.className = inactiveClass;
-                if (tabOrtu) tabOrtu.className = inactiveClass;
                 if (tabAdmin) tabAdmin.className = inactiveClass;
                 if (formWali) formWali.classList.remove('hidden');
                 if (formSiswa) formSiswa.classList.add('hidden');
@@ -1638,17 +1629,12 @@
             } else if (role === 'SISWA') {
                 if (tabSiswa) tabSiswa.className = activeClass + 'bg-emerald-600';
                 if (tabWali) tabWali.className = inactiveClass;
-                if (tabOrtu) tabOrtu.className = inactiveClass;
                 if (tabAdmin) tabAdmin.className = inactiveClass;
                 if (formSiswa) formSiswa.classList.remove('hidden');
                 if (formWali) formWali.classList.add('hidden');
                 if (formOrtu) formOrtu.classList.add('hidden');
                 if (formAdmin) formAdmin.classList.add('hidden');
             } else if (role === 'ORTU') {
-                if (tabOrtu) tabOrtu.className = activeClass + 'bg-purple-600';
-                if (tabWali) tabWali.className = inactiveClass;
-                if (tabSiswa) tabSiswa.className = inactiveClass;
-                if (tabAdmin) tabAdmin.className = inactiveClass;
                 if (formOrtu) formOrtu.classList.remove('hidden');
                 if (formWali) formWali.classList.add('hidden');
                 if (formSiswa) formSiswa.classList.add('hidden');
@@ -1657,7 +1643,6 @@
                 if (tabAdmin) tabAdmin.className = activeClass + 'bg-purple-600';
                 if (tabWali) tabWali.className = inactiveClass;
                 if (tabSiswa) tabSiswa.className = inactiveClass;
-                if (tabOrtu) tabOrtu.className = inactiveClass;
                 if (formAdmin) formAdmin.classList.remove('hidden');
                 if (formWali) formWali.classList.add('hidden');
                 if (formSiswa) formSiswa.classList.add('hidden');
@@ -1679,69 +1664,6 @@
                         'px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-2 whitespace-nowrap transition';
                 }
             });
-        }
-
-        function updateHariField() {
-            const dateVal = document.getElementById('siswa-self-tanggal')?.value;
-            const hariInput = document.getElementById('siswa-self-hari');
-            if (hariInput) {
-                hariInput.value = window.getHariIndo(dateVal);
-            }
-        }
-
-        function openModalShareLink() {
-            const linkInput = document.getElementById('share-link-input');
-            const msg = document.getElementById('share-copied-msg');
-            if (msg) msg.classList.add('hidden');
-
-            const baseUrl = window.location.origin + window.location.pathname;
-            const compactPayload = {
-                c: window.appData.activeKelasCode,
-                g: window.appData.guruProfile?.nama || '',
-                k: window.appData.guruProfile?.kelas || '',
-                s: (window.appData.siswaList || []).map(s => [s.id, s.nis || '', s.nama, s.kelas || '', s.jurusan || '', s.gender || 'L', s.ipk || '0.00', s.ortu || '']),
-                m: (window.appData.guruMapelList || []).map(g => [g.id, g.nama, g.mapel])
-            };
-
-            const compressed = window.compressDataObj(compactPayload);
-            if (linkInput) linkInput.value = `${baseUrl}?code=${window.appData.activeKelasCode}&d=${compressed}`;
-            document.getElementById('modal-share-link')?.classList.remove('hidden');
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function openModalShareOrtuLink() {
-            const linkInput = document.getElementById('share-ortu-link-input');
-            const msg = document.getElementById('share-ortu-copied-msg');
-            if (msg) msg.classList.add('hidden');
-
-            const baseUrl = window.location.origin + window.location.pathname;
-            const compactPayload = {
-                c: window.appData.activeKelasCode,
-                role: 'ortu',
-                g: window.appData.guruProfile?.nama || '',
-                k: window.appData.guruProfile?.kelas || '',
-                s: (window.appData.siswaList || []).map(s => [s.id, s.nis || '', s.nama, s.kelas || '', s.jurusan || '', s.gender || 'L', s.ipk || '0.00', s.ortu || ''])
-            };
-
-            const compressed = window.compressDataObj(compactPayload);
-            if (linkInput) linkInput.value = `${baseUrl}?role=ortu&code=${window.appData.activeKelasCode}&d=${compressed}`;
-            document.getElementById('modal-share-ortu-link')?.classList.remove('hidden');
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function closeModalShareLink() { document.getElementById('modal-share-link')?.classList.add('hidden'); }
-        function closeModalShareOrtuLink() { document.getElementById('modal-share-ortu-link')?.classList.add('hidden'); }
-        function openModalExport() { document.getElementById('modal-export-excel')?.classList.remove('hidden'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
-        function closeModalExport() { document.getElementById('modal-export-excel')?.classList.add('hidden'); }
-
-        function copyGeneratedLink(inputId, msgId) {
-            const input = document.getElementById(inputId);
-            const msg = document.getElementById(msgId);
-            if (input && input.value) {
-                input.select(); document.execCommand('copy');
-                if (msg) msg.classList.remove('hidden');
-                showToast('Link berhasil disalin!', 'success');
-            }
         }
 
         function showMainApp() {
@@ -1802,29 +1724,43 @@
             document.getElementById('btn-share-ortu')?.classList.add('hidden');
             document.getElementById('btn-export-excel')?.classList.add('hidden');
 
-            if (window.appData.isParentLinkMode) {
-                const roleTabs = document.getElementById('login-role-tabs');
-                const subtitle = document.getElementById('login-subtitle');
-                const containerSelectKelas = document.getElementById('container-select-kelas-ortu');
+            const roleTabs = document.getElementById('login-role-tabs');
+            const subtitle = document.getElementById('login-subtitle');
+            const titleHead = document.getElementById('login-title-head');
+            const logoBadge = document.getElementById('login-logo-badge');
 
-                if (roleTabs) roleTabs.classList.add('hidden');
-                if (subtitle) subtitle.innerText = `Portal Monitoring Orang Tua • Kelas ${window.appData.guruProfile?.kelas || ''}`;
-                if (containerSelectKelas) containerSelectKelas.classList.add('hidden');
+            if (window.appData.isParentLinkMode) {
+                if (roleTabs) roleTabs.classList.add('hidden'); // Sembunyikan tab switcher total
+                if (titleHead) titleHead.innerText = "PORTAL MONITORING ORANG TUA";
+                if (subtitle) subtitle.innerText = `Monitoring Kehadiran Putra/Putri • Kelas ${window.appData.guruProfile?.kelas || ''}`;
+                if (logoBadge) {
+                    logoBadge.className = "inline-flex items-center justify-center p-3 mb-1 w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 mx-auto";
+                    logoBadge.innerHTML = '<i data-lucide="heart-handshake" class="w-10 h-10"></i>';
+                }
+                const containerSelectKelasOrtu = document.getElementById('container-select-kelas-ortu');
+                if (containerSelectKelasOrtu) containerSelectKelasOrtu.classList.add('hidden');
 
                 switchLoginTab('ORTU');
             } else if (window.appData.isStudentLinkMode) {
-                const roleTabs = document.getElementById('login-role-tabs');
-                const subtitle = document.getElementById('login-subtitle');
-                const containerSelectKelas = document.getElementById('container-select-kelas-siswa');
-
-                if (roleTabs) roleTabs.classList.add('hidden');
-                if (subtitle) subtitle.innerText = `Portal Mandiri Siswa • Kelas ${window.appData.guruProfile?.kelas || ''}`;
-                if (containerSelectKelas) containerSelectKelas.classList.add('hidden');
+                if (roleTabs) roleTabs.classList.add('hidden'); // Sembunyikan tab switcher total
+                if (titleHead) titleHead.innerText = "PORTAL MANDIRI SISWA";
+                if (subtitle) subtitle.innerText = `Portal Pelaporan Siswa • Kelas ${window.appData.guruProfile?.kelas || ''}`;
+                if (logoBadge) {
+                    logoBadge.className = "inline-flex items-center justify-center p-3 mb-1 w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 mx-auto";
+                    logoBadge.innerHTML = '<i data-lucide="school" class="w-10 h-10"></i>';
+                }
+                const containerSelectKelasSiswa = document.getElementById('container-select-kelas-siswa');
+                if (containerSelectKelasSiswa) containerSelectKelasSiswa.classList.add('hidden');
 
                 switchLoginTab('SISWA');
             } else {
+                if (roleTabs) roleTabs.classList.remove('hidden');
+                if (titleHead) titleHead.innerText = "PORTAL MASUK PERWALIAN";
+                if (subtitle) subtitle.innerText = "Pilih peran dan kelas untuk mengakses sistem • SMK Negeri 1 Marisa";
                 populateWaliKelasDropdowns();
             }
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function logout() {
@@ -2092,7 +2028,6 @@
             if (elGuru) elGuru.innerText = window.appData.guruProfile?.nama || 'Guru Perwalian';
             if (elBadge) elBadge.innerText = `KELAS: ${window.appData.guruProfile?.kelas || '-'}`;
 
-            // Check latest attendance status
             const latestAbsen = myAbsen[0];
             if (elToday) {
                 if (latestAbsen) {
@@ -2110,7 +2045,6 @@
             document.getElementById('ortu-stat-alpa').innerText = aC;
             document.getElementById('ortu-stat-bolos').innerText = bC;
 
-            // Render attendance log
             const presensiContainer = document.getElementById('ortu-presensi-list');
             if (presensiContainer) {
                 if (myAbsen.length === 0) {
@@ -2135,7 +2069,6 @@
                 }
             }
 
-            // Render counselling notes
             const bimbinganContainer = document.getElementById('ortu-bimbingan-list');
             if (bimbinganContainer) {
                 if (myCatatan.length === 0) {
@@ -2916,7 +2849,6 @@
             });
         }
 
-        // EXPORT REKAP PRESENSI EXCEL FORMAT 100% PRESISI SESUAI GAMBAR REFERENSI 2
         function exportCSVLogDetail() {
             const currentProf = window.appData.guruProfile || {};
             const currentKelas = currentProf.kelas || 'Kelas -';
