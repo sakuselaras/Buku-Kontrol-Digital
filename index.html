@@ -144,20 +144,20 @@
                 <div id="user-badge-container" class="hidden items-center gap-2 bg-[#0b0f19] px-3 py-1.5 rounded-xl border border-slate-800">
                     <div id="badge-role-pill" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase">GURU KELAS</div>
                     <span id="badge-user-name" class="text-xs font-bold text-white">-</span>
-                    <button onclick="window.logout()" class="ml-2 px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-600 hover:text-white text-xs font-semibold transition flex items-center gap-1">
+                    <button onclick="logout()" class="ml-2 px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-600 hover:text-white text-xs font-semibold transition flex items-center gap-1">
                         <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Keluar
                     </button>
                 </div>
 
-                <button id="btn-share-link" onclick="window.openModalShareLink()" class="hidden px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white flex items-center gap-1.5 transition shadow-lg shadow-emerald-600/20">
+                <button id="btn-share-link" onclick="openModalShareLink()" class="hidden px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white flex items-center gap-1.5 transition shadow-lg shadow-emerald-600/20">
                     <i data-lucide="share-2" class="w-3.5 h-3.5"></i> Bagikan Link Ke Siswa
                 </button>
 
-                <button id="btn-share-ortu" onclick="window.openModalShareOrtuLink()" class="hidden px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white flex items-center gap-1.5 transition shadow-lg shadow-purple-600/20">
+                <button id="btn-share-ortu" onclick="openModalShareOrtuLink()" class="hidden px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white flex items-center gap-1.5 transition shadow-lg shadow-purple-600/20">
                     <i data-lucide="heart-handshake" class="w-3.5 h-3.5"></i> Bagikan Link Orang Tua
                 </button>
 
-                <button id="btn-export-excel" onclick="window.openModalExport()" class="hidden px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 border border-cyan-500/30 text-xs font-bold text-white flex items-center gap-1.5 transition shadow-lg shadow-cyan-600/20">
+                <button id="btn-export-excel" onclick="openModalExport()" class="hidden px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 border border-cyan-500/30 text-xs font-bold text-white flex items-center gap-1.5 transition shadow-lg shadow-cyan-600/20">
                     <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Export Excel Rekap
                 </button>
             </div>
@@ -181,13 +181,13 @@
 
                 <!-- TAB SWITCHER 3 PERAN UTAMA (GURU | SISWA | ADMIN GLOBAL) -->
                 <div id="login-role-tabs" class="grid grid-cols-3 gap-1 p-1 bg-[#0b0f19] rounded-xl border border-slate-800 text-[11px] font-bold">
-                    <button id="tab-login-wali" onclick="window.switchLoginTab('WALI')" class="py-2.5 rounded-lg bg-rose-600 text-white shadow transition flex items-center justify-center gap-1">
+                    <button id="tab-login-wali" onclick="switchLoginTab('WALI')" class="py-2.5 rounded-lg bg-rose-600 text-white shadow transition flex items-center justify-center gap-1">
                         <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Guru
                     </button>
-                    <button id="tab-login-siswa" onclick="window.switchLoginTab('SISWA')" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-1">
+                    <button id="tab-login-siswa" onclick="switchLoginTab('SISWA')" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-1">
                         <i data-lucide="users" class="w-3.5 h-3.5"></i> Siswa
                     </button>
-                    <button id="tab-login-admin" onclick="window.switchLoginTab('ADMIN')" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-1">
+                    <button id="tab-login-admin" onclick="switchLoginTab('ADMIN')" class="py-2.5 rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-1">
                         <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Admin Global
                     </button>
                 </div>
@@ -196,7 +196,7 @@
                 <div id="form-login-wali" class="space-y-4">
                     <div class="flex items-center justify-between text-xs border-b border-slate-800 pb-2">
                         <span id="wali-form-mode-title" class="font-bold text-slate-300">MASUK KELOMPOK PERWALIAN</span>
-                        <button type="button" onclick="window.toggleWaliFormMode()" id="btn-toggle-wali-mode" class="text-rose-400 hover:underline font-semibold text-[11px]">
+                        <button type="button" onclick="toggleWaliFormMode()" id="btn-toggle-wali-mode" class="text-rose-400 hover:underline font-semibold text-[11px]">
                             + Buat Kelompok Baru
                         </button>
                     </div>
@@ -211,7 +211,7 @@
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1">MASUKKAN PIN KEAMANAN (MAX 6 DIGIT)</label>
-                            <input type="password" id="login-pin-input" maxlength="6" placeholder="Masukkan PIN" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500 transition font-mono tracking-widest" onkeyup="if(event.key==='Enter') window.loginWali()">
+                            <input type="password" id="login-pin-input" maxlength="6" placeholder="Masukkan PIN" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500 transition font-mono tracking-widest" onkeyup="if(event.key==='Enter') loginWali()">
                             <p class="text-[11px] text-slate-500 mt-1">Default PIN: <code class="text-rose-400 font-bold">123456</code></p>
                         </div>
 
@@ -219,7 +219,7 @@
                             PIN Keamanan salah! Silakan periksa kembali.
                         </div>
 
-                        <button type="button" onclick="window.loginWali()" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white transition shadow-lg shadow-rose-600/20 uppercase tracking-wider">
+                        <button onclick="loginWali()" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white transition shadow-lg shadow-rose-600/20 uppercase tracking-wider">
                             Masuk Portal Guru Perwalian
                         </button>
                     </div>
@@ -245,7 +245,7 @@
                             <input type="password" id="new-guru-pin" maxlength="6" value="123456" placeholder="123456" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 transition font-mono">
                         </div>
 
-                        <button type="button" onclick="window.createNewKelas()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition shadow-lg shadow-emerald-600/20 uppercase tracking-wider">
+                        <button onclick="createNewKelas()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition shadow-lg shadow-emerald-600/20 uppercase tracking-wider">
                             Buat Kelompok Perwalian Baru
                         </button>
                     </div>
@@ -255,7 +255,7 @@
                 <div id="form-login-siswa" class="hidden space-y-4">
                     <div id="container-select-kelas-siswa">
                         <label class="block text-xs font-semibold text-slate-400 mb-1">PILIH KELOMPOK PERWALIAN / KELAS</label>
-                        <select id="login-siswa-kelas-select" onchange="window.handleSiswaKelasChange()" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition">
+                        <select id="login-siswa-kelas-select" onchange="handleSiswaKelasChange()" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition">
                             <option value="" disabled selected>-- Pilih Kelas / Guru Perwalian --</option>
                         </select>
                     </div>
@@ -275,14 +275,14 @@
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1">MASUKKAN NIS (OPSIONAL)</label>
-                        <input type="text" id="login-siswa-nis" placeholder="Contoh: 2026101" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition font-mono" onkeyup="if(event.key==='Enter') window.loginSiswa()">
+                        <input type="text" id="login-siswa-nis" placeholder="Contoh: 2026101" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition font-mono" onkeyup="if(event.key==='Enter') loginSiswa()">
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold text-emerald-400 mb-1 flex items-center gap-1">
                             <i data-lucide="key-round" class="w-3.5 h-3.5"></i> PASSWORD PORTAL SISWA
                         </label>
-                        <input type="password" id="login-siswa-pass" placeholder="Masukkan Password Portal Siswa" class="w-full bg-[#0b0f19] border border-emerald-500/50 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition font-mono tracking-wider" onkeyup="if(event.key==='Enter') window.loginSiswa()">
+                        <input type="password" id="login-siswa-pass" placeholder="Masukkan Password Portal Siswa" class="w-full bg-[#0b0f19] border border-emerald-500/50 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition font-mono tracking-wider" onkeyup="if(event.key==='Enter') loginSiswa()">
                         <p class="text-[10px] text-slate-500 mt-1">Akses khusus perwakilan siswa yang ditunjuk oleh Guru Perwalian.</p>
                     </div>
 
@@ -290,7 +290,7 @@
                         Data siswa atau Password Portal salah! Minta password ke Guru Perwalian Anda.
                     </div>
 
-                    <button type="button" onclick="window.loginSiswa()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition shadow-lg shadow-emerald-600/20 uppercase tracking-wider">
+                    <button onclick="loginSiswa()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition shadow-lg shadow-emerald-600/20 uppercase tracking-wider">
                         Masuk Portal Siswa
                     </button>
                 </div>
@@ -303,7 +303,7 @@
 
                     <div id="container-select-kelas-ortu">
                         <label class="block text-xs font-semibold text-slate-400 mb-1">PILIH KELAS / KELOMPOK PERWALIAN</label>
-                        <select id="login-ortu-kelas-select" onchange="window.handleOrtuKelasChange()" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition">
+                        <select id="login-ortu-kelas-select" onchange="handleOrtuKelasChange()" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition">
                             <option value="" disabled selected>-- Pilih Kelas / Guru Perwalian --</option>
                         </select>
                     </div>
@@ -315,23 +315,12 @@
                         </select>
                     </div>
 
-                    <div class="relative flex py-1 items-center">
-                        <div class="flex-grow border-t border-slate-800"></div>
-                        <span class="flex-shrink mx-3 text-[10px] font-bold text-slate-500 uppercase">Atau Cari Dengan NIS</span>
-                        <div class="flex-grow border-t border-slate-800"></div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">MASUKKAN NIS ANANDA (NOMOR INDUK SISWA)</label>
-                        <input type="text" id="login-ortu-nis" placeholder="Contoh: 2026101" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition font-mono" onkeyup="if(event.key==='Enter') window.loginOrtu()">
-                    </div>
-
                     <div id="login-ortu-error" class="hidden text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl font-semibold">
-                        Data nama siswa tidak ditemukan di kelas ini!
+                        Data nama siswa tidak ditemukan atau belum dipilih!
                     </div>
 
-                    <button type="button" onclick="window.loginOrtu()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition shadow-lg shadow-purple-600/20 uppercase tracking-wider flex items-center justify-center gap-2">
-                        <i data-lucide="eye" class="w-4 h-4"></i> Masuk Monitoring Orang Tua
+                    <button onclick="loginOrtu()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition shadow-lg shadow-purple-600/20 uppercase tracking-wider flex items-center justify-center gap-2">
+                        <i data-lucide="eye" class="w-4 h-4"></i> Lihat Kehadiran Siswa
                     </button>
                 </div>
 
@@ -343,10 +332,10 @@
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1">PIN KEAMANAN ADMIN GLOBAL</label>
-                        <input type="password" id="login-admin-pin" placeholder="Masukkan PIN Admin" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition font-mono tracking-widest" onkeyup="if(event.key==='Enter') window.loginAdmin()">
+                        <input type="password" id="login-admin-pin" placeholder="Masukkan PIN Admin" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition font-mono tracking-widest" onkeyup="if(event.key==='Enter') loginAdmin()">
                     </div>
 
-                    <button type="button" onclick="window.loginAdmin()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition shadow-lg shadow-purple-600/20 uppercase tracking-wider">
+                    <button onclick="loginAdmin()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition shadow-lg shadow-purple-600/20 uppercase tracking-wider">
                         Masuk Portal Admin Global
                     </button>
                 </div>
@@ -373,7 +362,7 @@
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <button onclick="window.openModalEditGuru()" class="px-3 py-2 rounded-xl bg-[#0b0f19] hover:bg-slate-800 border border-slate-800 text-xs font-bold text-rose-400 flex items-center gap-2 transition">
+                        <button onclick="openModalEditGuru()" class="px-3 py-2 rounded-xl bg-[#0b0f19] hover:bg-slate-800 border border-slate-800 text-xs font-bold text-rose-400 flex items-center gap-2 transition">
                             <i data-lucide="user-cog" class="w-4 h-4"></i>
                             <div>
                                 <div class="text-[9px] text-slate-500 uppercase">GURU PERWALIAN</div>
@@ -385,19 +374,19 @@
 
                 <!-- Navigation Tabs -->
                 <div class="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto text-xs font-bold">
-                    <button id="tab-btn-dashboard" onclick="window.switchWaliTab('dashboard')" class="px-4 py-2 rounded-xl bg-rose-600 text-white shadow-md flex items-center gap-2 whitespace-nowrap">
+                    <button id="tab-btn-dashboard" onclick="switchWaliTab('dashboard')" class="px-4 py-2 rounded-xl bg-rose-600 text-white shadow-md flex items-center gap-2 whitespace-nowrap">
                         <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard Utama
                     </button>
-                    <button id="tab-btn-siswa" onclick="window.switchWaliTab('siswa')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-2 whitespace-nowrap transition">
+                    <button id="tab-btn-siswa" onclick="switchWaliTab('siswa')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-2 whitespace-nowrap transition">
                         <i data-lucide="users" class="w-4 h-4"></i> Kelola Data Siswa
                     </button>
-                    <button id="tab-btn-guru-mapel" onclick="window.switchWaliTab('guru-mapel')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-2 whitespace-nowrap transition">
+                    <button id="tab-btn-guru-mapel" onclick="switchWaliTab('guru-mapel')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-2 whitespace-nowrap transition">
                         <i data-lucide="user-check" class="w-4 h-4"></i> Kelola Guru Mapel
                     </button>
-                    <button id="tab-btn-bimbingan" onclick="window.switchWaliTab('bimbingan')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-2 whitespace-nowrap transition">
+                    <button id="tab-btn-bimbingan" onclick="switchWaliTab('bimbingan')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-2 whitespace-nowrap transition">
                         <i data-lucide="file-check-2" class="w-4 h-4"></i> Catatan & Konseling
                     </button>
-                    <button id="tab-btn-presensi" onclick="window.switchWaliTab('presensi')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-2 whitespace-nowrap transition">
+                    <button id="tab-btn-presensi" onclick="switchWaliTab('presensi')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-2 whitespace-nowrap transition">
                         <i data-lucide="calendar" class="w-4 h-4"></i> Rekap Absensi Siswa & Guru
                     </button>
                 </div>
@@ -466,10 +455,10 @@
                                 <p class="text-xs text-slate-400">Kelola NIS, nama lengkap, kelas, jurusan, status akademik, dan kontak orang tua siswa.</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <button id="btn-delete-selected-siswa" onclick="window.deleteSelectedSiswa()" class="hidden px-3.5 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white font-bold text-xs flex items-center gap-1.5 transition border border-rose-500/30">
+                                <button id="btn-delete-selected-siswa" onclick="deleteSelectedSiswa()" class="hidden px-3.5 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white font-bold text-xs flex items-center gap-1.5 transition border border-rose-500/30">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus Siswa Terpilih (<span id="selected-siswa-count">0</span>)
                                 </button>
-                                <button onclick="window.openModalTambahSiswa()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white text-xs flex items-center gap-1.5 transition shadow-lg shadow-emerald-600/20">
+                                <button onclick="openModalTambahSiswa()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white text-xs flex items-center gap-1.5 transition shadow-lg shadow-emerald-600/20">
                                     <i data-lucide="user-plus" class="w-4 h-4"></i> Tambah Siswa Baru
                                 </button>
                             </div>
@@ -480,7 +469,7 @@
                                 <thead>
                                     <tr class="bg-[#0b0f19] text-slate-400 uppercase font-bold border-b border-slate-800">
                                         <th class="p-3 w-10 text-center">
-                                            <input type="checkbox" id="check-all-siswa" onchange="window.toggleSelectAllSiswa(this)" class="rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-0 cursor-pointer">
+                                            <input type="checkbox" id="check-all-siswa" onchange="toggleSelectAllSiswa(this)" class="rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-0 cursor-pointer">
                                         </th>
                                         <th class="p-3">NO</th>
                                         <th class="p-3">NIS</th>
@@ -506,7 +495,7 @@
                                 <h3 class="text-sm font-bold text-white uppercase tracking-wide">Daftar Guru Mata Pelajaran</h3>
                                 <p class="text-xs text-slate-400">Kelola master nama guru dan mata pelajaran untuk pilihan laporan ketidakhadiran siswa.</p>
                             </div>
-                            <button onclick="window.openModalTambahGuruMapel()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 font-bold text-white text-xs flex items-center gap-1.5 transition shadow-lg shadow-amber-600/20">
+                            <button onclick="openModalTambahGuruMapel()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 font-bold text-white text-xs flex items-center gap-1.5 transition shadow-lg shadow-amber-600/20">
                                 <i data-lucide="user-plus" class="w-4 h-4"></i> Tambah Guru Mapel
                             </button>
                         </div>
@@ -534,7 +523,7 @@
                             <div class="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase tracking-wider border-b border-slate-800 pb-3">
                                 <i data-lucide="file-plus" class="w-4 h-4"></i> Input Catatan Bimbingan / Perwalian
                             </div>
-                            <form onsubmit="window.handleSaveCatatan(event)" class="space-y-3 text-xs">
+                            <form onsubmit="handleSaveCatatan(event)" class="space-y-3 text-xs">
                                 <div>
                                     <label class="block font-semibold text-slate-400 mb-1">SISWA YANG DIBIMBING</label>
                                     <select id="catatan-siswa-id" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-rose-500 transition" required>
@@ -573,7 +562,7 @@
                         <div class="lg:col-span-2 p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
                             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                                 <h3 class="text-sm font-bold text-white uppercase tracking-wide">Riwayat Catatan Bimbingan Perwalian</h3>
-                                <select id="filter-bimbingan-siswa" onchange="window.renderBimbinganList()" class="bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white">
+                                <select id="filter-bimbingan-siswa" onchange="renderBimbinganList()" class="bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white">
                                     <option value="ALL">Semua Siswa</option>
                                 </select>
                             </div>
@@ -591,15 +580,15 @@
                                 <p class="text-xs text-slate-400">Pencatatan harian, per jam mengajar, dan bulanan dari perwakilan siswa.</p>
                             </div>
                             <div class="flex items-center gap-2 flex-wrap">
-                                <button id="btn-delete-selected-absensi" onclick="window.deleteSelectedAbsensi()" class="hidden px-3.5 py-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white font-bold text-xs flex items-center gap-1.5 transition border border-rose-500/30">
+                                <button id="btn-delete-selected-absensi" onclick="deleteSelectedAbsensi()" class="hidden px-3.5 py-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white font-bold text-xs flex items-center gap-1.5 transition border border-rose-500/30">
                                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus Terpilih (<span id="selected-absensi-count">0</span>)
                                 </button>
-                                <button onclick="window.exportCSVLogDetail()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20">
+                                <button onclick="exportCSVLogDetail()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20">
                                     <i data-lucide="download" class="w-3.5 h-3.5"></i> Export Rekap Excel (.xls)
                                 </button>
                                 <div class="flex items-center gap-1 ml-2">
                                     <label class="text-xs text-slate-400 font-semibold">PERIODE:</label>
-                                    <select id="filter-presensi-periode" onchange="window.renderAbsensiTable()" class="bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500">
+                                    <select id="filter-presensi-periode" onchange="renderAbsensiTable()" class="bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500">
                                         <option value="ALL">Semua Tanggal</option>
                                         <option value="MINGGU">Minggu Ini</option>
                                         <option value="BULAN">Bulan Ini</option>
@@ -613,7 +602,7 @@
                                 <thead>
                                     <tr class="bg-[#0b0f19] text-slate-400 uppercase font-bold border-b border-slate-800">
                                         <th class="p-3 w-10 text-center">
-                                            <input type="checkbox" id="check-all-absensi" onchange="window.toggleSelectAllAbsensi(this)" class="rounded bg-slate-800 border-slate-700 text-rose-500 focus:ring-0 cursor-pointer">
+                                            <input type="checkbox" id="check-all-absensi" onchange="toggleSelectAllAbsensi(this)" class="rounded bg-slate-800 border-slate-700 text-rose-500 focus:ring-0 cursor-pointer">
                                         </th>
                                         <th class="p-3">HARI / TGL & WAKTU</th>
                                         <th class="p-3">NAMA SISWA</th>
@@ -691,12 +680,12 @@
                             <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
                                 <i data-lucide="users-check" class="w-4 h-4"></i> Presensi Kelas Per-Jam Mengajar (Perwakilan Siswa)
                             </div>
-                            <button type="button" onclick="window.setAllStudentsPresent()" class="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 hover:text-white text-emerald-400 text-[11px] font-bold transition border border-emerald-500/20 flex items-center gap-1">
+                            <button type="button" onclick="setAllStudentsPresent()" class="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 hover:text-white text-emerald-400 text-[11px] font-bold transition border border-emerald-500/20 flex items-center gap-1">
                                 <i data-lucide="check-check" class="w-3.5 h-3.5"></i> Tandai Semua Hadir
                             </button>
                         </div>
 
-                        <form onsubmit="window.handleSiswaLaporAbsenBatch(event)" class="space-y-4 text-xs">
+                        <form onsubmit="handleSiswaLaporAbsenBatch(event)" class="space-y-4 text-xs">
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 bg-[#0b0f19] p-3.5 rounded-xl border border-slate-800">
                                 <div>
                                     <div class="flex items-center justify-between mb-1">
@@ -713,7 +702,7 @@
                                 <div>
                                     <label class="block font-semibold text-slate-400 text-[11px] mb-1">TANGGAL & HARI</label>
                                     <div class="flex gap-1.5">
-                                        <input type="date" id="siswa-self-tanggal" onchange="window.updateHariField()" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-500 transition text-xs" required>
+                                        <input type="date" id="siswa-self-tanggal" onchange="updateHariField()" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-500 transition text-xs" required>
                                         <input type="text" id="siswa-self-hari" readonly class="w-20 bg-[#131b2e] border border-slate-800 rounded-lg px-2 text-center text-emerald-400 font-bold text-xs" uppercase>
                                     </div>
                                 </div>
@@ -725,39 +714,42 @@
                                     <input type="time" id="siswa-self-waktu" class="w-full bg-[#131b2e] border border-emerald-500/50 rounded-lg px-2.5 py-1.5 text-emerald-400 font-mono font-bold focus:outline-none focus:border-emerald-500 transition text-xs" required>
                                 </div>
 
-                                <div class="sm:col-span-2">
+                                <div class="sm:col-span-3">
                                     <label class="block font-semibold text-amber-400 text-[11px] mb-1">GURU & MATA PELAJARAN SAAT INI</label>
                                     <select id="siswa-self-guru-mapel" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500 transition text-xs" required>
                                         <option value="" disabled selected>-- Pilih Guru & Mapel --</option>
                                     </select>
                                 </div>
 
-                                <div>
-                                    <label class="block font-semibold text-slate-400 text-[11px] mb-1">JAM PELAJARAN</label>
-                                    <div class="grid grid-cols-2 gap-1.5">
-                                        <select id="siswa-self-jam-dari" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2 py-1.5 text-white focus:outline-none focus:border-emerald-500 transition text-xs" required>
-                                            <option value="Jam Ke - 1">Jam Ke - 1</option>
-                                            <option value="Jam Ke - 2">Jam Ke - 2</option>
-                                            <option value="Jam Ke - 3">Jam Ke - 3</option>
-                                            <option value="Jam Ke - 4">Jam Ke - 4</option>
-                                            <option value="Jam Ke - 5">Jam Ke - 5</option>
-                                            <option value="Jam Ke - 6">Jam Ke - 6</option>
-                                            <option value="Jam Ke - 7">Jam Ke - 7</option>
-                                            <option value="Jam Ke - 8">Jam Ke - 8</option>
-                                            <option value="Jam Ke - 9">Jam Ke - 9</option>
-                                            <option value="Jam Ke - 10">Jam Ke - 10</option>
+                                <div class="sm:col-span-3 grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block font-semibold text-slate-400 text-[11px] mb-1">DARI JAM KE-</label>
+                                        <select id="siswa-self-jam-dari" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-500 transition text-xs">
+                                            <option value="1">Jam Ke - 1</option>
+                                            <option value="2">Jam Ke - 2</option>
+                                            <option value="3">Jam Ke - 3</option>
+                                            <option value="4">Jam Ke - 4</option>
+                                            <option value="5">Jam Ke - 5</option>
+                                            <option value="6">Jam Ke - 6</option>
+                                            <option value="7">Jam Ke - 7</option>
+                                            <option value="8">Jam Ke - 8</option>
+                                            <option value="9">Jam Ke - 9</option>
+                                            <option value="10">Jam Ke - 10</option>
                                         </select>
-                                        <select id="siswa-self-jam-sampai" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2 py-1.5 text-white focus:outline-none focus:border-emerald-500 transition text-xs" required>
-                                            <option value="Jam Ke - 1">s/d Jam Ke - 1</option>
-                                            <option value="Jam Ke - 2" selected>s/d Jam Ke - 2</option>
-                                            <option value="Jam Ke - 3">s/d Jam Ke - 3</option>
-                                            <option value="Jam Ke - 4">s/d Jam Ke - 4</option>
-                                            <option value="Jam Ke - 5">s/d Jam Ke - 5</option>
-                                            <option value="Jam Ke - 6">s/d Jam Ke - 6</option>
-                                            <option value="Jam Ke - 7">s/d Jam Ke - 7</option>
-                                            <option value="Jam Ke - 8">s/d Jam Ke - 8</option>
-                                            <option value="Jam Ke - 9">s/d Jam Ke - 9</option>
-                                            <option value="Jam Ke - 10">s/d Jam Ke - 10</option>
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold text-slate-400 text-[11px] mb-1">SAMPAI JAM KE-</label>
+                                        <select id="siswa-self-jam-sampai" class="w-full bg-[#131b2e] border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-500 transition text-xs">
+                                            <option value="1">Jam Ke - 1</option>
+                                            <option value="2" selected>Jam Ke - 2</option>
+                                            <option value="3">Jam Ke - 3</option>
+                                            <option value="4">Jam Ke - 4</option>
+                                            <option value="5">Jam Ke - 5</option>
+                                            <option value="6">Jam Ke - 6</option>
+                                            <option value="7">Jam Ke - 7</option>
+                                            <option value="8">Jam Ke - 8</option>
+                                            <option value="9">Jam Ke - 9</option>
+                                            <option value="10">Jam Ke - 10</option>
                                         </select>
                                     </div>
                                 </div>
@@ -783,7 +775,7 @@
                                 <i data-lucide="user-x" class="w-4 h-4"></i> Lapor Guru Mapel Tidak Masuk
                             </div>
 
-                            <form onsubmit="window.handleSiswaLaporGuru(event)" class="space-y-3 text-xs">
+                            <form onsubmit="handleSiswaLaporGuru(event)" class="space-y-3 text-xs">
                                 <div>
                                     <label class="block font-semibold text-slate-400 mb-1">PILIH GURU & MATA PELAJARAN</label>
                                     <select id="siswa-guru-nama-mapel" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition" required>
@@ -805,45 +797,48 @@
 
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block font-semibold text-slate-400 mb-1">JAM PELAJARAN</label>
-                                        <div class="grid grid-cols-2 gap-1.5">
-                                            <select id="siswa-guru-jam-dari" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-2 py-2 text-white focus:outline-none focus:border-amber-500 transition text-xs" required>
-                                                <option value="Jam Ke - 1">Jam Ke - 1</option>
-                                                <option value="Jam Ke - 2">Jam Ke - 2</option>
-                                                <option value="Jam Ke - 3">Jam Ke - 3</option>
-                                                <option value="Jam Ke - 4">Jam Ke - 4</option>
-                                                <option value="Jam Ke - 5">Jam Ke - 5</option>
-                                                <option value="Jam Ke - 6">Jam Ke - 6</option>
-                                                <option value="Jam Ke - 7">Jam Ke - 7</option>
-                                                <option value="Jam Ke - 8">Jam Ke - 8</option>
-                                                <option value="Jam Ke - 9">Jam Ke - 9</option>
-                                                <option value="Jam Ke - 10">Jam Ke - 10</option>
-                                            </select>
-                                            <select id="siswa-guru-jam-sampai" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-2 py-2 text-white focus:outline-none focus:border-amber-500 transition text-xs" required>
-                                                <option value="Jam Ke - 1">s/d Jam Ke - 1</option>
-                                                <option value="Jam Ke - 2" selected>s/d Jam Ke - 2</option>
-                                                <option value="Jam Ke - 3">s/d Jam Ke - 3</option>
-                                                <option value="Jam Ke - 4">s/d Jam Ke - 4</option>
-                                                <option value="Jam Ke - 5">s/d Jam Ke - 5</option>
-                                                <option value="Jam Ke - 6">s/d Jam Ke - 6</option>
-                                                <option value="Jam Ke - 7">s/d Jam Ke - 7</option>
-                                                <option value="Jam Ke - 8">s/d Jam Ke - 8</option>
-                                                <option value="Jam Ke - 9">s/d Jam Ke - 9</option>
-                                                <option value="Jam Ke - 10">s/d Jam Ke - 10</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div>
                                         <label class="block font-semibold text-slate-400 mb-1">TANGGAL LAPOR</label>
                                         <input type="date" id="siswa-guru-tanggal" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition" required>
                                     </div>
+                                    <div>
+                                        <label class="block font-semibold text-amber-400 mb-1 flex items-center gap-1">
+                                            <i data-lucide="clock" class="w-3.5 h-3.5"></i> WAKTU / JAM LAPOR
+                                        </label>
+                                        <input type="time" id="siswa-guru-waktu" class="w-full bg-[#0b0f19] border border-amber-500/50 rounded-xl px-3 py-2 text-amber-400 font-mono font-bold focus:outline-none focus:border-amber-500 transition" required>
+                                    </div>
                                 </div>
-
-                                <div>
-                                    <label class="block font-semibold text-amber-400 mb-1 flex items-center gap-1">
-                                        <i data-lucide="clock" class="w-3.5 h-3.5"></i> WAKTU / JAM LAPOR (REALTIME)
-                                    </label>
-                                    <input type="time" id="siswa-guru-waktu" class="w-full bg-[#0b0f19] border border-amber-500/50 rounded-xl px-3 py-2 text-amber-400 font-mono font-bold focus:outline-none focus:border-amber-500 transition" required>
+                                
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block font-semibold text-slate-400 text-[11px] mb-1">DARI JAM KE-</label>
+                                        <select id="siswa-guru-jam-dari" class="w-full bg-[#0b0f19] border border-slate-800 rounded-lg px-2.5 py-2 text-white focus:outline-none focus:border-amber-500 transition text-xs">
+                                            <option value="1">Jam Ke - 1</option>
+                                            <option value="2">Jam Ke - 2</option>
+                                            <option value="3">Jam Ke - 3</option>
+                                            <option value="4">Jam Ke - 4</option>
+                                            <option value="5">Jam Ke - 5</option>
+                                            <option value="6">Jam Ke - 6</option>
+                                            <option value="7">Jam Ke - 7</option>
+                                            <option value="8">Jam Ke - 8</option>
+                                            <option value="9">Jam Ke - 9</option>
+                                            <option value="10">Jam Ke - 10</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold text-slate-400 text-[11px] mb-1">SAMPAI JAM KE-</label>
+                                        <select id="siswa-guru-jam-sampai" class="w-full bg-[#0b0f19] border border-slate-800 rounded-lg px-2.5 py-2 text-white focus:outline-none focus:border-amber-500 transition text-xs">
+                                            <option value="1">Jam Ke - 1</option>
+                                            <option value="2" selected>Jam Ke - 2</option>
+                                            <option value="3">Jam Ke - 3</option>
+                                            <option value="4">Jam Ke - 4</option>
+                                            <option value="5">Jam Ke - 5</option>
+                                            <option value="6">Jam Ke - 6</option>
+                                            <option value="7">Jam Ke - 7</option>
+                                            <option value="8">Jam Ke - 8</option>
+                                            <option value="9">Jam Ke - 9</option>
+                                            <option value="10">Jam Ke - 10</option>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <div>
@@ -880,22 +875,9 @@
                             </span>
                         </div>
                         <h2 id="ortu-portal-nama-siswa" class="text-xl font-black text-white uppercase">Siswa: -</h2>
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 text-xs">
-                            <div class="flex items-center gap-2 bg-[#0b0f19]/80 p-2.5 rounded-xl border border-slate-800">
-                                <i data-lucide="user-check" class="w-4 h-4 text-rose-400"></i>
-                                <div>
-                                    <span class="text-[10px] text-slate-500 block font-semibold uppercase">GURU PERWALIAN</span>
-                                    <span id="ortu-portal-guru-nama" class="font-bold text-rose-300">-</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 bg-[#0b0f19]/80 p-2.5 rounded-xl border border-slate-800">
-                                <i data-lucide="book-open" class="w-4 h-4 text-amber-400"></i>
-                                <div>
-                                    <span class="text-[10px] text-slate-500 block font-semibold uppercase">MAPEL & GURU JAM BERJALAN</span>
-                                    <span id="ortu-portal-guru-berjalan" class="font-bold text-amber-300">-</span>
-                                </div>
-                            </div>
+                        <div class="flex items-center gap-2 pt-1 mt-1">
+                            <span class="text-xs text-slate-400 font-medium">Guru Perwalian:</span>
+                            <span id="ortu-portal-guru-nama" class="text-xs font-bold text-purple-300 bg-purple-500/10 px-2.5 py-0.5 rounded-lg border border-purple-500/20">-</span>
                         </div>
                     </div>
 
@@ -914,22 +896,22 @@
                     <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
                         <span class="text-[10px] font-bold text-slate-500 uppercase">SAKIT</span>
                         <div id="ortu-stat-sakit" class="text-2xl font-black text-amber-400">0</div>
-                        <span class="text-[10px] text-slate-400 block font-medium">Laporan Izin</span>
+                        <span class="text-[10px] text-slate-400 block font-medium">Sesi Pelajaran Hari Ini</span>
                     </div>
                     <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
                         <span class="text-[10px] font-bold text-slate-500 uppercase">IZIN</span>
                         <div id="ortu-stat-ijin" class="text-2xl font-black text-cyan-400">0</div>
-                        <span class="text-[10px] text-slate-400 block font-medium">Laporan Izin</span>
+                        <span class="text-[10px] text-slate-400 block font-medium">Sesi Pelajaran Hari Ini</span>
                     </div>
                     <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
                         <span class="text-[10px] font-bold text-slate-500 uppercase">ALPA</span>
                         <div id="ortu-stat-alpa" class="text-2xl font-black text-rose-400">0</div>
-                        <span class="text-[10px] text-slate-400 block font-medium">Tanpa Keterangan</span>
+                        <span class="text-[10px] text-slate-400 block font-medium">Sesi Pelajaran Hari Ini</span>
                     </div>
                     <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1 col-span-2 md:col-span-1">
                         <span class="text-[10px] font-bold text-slate-500 uppercase">BOLOS</span>
                         <div id="ortu-stat-bolos" class="text-2xl font-black text-purple-400">0</div>
-                        <span class="text-[10px] text-purple-400 block font-medium">Meninggalkan Jam</span>
+                        <span class="text-[10px] text-purple-400 block font-medium">Sesi Pelajaran Hari Ini</span>
                     </div>
                 </div>
 
@@ -937,21 +919,19 @@
                     <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
                         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                             <h3 class="text-sm font-bold text-white uppercase tracking-wide flex items-center gap-2">
-                                <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i> Riwayat Kehadiran Hari Ini
+                                <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i> Pantauan Kehadiran Hari Ini
                             </h3>
-                            <span class="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">RESET PUKUL 00:00</span>
+                            <span class="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">RESET JAM 00:00</span>
                         </div>
-                        <div id="ortu-presensi-list" class="space-y-3 max-h-[380px] overflow-y-auto pr-1"></div>
+
+                        <div id="ortu-presensi-list" class="space-y-3 max-h-[420px] overflow-y-auto pr-1"></div>
                     </div>
 
                     <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
-                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                            <h3 class="text-sm font-bold text-white uppercase tracking-wide flex items-center gap-2">
-                                <i data-lucide="book-open" class="w-4 h-4 text-cyan-400"></i> Catatan Konseling Hari Ini
-                            </h3>
-                            <span class="text-[10px] text-cyan-400 font-mono bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">RESET PUKUL 00:00</span>
+                        <div class="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase tracking-wider border-b border-slate-800 pb-3">
+                            <i data-lucide="book-open" class="w-4 h-4"></i> Seluruh Catatan Konseling
                         </div>
-                        <div id="ortu-bimbingan-list" class="space-y-3 max-h-[380px] overflow-y-auto pr-1"></div>
+                        <div id="ortu-bimbingan-list" class="space-y-3 max-h-[420px] overflow-y-auto pr-1"></div>
                     </div>
                 </div>
             </div>
@@ -974,7 +954,7 @@
 
                     <div class="flex items-center gap-2">
                         <label class="text-xs text-slate-300 font-bold">INSPEKSI KELAS:</label>
-                        <select id="admin-kelas-switcher" onchange="window.handleAdminSwitchKelas()" class="bg-[#0b0f19] border border-purple-500/50 rounded-xl px-3 py-2 text-xs text-purple-300 font-bold focus:outline-none">
+                        <select id="admin-kelas-switcher" onchange="handleAdminSwitchKelas()" class="bg-[#0b0f19] border border-purple-500/50 rounded-xl px-3 py-2 text-xs text-purple-300 font-bold focus:outline-none">
                             <option value="ALL">-- SEMUA KELAS (GLOBAL) --</option>
                         </select>
                     </div>
@@ -1013,7 +993,7 @@
                         <h3 class="text-sm font-bold text-white uppercase tracking-wide flex items-center gap-2">
                             <i data-lucide="layout-grid" class="w-4 h-4 text-purple-400"></i> Ringkasan Seluruh Kelompok Perwalian
                         </h3>
-                        <button onclick="window.exportExcelMatrixAll()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition flex items-center gap-1.5">
+                        <button onclick="exportExcelMatrixAll()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition flex items-center gap-1.5">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i> Export Rekap Excel Global
                         </button>
                     </div>
@@ -1048,10 +1028,10 @@
                 <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
                     <i data-lucide="user-cog" class="w-4 h-4 text-rose-400"></i> Edit Profil & Pengaturan Kelompok
                 </h3>
-                <button onclick="window.closeModalEditGuru()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeModalEditGuru()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
-            <form onsubmit="window.handleSaveGuruProfile(event)" class="space-y-3 text-xs">
+            <form onsubmit="handleSaveGuruProfile(event)" class="space-y-3 text-xs">
                 <div>
                     <label class="block font-semibold text-slate-400 mb-1">NAMA LENGKAP & GELAR GURU</label>
                     <input type="text" id="edit-guru-nama" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-rose-500 transition" required>
@@ -1079,11 +1059,11 @@
                 </div>
 
                 <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-800/80">
-                    <button type="button" onclick="window.deleteCurrentKelas()" class="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-600 text-rose-400 hover:text-white font-bold transition flex items-center gap-1.5 text-xs">
+                    <button type="button" onclick="deleteCurrentKelas()" class="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-600 text-rose-400 hover:text-white font-bold transition flex items-center gap-1.5 text-xs">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus Kelompok Ini
                     </button>
                     <div class="flex gap-2">
-                        <button type="button" onclick="window.closeModalEditGuru()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold">Batal</button>
+                        <button type="button" onclick="closeModalEditGuru()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold">Batal</button>
                         <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold shadow-md shadow-rose-600/20">Simpan Perubahan</button>
                     </div>
                 </div>
@@ -1098,16 +1078,11 @@
                 <h3 id="modal-siswa-title" class="text-sm font-bold text-white uppercase flex items-center gap-2">
                     <i data-lucide="user-plus" class="w-4 h-4 text-emerald-400"></i> Tambah Data Siswa Baru
                 </h3>
-                <button onclick="window.closeModalSiswa()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeModalSiswa()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
-            <form onsubmit="window.handleSaveSiswa(event)" class="space-y-3 text-xs">
+            <form onsubmit="handleSaveSiswa(event)" class="space-y-3 text-xs">
                 <input type="hidden" id="edit-siswa-id">
-
-                <div>
-                    <label class="block font-semibold text-slate-400 mb-1">NOMOR INDUK SISWA (NIS) <span class="text-slate-500 font-normal">(OPSIONAL)</span></label>
-                    <input type="text" id="form-siswa-nis" placeholder="Contoh: 2026101 (Boleh dikosongkan)" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition">
-                </div>
 
                 <div>
                     <label class="block font-semibold text-slate-400 mb-1">NAMA LENGKAP SISWA</label>
@@ -1149,7 +1124,7 @@
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="window.closeModalSiswa()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold">Batal</button>
+                    <button type="button" onclick="closeModalSiswa()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold">Batal</button>
                     <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md shadow-emerald-600/20">Simpan Data Siswa</button>
                 </div>
             </form>
@@ -1163,10 +1138,10 @@
                 <h3 id="modal-guru-mapel-title" class="text-sm font-bold text-white uppercase flex items-center gap-2">
                     <i data-lucide="user-plus" class="w-4 h-4 text-amber-400"></i> Tambah Data Guru Mapel
                 </h3>
-                <button onclick="window.closeModalGuruMapel()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeModalGuruMapel()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
-            <form onsubmit="window.handleSaveGuruMapel(event)" class="space-y-3 text-xs">
+            <form onsubmit="handleSaveGuruMapel(event)" class="space-y-3 text-xs">
                 <input type="hidden" id="edit-guru-mapel-id">
 
                 <div>
@@ -1180,7 +1155,7 @@
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="window.closeModalGuruMapel()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold">Batal</button>
+                    <button type="button" onclick="closeModalGuruMapel()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold">Batal</button>
                     <button type="submit" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold shadow-md shadow-amber-600/20">Simpan Guru Mapel</button>
                 </div>
             </form>
@@ -1194,7 +1169,7 @@
                 <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
                     <i data-lucide="share-2" class="w-4 h-4 text-emerald-400"></i> Bagikan Link Portal Siswa Kelas
                 </h3>
-                <button onclick="window.closeModalShareLink()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeModalShareLink()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
             <div class="space-y-3 text-xs">
@@ -1206,7 +1181,7 @@
                     <label class="block font-semibold text-slate-400 mb-1">LINK AKSES PORTAL SISWA (SUPER RINGKAS)</label>
                     <div class="flex gap-2">
                         <input type="text" id="share-link-input" readonly class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-emerald-400 font-mono text-[11px] focus:outline-none">
-                        <button onclick="window.copyGeneratedLink('share-link-input', 'share-copied-msg')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-xl whitespace-nowrap transition flex items-center gap-1">
+                        <button onclick="copyGeneratedLink('share-link-input', 'share-copied-msg')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-xl whitespace-nowrap transition flex items-center gap-1">
                             <i data-lucide="copy" class="w-3.5 h-3.5"></i> Salin Link
                         </button>
                     </div>
@@ -1218,7 +1193,7 @@
             </div>
 
             <div class="flex justify-end pt-2">
-                <button type="button" onclick="window.closeModalShareLink()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs">Tutup</button>
+                <button type="button" onclick="closeModalShareLink()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs">Tutup</button>
             </div>
         </div>
     </div>
@@ -1230,7 +1205,7 @@
                 <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
                     <i data-lucide="heart-handshake" class="w-4 h-4 text-purple-400"></i> Bagikan Link Akses Orang Tua
                 </h3>
-                <button onclick="window.closeModalShareOrtuLink()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeModalShareOrtuLink()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
             <div class="space-y-3 text-xs">
@@ -1242,7 +1217,7 @@
                     <label class="block font-semibold text-slate-400 mb-1">LINK MONITORING ORANG TUA</label>
                     <div class="flex gap-2">
                         <input type="text" id="share-ortu-link-input" readonly class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-purple-300 font-mono text-[11px] focus:outline-none">
-                        <button onclick="window.copyGeneratedLink('share-ortu-link-input', 'share-ortu-copied-msg')" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 font-bold text-white rounded-xl whitespace-nowrap transition flex items-center gap-1">
+                        <button onclick="copyGeneratedLink('share-ortu-link-input', 'share-ortu-copied-msg')" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 font-bold text-white rounded-xl whitespace-nowrap transition flex items-center gap-1">
                             <i data-lucide="copy" class="w-3.5 h-3.5"></i> Salin Link
                         </button>
                     </div>
@@ -1254,19 +1229,19 @@
             </div>
 
             <div class="flex justify-end pt-2">
-                <button type="button" onclick="window.closeModalShareOrtuLink()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs">Tutup</button>
+                <button type="button" onclick="closeModalShareOrtuLink()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs">Tutup</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL EXPORT EXCEL REKAP MATRIKS / TABEL DETAIL -->
+    <!-- MODAL EXPORT EXCEL -->
     <div id="modal-export-excel" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="max-w-md w-full bg-[#131b2e] border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
                     <i data-lucide="file-spreadsheet" class="w-4 h-4 text-cyan-400"></i> Export Rekap Presensi Excel
                 </h3>
-                <button onclick="window.closeModalExport()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeModalExport()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
             <div class="space-y-4 text-xs">
@@ -1275,22 +1250,22 @@
                 </p>
 
                 <div class="space-y-2">
-                    <button onclick="window.exportCSVLogDetail()" class="w-full p-3 rounded-xl bg-[#0b0f19] hover:bg-emerald-950/40 border border-slate-800 hover:border-emerald-500/50 text-left transition flex items-center gap-3 group">
+                    <button onclick="exportCSVLogDetail()" class="w-full p-3 rounded-xl bg-[#0b0f19] hover:bg-emerald-950/40 border border-slate-800 hover:border-emerald-500/50 text-left transition flex items-center gap-3 group">
                         <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition">
                             <i data-lucide="table-properties" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <div class="font-bold text-white text-xs">Rekap Presensi Harian / Per-Jam (Format Ref 2)</div>
+                            <div class="font-bold text-white text-xs">Rekap Presensi Harian / Per-Jam</div>
                             <div class="text-[10px] text-slate-400">Format persis sesuai tampilan tabel rekap dengan grid, centang `✓`, dan header ber-subkolom</div>
                         </div>
                     </button>
 
-                    <button onclick="window.exportExcelMatrixCurrent()" class="w-full p-3 rounded-xl bg-[#0b0f19] hover:bg-cyan-950/40 border border-slate-800 hover:border-cyan-500/50 text-left transition flex items-center gap-3 group">
+                    <button onclick="exportExcelMatrixCurrent()" class="w-full p-3 rounded-xl bg-[#0b0f19] hover:bg-cyan-950/40 border border-slate-800 hover:border-cyan-500/50 text-left transition flex items-center gap-3 group">
                         <div class="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition">
                             <i data-lucide="table" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <div class="font-bold text-white text-xs">Rekap Matriks Bulanan (Tabel Accumulasi)</div>
+                            <div class="font-bold text-white text-xs">Rekap Matriks Bulanan</div>
                             <div class="text-[10px] text-slate-400">Format matriks per-siswa dengan akumulasi total Hadir, Sakit, Ijin, Alpa, Bolos & % Kehadiran</div>
                         </div>
                     </button>
@@ -1298,7 +1273,7 @@
             </div>
 
             <div class="flex justify-end pt-2 border-t border-slate-800">
-                <button type="button" onclick="window.closeModalExport()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs">Tutup</button>
+                <button type="button" onclick="closeModalExport()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs">Tutup</button>
             </div>
         </div>
     </div>
@@ -1324,7 +1299,8 @@
     </div>
 
     <script>
-        function showToast(message, type = 'info') {
+        // GLOBAL BINDINGS & UTILITIES
+        window.showToast = function(message, type = 'info') {
             const container = document.getElementById('toast-container');
             if (!container) return;
 
@@ -1339,10 +1315,9 @@
                 toast.classList.add('opacity-0');
                 setTimeout(() => toast.remove(), 300);
             }, 4000);
-        }
-        window.showToast = showToast;
+        };
 
-        function showConfirmDialog(title, message, onConfirm) {
+        window.showConfirmDialog = function(title, message, onConfirm) {
             const dialog = document.getElementById('modal-confirm-dialog');
             const titleEl = document.getElementById('confirm-dialog-title');
             const msgEl = document.getElementById('confirm-dialog-msg');
@@ -1361,12 +1336,11 @@
             };
 
             dialog.classList.remove('hidden');
-        }
-        window.showConfirmDialog = showConfirmDialog;
+        };
 
         let mqttClient = null;
 
-        function initMQTTWebSocket() {
+        window.initMQTTWebSocket = function() {
             try {
                 if (typeof mqtt === 'undefined') return;
 
@@ -1383,7 +1357,7 @@
                         badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span> REALTIME WEBSOCKETS';
                         badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 flex items-center gap-1';
                     }
-                    subscribeCurrentClassMQTT();
+                    window.subscribeCurrentClassMQTT();
                 });
 
                 mqttClient.on('message', (topic, message) => {
@@ -1425,28 +1399,25 @@
                     } catch (e) { console.warn('MQTT parse error:', e); }
                 });
             } catch (e) { console.warn('MQTT Exception:', e); }
-        }
-        window.initMQTTWebSocket = initMQTTWebSocket;
+        };
 
-        function subscribeCurrentClassMQTT() {
+        window.subscribeCurrentClassMQTT = function() {
             if (!mqttClient || !mqttClient.connected) return;
             if (window.appData.currentRole === 'ADMIN') {
                 mqttClient.subscribe('smkn1marisa/perwalian/v2/+', { qos: 0 });
             } else if (window.appData.activeKelasCode) {
                 mqttClient.subscribe(`smkn1marisa/perwalian/v2/${window.appData.activeKelasCode}`, { qos: 0 });
             }
-        }
-        window.subscribeCurrentClassMQTT = subscribeCurrentClassMQTT;
+        };
 
-        function publishMQTTAction(actionType, data) {
+        window.publishMQTTAction = function(actionType, data) {
             if (!mqttClient || !mqttClient.connected || !window.appData.activeKelasCode) return;
             const topic = `smkn1marisa/perwalian/v2/${window.appData.activeKelasCode}`;
             const payload = JSON.stringify({
                 type: actionType, kelasCode: window.appData.activeKelasCode, data: data, timestamp: Date.now()
             });
             mqttClient.publish(topic, payload, { qos: 0 });
-        }
-        window.publishMQTTAction = publishMQTTAction;
+        };
 
         window.syncFilteredData = function(isWali = true) {
             const code = window.appData.activeKelasCode;
@@ -1487,14 +1458,14 @@
                     window.renderSiswaPortalBimbingan(); window.renderSiswaPresensiRoster(); window.renderOrtuDashboard(); window.renderAdminDashboard();
                     window.renderCharts(); window.updateHeaderInfo();
                 } catch (err) {
-                    console.error("Rendering error:", err);
+                    console.error("Rendering interface error:", err);
                 }
             }
         };
 
         let isWaliNewMode = false;
 
-        function toggleWaliFormMode() {
+        window.toggleWaliFormMode = function() {
             isWaliNewMode = !isWaliNewMode;
             const modeExisting = document.getElementById('wali-mode-existing');
             const modeNew = document.getElementById('wali-mode-new');
@@ -1512,16 +1483,15 @@
                 if (btnToggle) btnToggle.innerText = '+ Buat Kelompok Baru';
                 if (title) title.innerText = 'MASUK KELOMPOK PERWALIAN';
             }
-        }
-        window.toggleWaliFormMode = toggleWaliFormMode;
+        };
 
-        function createNewKelas() {
+        window.createNewKelas = function() {
             const nama = document.getElementById('new-guru-nama')?.value.trim();
             const nip = document.getElementById('new-guru-nip')?.value.trim() || '-';
             const kelas = document.getElementById('new-guru-kelas')?.value.trim();
             let pin = document.getElementById('new-guru-pin')?.value.trim() || '123456';
 
-            if (!nama || !kelas) { showToast('Mohon isi Nama Guru dan Nama Kelas/Jurusan!', 'error'); return; }
+            if (!nama || !kelas) { window.showToast('Mohon isi Nama Guru dan Nama Kelas/Jurusan!', 'error'); return; }
 
             const existingProf = (window.appData.allKelasProfiles || []).find(p => 
                 (nip !== '-' && p.nip && p.nip.trim() === nip) || 
@@ -1529,7 +1499,7 @@
             );
 
             if (existingProf) {
-                showToast(`Gagal! Guru "${nama}" sudah memiliki kelompok perwalian (${existingProf.kelas}). Hapus kelompok lama terlebih dahulu!`, 'error');
+                window.showToast(`Gagal! Guru "${nama}" sudah memiliki kelompok perwalian (${existingProf.kelas}). Hapus kelompok lama terlebih dahulu!`, 'error');
                 return;
             }
 
@@ -1544,21 +1514,20 @@
 
             window.appData.isLoggedIn = true; window.appData.currentRole = 'WALI';
             
-            showMainApp(); // Pindah layar DULU sebelum render untuk menghindari crash
+            window.showMainApp(); // Pindah layar DULU sebelum render untuk menghindari crash
             window.saveToStorage(true, true);
-            subscribeCurrentClassMQTT(); populateWaliKelasDropdowns(); 
-            showToast(`Kelompok Perwalian "${kelas}" Berhasil Dibuat!`, 'success');
-        }
-        window.createNewKelas = createNewKelas;
+            window.subscribeCurrentClassMQTT(); window.populateWaliKelasDropdowns(); 
+            window.showToast(`Kelompok Perwalian "${kelas}" Berhasil Dibuat!`, 'success');
+        };
 
-        function deleteCurrentKelas() {
+        window.deleteCurrentKelas = function() {
             const code = window.appData.activeKelasCode;
-            if (!code) { showToast('Tidak ada kelompok perwalian aktif!', 'error'); return; }
+            if (!code) { window.showToast('Tidak ada kelompok perwalian aktif!', 'error'); return; }
 
             const currentProf = window.appData.guruProfile || {};
             const namaKelas = currentProf.kelas || 'kelompok ini';
 
-            showConfirmDialog('Hapus Kelompok Perwalian', `Apakah Anda yakin ingin MENGHAPUS "${namaKelas}"? Seluruh data siswa dan presensi akan dihapus permanen!`, function() {
+            window.showConfirmDialog('Hapus Kelompok Perwalian', `Apakah Anda yakin ingin MENGHAPUS "${namaKelas}"? Seluruh data siswa dan presensi akan dihapus permanen!`, function() {
                 window.appData.allKelasProfiles = (window.appData.allKelasProfiles || []).filter(k => k.id !== code && k.kelasCode !== code);
                 window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== code);
                 window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== code);
@@ -1571,18 +1540,17 @@
                 // MENGHAPUS GHOST DATA DARI MEMORI
                 window.appData.guruProfile = { nama: "Guru Perwalian", nip: "-", kelas: "Kelas -", pin: "123456", siswaPin: "siswa123" };
                 
-                saveToStorage(true, false); closeModalEditGuru(); showLoginScreen();
-                showToast(`Kelompok perwalian "${namaKelas}" berhasil dihapus.`, 'success');
+                window.saveToStorage(true, false); window.closeModalEditGuru(); window.showLoginScreen();
+                window.showToast(`Kelompok perwalian "${namaKelas}" berhasil dihapus.`, 'success');
             });
-        }
-        window.deleteCurrentKelas = deleteCurrentKelas;
+        };
 
-        function loginWali() {
+        window.loginWali = function() {
             const selectedKelasCode = document.getElementById('login-wali-kelas-select')?.value;
             const pinInput = document.getElementById('login-pin-input')?.value.trim();
             const pinError = document.getElementById('login-pin-error');
 
-            if (!selectedKelasCode) { showToast('Pilih kelompok perwalian terlebih dahulu!', 'error'); return; }
+            if (!selectedKelasCode) { window.showToast('Pilih kelompok perwalian terlebih dahulu!', 'error'); return; }
 
             const prof = (window.appData.allKelasProfiles || []).find(k => k.id === selectedKelasCode || k.kelasCode === selectedKelasCode);
             const targetPin = prof ? prof.pin : '123456';
@@ -1593,33 +1561,32 @@
                 if (prof) window.appData.guruProfile = prof;
                 window.appData.isLoggedIn = true; window.appData.currentRole = 'WALI';
                 
-                showMainApp(); // Pindah layar DULU agar Canvas Chart.js tidak error
+                window.showMainApp(); // Pindah layar DULU agar Canvas Chart.js tidak error
                 window.syncFilteredData(true); 
                 window.saveToStorage(true, true);
-                subscribeCurrentClassMQTT(); 
-                showToast(`Selamat datang, ${window.appData.guruProfile.nama}!`, 'success');
+                window.subscribeCurrentClassMQTT(); 
+                window.showToast(`Selamat datang, ${window.appData.guruProfile.nama}!`, 'success');
             } else {
                 if (pinError) pinError.classList.remove('hidden');
-                showToast('PIN Keamanan salah!', 'error');
+                window.showToast('PIN Keamanan salah!', 'error');
             }
-        }
-        window.loginWali = loginWali;
+        };
 
-        function loginSiswa() {
+        window.loginSiswa = function() {
             const selectedKelasCode = document.getElementById('login-siswa-kelas-select')?.value || window.appData.activeKelasCode;
             const selectedSiswaId = document.getElementById('login-siswa-select')?.value;
             const nisInput = document.getElementById('login-siswa-nis')?.value.trim();
             const passInput = document.getElementById('login-siswa-pass')?.value.trim();
             const siswaError = document.getElementById('login-siswa-error');
 
-            if (!selectedKelasCode) { showToast('Pilih kelompok perwalian / kelas terlebih dahulu!', 'error'); return; }
+            if (!selectedKelasCode) { window.showToast('Pilih kelompok perwalian / kelas terlebih dahulu!', 'error'); return; }
 
             const currentProf = (window.appData.allKelasProfiles || []).find(k => k.id === selectedKelasCode || k.kelasCode === selectedKelasCode) || window.appData.guruProfile;
             const targetSiswaPass = currentProf?.siswaPin || "siswa123";
 
             if (passInput !== targetSiswaPass && passInput !== "siswa123") {
                 if (siswaError) siswaError.classList.remove('hidden');
-                showToast('Password Portal Siswa Salah! Silakan minta password ke Guru Perwalian Anda.', 'error');
+                window.showToast('Password Portal Siswa Salah! Silakan minta password ke Guru Perwalian Anda.', 'error');
                 return;
             }
 
@@ -1633,23 +1600,22 @@
                 window.appData.activeSiswaId = targetSiswa.id;
                 window.appData.isLoggedIn = true; window.appData.currentRole = 'SISWA';
                 
-                showMainApp();
-                saveToStorage(false, true); subscribeCurrentClassMQTT(); 
-                showToast(`Selamat datang pelapor, ${targetSiswa.nama}!`, 'success');
+                window.showMainApp();
+                window.saveToStorage(false, true); window.subscribeCurrentClassMQTT(); 
+                window.showToast(`Selamat datang pelapor, ${targetSiswa.nama}!`, 'success');
             } else {
                 if (siswaError) siswaError.classList.remove('hidden');
-                showToast('Pilih Identitas Nama Anda terlebih dahulu!', 'error');
+                window.showToast('Pilih Identitas Nama Anda terlebih dahulu!', 'error');
             }
-        }
-        window.loginSiswa = loginSiswa;
+        };
 
-        function loginOrtu() {
+        window.loginOrtu = function() {
             const selectedKelasCode = document.getElementById('login-ortu-kelas-select')?.value || window.appData.activeKelasCode;
             const selectedSiswaId = document.getElementById('login-ortu-siswa-select')?.value;
             const nisInput = document.getElementById('login-ortu-nis')?.value.trim();
             const ortuError = document.getElementById('login-ortu-error');
 
-            if (!selectedKelasCode) { showToast('Pilih kelompok perwalian / kelas terlebih dahulu!', 'error'); return; }
+            if (!selectedKelasCode) { window.showToast('Pilih kelompok perwalian / kelas terlebih dahulu!', 'error'); return; }
 
             let targetSiswa = null;
             if (selectedSiswaId) targetSiswa = window.appData.siswaList.find(s => s.id === selectedSiswaId);
@@ -1661,17 +1627,16 @@
                 window.appData.activeSiswaId = targetSiswa.id;
                 window.appData.isLoggedIn = true; window.appData.currentRole = 'ORTU';
                 
-                showMainApp();
-                saveToStorage(false, true); subscribeCurrentClassMQTT(); 
-                showToast(`Selamat datang Orang Tua dari ${targetSiswa.nama}!`, 'success');
+                window.showMainApp();
+                window.saveToStorage(false, true); window.subscribeCurrentClassMQTT(); 
+                window.showToast(`Selamat datang Orang Tua dari ${targetSiswa.nama}!`, 'success');
             } else {
                 if (ortuError) ortuError.classList.remove('hidden');
-                showToast('Pilih Nama Putra/Putri Anda terlebih dahulu!', 'error');
+                window.showToast('Pilih Nama Putra/Putri Anda terlebih dahulu!', 'error');
             }
-        }
-        window.loginOrtu = loginOrtu;
+        };
 
-        function loginAdmin() {
+        window.loginAdmin = function() {
             const pinInput = document.getElementById('login-admin-pin')?.value.trim();
             const targetPin = window.appData.adminPin || 'admin123';
 
@@ -1679,17 +1644,16 @@
                 window.appData.isLoggedIn = true; window.appData.currentRole = 'ADMIN';
                 window.appData.activeKelasCode = 'ALL';
                 
-                showMainApp();
-                window.syncFilteredData(false); saveToStorage(false, true);
-                subscribeCurrentClassMQTT(); 
-                showToast('Selamat datang di Portal Admin Global!', 'success');
+                window.showMainApp();
+                window.syncFilteredData(false); window.saveToStorage(false, true);
+                window.subscribeCurrentClassMQTT(); 
+                window.showToast('Selamat datang di Portal Admin Global!', 'success');
             } else {
-                showToast('PIN Admin Keamanan salah!', 'error');
+                window.showToast('PIN Admin Keamanan salah!', 'error');
             }
-        }
-        window.loginAdmin = loginAdmin;
+        };
 
-        function switchLoginTab(role) {
+        window.switchLoginTab = function(role) {
             const tabWali = document.getElementById('tab-login-wali');
             const tabSiswa = document.getElementById('tab-login-siswa');
             const tabAdmin = document.getElementById('tab-login-admin');
@@ -1732,10 +1696,9 @@
                 if (formSiswa) formSiswa.classList.add('hidden');
                 if (formOrtu) formOrtu.classList.add('hidden');
             }
-        }
-        window.switchLoginTab = switchLoginTab;
+        };
 
-        function switchWaliTab(tabName) {
+        window.switchWaliTab = function(tabName) {
             ['dashboard', 'siswa', 'guru-mapel', 'bimbingan', 'presensi'].forEach(t => {
                 const sec = document.getElementById(`wali-sec-${t}`);
                 const btn = document.getElementById(`tab-btn-${t}`);
@@ -1749,82 +1712,9 @@
                         'px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-2 whitespace-nowrap transition';
                 }
             });
-        }
-        window.switchWaliTab = switchWaliTab;
+        };
 
-        function updateHariField() {
-            const dateVal = document.getElementById('siswa-self-tanggal')?.value;
-            const hariInput = document.getElementById('siswa-self-hari');
-            if (hariInput) {
-                hariInput.value = window.getHariIndo(dateVal);
-            }
-        }
-        window.updateHariField = updateHariField;
-
-        function openModalShareLink() {
-            const linkInput = document.getElementById('share-link-input');
-            const msg = document.getElementById('share-copied-msg');
-            if (msg) msg.classList.add('hidden');
-
-            const baseUrl = window.location.origin + window.location.pathname;
-            const compactPayload = {
-                c: window.appData.activeKelasCode,
-                g: window.appData.guruProfile?.nama || '',
-                k: window.appData.guruProfile?.kelas || '',
-                s: (window.appData.siswaList || []).map(s => [s.id, s.nis || '', s.nama, s.kelas || '', s.jurusan || '', s.gender || 'L', s.ipk || '0.00', s.ortu || '']),
-                m: (window.appData.guruMapelList || []).map(g => [g.id, g.nama, g.mapel])
-            };
-
-            const compressed = window.compressDataObj(compactPayload);
-            if (linkInput) linkInput.value = `${baseUrl}?code=${window.appData.activeKelasCode}&d=${compressed}`;
-            document.getElementById('modal-share-link')?.classList.remove('hidden');
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-        window.openModalShareLink = openModalShareLink;
-
-        function openModalShareOrtuLink() {
-            const linkInput = document.getElementById('share-ortu-link-input');
-            const msg = document.getElementById('share-ortu-copied-msg');
-            if (msg) msg.classList.add('hidden');
-
-            const baseUrl = window.location.origin + window.location.pathname;
-            const compactPayload = {
-                c: window.appData.activeKelasCode,
-                role: 'ortu',
-                g: window.appData.guruProfile?.nama || '',
-                k: window.appData.guruProfile?.kelas || '',
-                s: (window.appData.siswaList || []).map(s => [s.id, s.nis || '', s.nama, s.kelas || '', s.jurusan || '', s.gender || 'L', s.ipk || '0.00', s.ortu || ''])
-            };
-
-            const compressed = window.compressDataObj(compactPayload);
-            if (linkInput) linkInput.value = `${baseUrl}?role=ortu&code=${window.appData.activeKelasCode}&d=${compressed}`;
-            document.getElementById('modal-share-ortu-link')?.classList.remove('hidden');
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-        window.openModalShareOrtuLink = openModalShareOrtuLink;
-
-        function closeModalShareLink() { document.getElementById('modal-share-link')?.classList.add('hidden'); }
-        function closeModalShareOrtuLink() { document.getElementById('modal-share-ortu-link')?.classList.add('hidden'); }
-        function openModalExport() { document.getElementById('modal-export-excel')?.classList.remove('hidden'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
-        function closeModalExport() { document.getElementById('modal-export-excel')?.classList.add('hidden'); }
-
-        window.closeModalShareLink = closeModalShareLink;
-        window.closeModalShareOrtuLink = closeModalShareOrtuLink;
-        window.openModalExport = openModalExport;
-        window.closeModalExport = closeModalExport;
-
-        function copyGeneratedLink(inputId, msgId) {
-            const input = document.getElementById(inputId);
-            const msg = document.getElementById(msgId);
-            if (input && input.value) {
-                input.select(); document.execCommand('copy');
-                if (msg) msg.classList.remove('hidden');
-                showToast('Link berhasil disalin!', 'success');
-            }
-        }
-        window.copyGeneratedLink = copyGeneratedLink;
-
-        function showMainApp() {
+        window.showMainApp = function() {
             document.getElementById('login-screen')?.classList.add('hidden');
             document.getElementById('main-app-content')?.classList.remove('hidden');
 
@@ -1871,11 +1761,10 @@
             }
 
             document.getElementById('user-badge-container')?.classList.remove('hidden');
-            updateHeaderInfo();
-        }
-        window.showMainApp = showMainApp;
+            window.updateHeaderInfo();
+        };
 
-        function showLoginScreen() {
+        window.showLoginScreen = function() {
             document.getElementById('login-screen')?.classList.remove('hidden');
             document.getElementById('main-app-content')?.classList.add('hidden');
             document.getElementById('user-badge-container')?.classList.add('hidden');
@@ -1899,7 +1788,7 @@
                 const containerSelectKelasOrtu = document.getElementById('container-select-kelas-ortu');
                 if (containerSelectKelasOrtu) containerSelectKelasOrtu.classList.add('hidden');
 
-                switchLoginTab('ORTU');
+                window.switchLoginTab('ORTU');
             } else if (window.appData.isStudentLinkMode) {
                 if (roleTabs) roleTabs.classList.add('hidden');
                 if (titleHead) titleHead.innerText = "PORTAL MANDIRI SISWA";
@@ -1911,26 +1800,24 @@
                 const containerSelectKelasSiswa = document.getElementById('container-select-kelas-siswa');
                 if (containerSelectKelasSiswa) containerSelectKelasSiswa.classList.add('hidden');
 
-                switchLoginTab('SISWA');
+                window.switchLoginTab('SISWA');
             } else {
                 if (roleTabs) roleTabs.classList.remove('hidden');
                 if (titleHead) titleHead.innerText = "PORTAL MASUK PERWALIAN";
                 if (subtitle) subtitle.innerText = "Pilih peran dan kelas untuk mengakses sistem • SMK Negeri 1 Marisa";
-                populateWaliKelasDropdowns();
+                window.populateWaliKelasDropdowns();
             }
 
             if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-        window.showLoginScreen = showLoginScreen;
+        };
 
-        function logout() {
+        window.logout = function() {
             window.appData.isLoggedIn = false; window.appData.activeSiswaId = '';
-            saveToStorage(false, false); showLoginScreen();
-            showToast('Berhasil keluar.', 'info');
-        }
-        window.logout = logout;
+            window.saveToStorage(false, false); window.showLoginScreen();
+            window.showToast('Berhasil keluar.', 'info');
+        };
 
-        function populateWaliKelasDropdowns() {
+        window.populateWaliKelasDropdowns = function() {
             const waliSelect = document.getElementById('login-wali-kelas-select');
             const siswaKelasSelect = document.getElementById('login-siswa-kelas-select');
             const ortuKelasSelect = document.getElementById('login-ortu-kelas-select');
@@ -1958,10 +1845,13 @@
                 adminSwitcher.innerHTML = '<option value="ALL">-- SEMUA KELAS (GLOBAL) --</option>' +
                     profiles.map(p => `<option value="${p.id}">${p.kelas} - ${p.nama}</option>`).join('');
             }
-        }
-        window.populateWaliKelasDropdowns = populateWaliKelasDropdowns;
+            
+            if (profiles.length > 0 && waliSelect && (!waliSelect.value || waliSelect.value === '')) {
+                waliSelect.value = window.appData.activeKelasCode || profiles[0].id;
+            }
+        };
 
-        function populateSiswaDropdowns() {
+        window.populateSiswaDropdowns = function() {
             const catatanDropdown = document.getElementById('catatan-siswa-id');
             const filterDropdown = document.getElementById('filter-bimbingan-siswa');
             const loginSelect = document.getElementById('login-siswa-select');
@@ -1995,11 +1885,10 @@
                     window.appData.siswaList.map(s => `<option value="${s.id}">${s.nama}</option>`).join('');
             }
 
-            renderSiswaPresensiRoster();
-        }
-        window.populateSiswaDropdowns = populateSiswaDropdowns;
+            window.renderSiswaPresensiRoster();
+        };
 
-        function populateGuruMapelDropdowns() {
+        window.populateGuruMapelDropdowns = function() {
             const dropdownLaporGuru = document.getElementById('siswa-guru-nama-mapel');
             const dropdownSelfGuruMapel = document.getElementById('siswa-self-guru-mapel');
 
@@ -2010,10 +1899,9 @@
 
             if (dropdownLaporGuru) dropdownLaporGuru.innerHTML = optionsHtml;
             if (dropdownSelfGuruMapel) dropdownSelfGuruMapel.innerHTML = optionsHtml;
-        }
-        window.populateGuruMapelDropdowns = populateGuruMapelDropdowns;
+        };
 
-        function renderSiswaPresensiRoster() {
+        window.renderSiswaPresensiRoster = function() {
             const container = document.getElementById('siswa-roster-container');
             const countBadge = document.getElementById('roster-count-badge');
             if (!container) return;
@@ -2064,52 +1952,45 @@
                     </div>
                 </div>
             `).join('');
-        }
-        window.renderSiswaPresensiRoster = renderSiswaPresensiRoster;
+        };
 
-        function setAllStudentsPresent() {
+        window.setAllStudentsPresent = function() {
             (window.appData.siswaList || []).forEach(s => {
                 const radioHadir = document.querySelector(`input[name="roster-status-${s.id}"][value="Hadir"]`);
                 if (radioHadir) { radioHadir.checked = true; window.toggleRosterAlasan(s.id); }
             });
-            showToast('Semua siswa ditandai HADIR!', 'info');
-        }
-        window.setAllStudentsPresent = setAllStudentsPresent;
+            window.showToast('Semua siswa ditandai HADIR!', 'info');
+        };
 
-        function toggleRosterAlasan(siswaId) {
+        window.toggleRosterAlasan = function(siswaId) {
             const selected = document.querySelector(`input[name="roster-status-${siswaId}"]:checked`)?.value;
             const container = document.getElementById(`container-roster-alasan-${siswaId}`);
             if (container) {
                 if (selected === 'Hadir') container.classList.add('hidden');
                 else container.classList.remove('hidden');
             }
-        }
-        window.toggleRosterAlasan = toggleRosterAlasan;
+        };
 
-        function handleSiswaLaporAbsenBatch(e) {
+        window.handleSiswaLaporAbsenBatch = function(e) {
             e.preventDefault();
             const list = window.appData.siswaList || [];
-            if (list.length === 0) { showToast('Tidak ada daftar siswa!', 'error'); return; }
+            if (list.length === 0) { window.showToast('Tidak ada daftar siswa!', 'error'); return; }
 
             const tanggal = document.getElementById('siswa-self-tanggal')?.value;
             const hari = document.getElementById('siswa-self-hari')?.value || window.getHariIndo(tanggal);
             const waktu = document.getElementById('siswa-self-waktu')?.value || new Date().toTimeString().slice(0, 5);
             const guruMapelVal = document.getElementById('siswa-self-guru-mapel')?.value;
             
-            const jamDari = document.getElementById('siswa-self-jam-dari')?.value;
-            const jamSampai = document.getElementById('siswa-self-jam-sampai')?.value;
-
-            let jamKe = jamDari;
-            if (jamDari && jamSampai && jamDari !== jamSampai) {
-                const numDari = jamDari.replace('Jam Ke - ', '');
-                const numSampai = jamSampai.replace('Jam Ke - ', '');
-                jamKe = `Jam Ke - ${numDari} s/d ${numSampai}`;
-            } else if (jamDari) {
-                jamKe = jamDari;
+            const jamDari = document.getElementById('siswa-self-jam-dari')?.value || '1';
+            const jamSampai = document.getElementById('siswa-self-jam-sampai')?.value || '2';
+            
+            let jamKe = `Jam Ke - ${jamDari}`;
+            if (parseInt(jamSampai) > parseInt(jamDari)) {
+                jamKe = `Jam Ke - ${jamDari} s/d ${jamSampai}`;
             }
 
-            if (!tanggal || !waktu || !guruMapelVal || !jamKe) { 
-                showToast('Pilih Tanggal, Jam Realtime, Guru Mapel & Jam Ke-!', 'error'); 
+            if (!tanggal || !waktu || !guruMapelVal) { 
+                window.showToast('Pilih Tanggal, Jam Realtime, & Guru Mapel!', 'error'); 
                 return; 
             }
 
@@ -2150,27 +2031,33 @@
             window.appData.absensiList = batchAbsensi.concat(window.appData.absensiList);
             window.appData.allAbsensiList = (window.appData.allAbsensiList || []).concat(batchAbsensi);
 
-            saveToStorage(false, true);
-            publishMQTTAction('REPORT_SISWA', batchAbsensi);
-            showToast(`Presensi jam mengajar (${jamKe}) dikirim! (H:${hC}, S:${sC}, I:${iC}, A:${aC}, B:${bC})`, 'success');
-        }
-        window.handleSiswaLaporAbsenBatch = handleSiswaLaporAbsenBatch;
+            window.saveToStorage(false, true);
+            window.publishMQTTAction('REPORT_SISWA', batchAbsensi);
+            window.showToast(`Presensi jam mengajar (${jamKe}) dikirim! (H:${hC}, S:${sC}, I:${iC}, A:${aC}, B:${bC})`, 'success');
+        };
 
-        function handleSiswaLaporGuru(e) {
+        window.handleSiswaLaporGuru = function(e) {
             e.preventDefault();
             const guruMapel = document.getElementById('siswa-guru-nama-mapel')?.value;
-            const jamKe = document.getElementById('siswa-guru-jam-ke')?.value;
             const tanggal = document.getElementById('siswa-guru-tanggal')?.value;
             const waktu = document.getElementById('siswa-guru-waktu')?.value || new Date().toTimeString().slice(0, 5);
             const keterangan = document.getElementById('siswa-guru-keterangan')?.value;
 
-            if (!guruMapel || !jamKe || !tanggal || !keterangan) { showToast('Lengkapi seluruh field laporan guru!', 'error'); return; }
+            const jamDari = document.getElementById('siswa-guru-jam-dari')?.value || '1';
+            const jamSampai = document.getElementById('siswa-guru-jam-sampai')?.value || '2';
+            
+            let jamKeFinal = `Jam Ke - ${jamDari}`;
+            if (parseInt(jamSampai) > parseInt(jamDari)) {
+                jamKeFinal = `Jam Ke - ${jamDari} s/d ${jamSampai}`;
+            }
+
+            if (!guruMapel || !tanggal || !keterangan) { window.showToast('Lengkapi seluruh field laporan guru!', 'error'); return; }
 
             const reporter = (window.appData.siswaList || []).find(s => s.id === window.appData.activeSiswaId);
             const reporterNama = reporter ? reporter.nama : 'Perwakilan Siswa';
 
             const newGuruAbsen = {
-                id: 'gabs-' + Date.now(), guruMapel, jamKe, tanggal, waktu, keterangan, pelapor: reporterNama,
+                id: 'gabs-' + Date.now(), guruMapel, jamKe: jamKeFinal, tanggal, waktu, keterangan, pelapor: reporterNama,
                 kelasCode: window.appData.activeKelasCode, timestamp: Date.now()
             };
 
@@ -2178,33 +2065,33 @@
             window.appData.guruAbsensiList.unshift(newGuruAbsen);
             window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.id !== newGuruAbsen.id).concat(newGuruAbsen);
 
-            saveToStorage(false, true);
-            publishMQTTAction('REPORT_GURU', newGuruAbsen);
-            showToast(`Laporan guru tidak hadir dikirim oleh ${reporterNama}!`, 'success');
-        }
+            window.saveToStorage(false, true);
+            window.publishMQTTAction('REPORT_GURU', newGuruAbsen);
+            window.showToast(`Laporan guru tidak hadir dikirim oleh ${reporterNama}!`, 'success');
+        };
 
-        function renderOrtuDashboard() {
+        window.renderOrtuDashboard = function() {
             if (window.appData.currentRole !== 'ORTU') return;
 
             const mySiswa = (window.appData.siswaList || []).find(s => s.id === window.appData.activeSiswaId) || { nama: 'Siswa', nis: '-' };
             
-            // Logika Tanggal Lokal & Filter Reset Harian 00:00
+            // Logika Tanggal Lokal untuk Reset Harian 00:00 Khusus Presensi Kehadiran
             const localDate = new Date();
             const year = localDate.getFullYear();
             const month = String(localDate.getMonth() + 1).padStart(2, '0');
             const day = String(localDate.getDate()).padStart(2, '0');
-            const todayStr = `${year}-${month}-${day}`; // Format persis input HTML Date YYYY-MM-DD
+            const todayStr = `${year}-${month}-${day}`; 
             
             const dayOfWeek = localDate.getDay();
-            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6); // 0 = Minggu, 6 = Sabtu
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6); 
 
-            // Filter data HANYA untuk aktivitas HARI INI
+            // Filter data HANYA untuk presensi HARI INI
             const myAbsenToday = (window.appData.absensiList || []).filter(a => a.siswaId === window.appData.activeSiswaId && a.tanggal === todayStr);
-            const myCatatanToday = (window.appData.catatanList || []).filter(c => c.siswaId === window.appData.activeSiswaId && c.tanggal === todayStr);
-
-            // Urutkan dari jam pertama ke terakhir (kronologis)
             myAbsenToday.sort((a,b) => (a.timestamp || 0) - (b.timestamp || 0));
-            myCatatanToday.sort((a,b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+            // Catatan Konseling Membaca SELURUH RIWAYAT Permanen
+            const myCatatan = (window.appData.catatanList || []).filter(c => c.siswaId === window.appData.activeSiswaId);
+            myCatatan.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
 
             const hC = myAbsenToday.filter(a => a.kategori === 'Hadir').length;
             const sC = myAbsenToday.filter(a => a.kategori === 'Sakit').length;
@@ -2216,29 +2103,15 @@
             const elGuru = document.getElementById('ortu-portal-guru-nama');
             const elBadge = document.getElementById('ortu-portal-kelas-badge');
             const elToday = document.getElementById('ortu-portal-status-today');
-            const elBerjalan = document.getElementById('ortu-portal-guru-berjalan');
 
             if (elNama) elNama.innerText = `Siswa: ${mySiswa.nama}`;
             if (elGuru) elGuru.innerText = window.appData.guruProfile?.nama || 'Guru Perwalian';
             if (elBadge) elBadge.innerText = `KELAS: ${window.appData.guruProfile?.kelas || '-'}`;
 
-            // Mapel berjalan (Mata pelajaran terkini pada hari ini)
-            if (elBerjalan) {
-                if (isWeekend) {
-                    elBerjalan.innerText = "LIBUR / TIDAK ADA JAM";
-                } else if (myAbsenToday.length > 0) {
-                    const latest = myAbsenToday[myAbsenToday.length - 1];
-                    elBerjalan.innerText = `${latest.guruMapel} (Jam ${latest.jamKe})`;
-                } else {
-                    elBerjalan.innerText = "Belum Ada Jam Mapel Terdata";
-                }
-            }
-
-            // Kartu Status Keseluruhan Hari Ini
             if (elToday) {
                 if (isWeekend) {
                     elToday.innerText = 'LIBUR';
-                    elToday.className = 'text-lg font-black text-rose-400 uppercase mt-0.5';
+                    elToday.className = 'text-lg font-black text-slate-400 uppercase mt-0.5';
                 } else if (myAbsenToday.length > 0) {
                     const latestAbsen = myAbsenToday[myAbsenToday.length - 1];
                     elToday.innerText = latestAbsen.kategori;
@@ -2255,25 +2128,24 @@
             document.getElementById('ortu-stat-alpa').innerText = aC;
             document.getElementById('ortu-stat-bolos').innerText = bC;
 
-            // Render Daftar Presensi HARI INI
             const presensiContainer = document.getElementById('ortu-presensi-list');
             if (presensiContainer) {
                 if (isWeekend) {
-                    presensiContainer.innerHTML = '<div class="p-5 text-center text-rose-400 font-bold text-sm bg-rose-500/10 rounded-xl border border-rose-500/20">HARI LIBUR SEKOLAH (SABTU / MINGGU)<br><span class="text-xs font-normal text-rose-300 mt-1 block">Tidak ada kegiatan pembelajaran dan presensi hari ini.</span></div>';
+                    presensiContainer.innerHTML = '<div class="p-5 text-center text-rose-400 font-bold text-sm bg-rose-500/10 rounded-xl border border-rose-500/20">HARI LIBUR SEKOLAH (SABTU / MINGGU)</div>';
                 } else if (myAbsenToday.length === 0) {
                     presensiContainer.innerHTML = '<div class="p-4 text-center text-slate-500 text-xs italic bg-[#0b0f19] rounded-xl border border-slate-800">Belum ada data kehadiran jam pelajaran yang dilaporkan untuk hari ini.</div>';
                 } else {
                     presensiContainer.innerHTML = myAbsenToday.map(a => {
                         const colorBadge = a.kategori === 'Hadir' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : (a.kategori === 'Sakit' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : (a.kategori === 'Ijin' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' : (a.kategori === 'Bolos' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-rose-500/20 text-rose-400 border-rose-500/30')));
                         return `
-                            <div class="p-3.5 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2 text-xs hover:bg-[#131b2e] transition">
+                            <div class="p-3.5 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2 text-xs">
                                 <div class="flex items-center justify-between">
                                     <span class="font-bold text-slate-300">${a.hari || 'Hari'}, ${a.tanggal} <span class="text-emerald-400 font-mono font-bold">(${a.waktu || 'WITA'})</span></span>
                                     <span class="px-2.5 py-0.5 rounded text-[10px] font-bold border ${colorBadge}">${a.kategori}</span>
                                 </div>
                                 <div class="text-[11px] text-amber-300 font-semibold bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20 flex items-center justify-between">
                                     <span>Pelajaran: ${a.guruMapel || '-'}</span>
-                                    <span class="font-bold text-cyan-400">Jam ${a.jamKe || '-'}</span>
+                                    <span class="font-bold text-cyan-400">${a.jamKe || '-'}</span>
                                 </div>
                                 <p class="text-[11px] text-slate-400">Catatan: ${a.alasan || '-'}</p>
                             </div>
@@ -2282,15 +2154,12 @@
                 }
             }
 
-            // Render Daftar Catatan Bimbingan HARI INI
             const bimbinganContainer = document.getElementById('ortu-bimbingan-list');
             if (bimbinganContainer) {
-                if (isWeekend) {
-                    bimbinganContainer.innerHTML = '<div class="p-5 text-center text-rose-400 font-bold text-sm bg-rose-500/10 rounded-xl border border-rose-500/20">HARI LIBUR SEKOLAH (SABTU / MINGGU)</div>';
-                } else if (myCatatanToday.length === 0) {
-                    bimbinganContainer.innerHTML = '<div class="p-4 text-center text-slate-500 text-xs italic bg-[#0b0f19] rounded-xl border border-slate-800">Tidak ada catatan bimbingan/konseling dari Guru Perwalian untuk hari ini.</div>';
+                if (myCatatan.length === 0) {
+                    bimbinganContainer.innerHTML = '<div class="p-4 text-center text-slate-500 text-xs italic bg-[#0b0f19] rounded-xl border border-slate-800">Belum ada riwayat catatan bimbingan perwalian untuk Ananda.</div>';
                 } else {
-                    bimbinganContainer.innerHTML = myCatatanToday.map(c => `
+                    bimbinganContainer.innerHTML = myCatatan.map(c => `
                         <div class="p-4 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-3 text-xs hover:bg-[#131b2e] transition">
                             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                                 <span class="px-2.5 py-1 rounded text-[10px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/20">${c.kategori}</span>
@@ -2308,9 +2177,9 @@
                     `).join('');
                 }
             }
-        }
+        };
 
-        function renderAdminDashboard() {
+        window.renderAdminDashboard = function() {
             if (window.appData.currentRole !== 'ADMIN') return;
 
             const statKelas = document.getElementById('admin-stat-kelas');
@@ -2370,30 +2239,16 @@
             }).join('');
 
             if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-        window.renderAdminDashboard = renderAdminDashboard;
+        };
 
-        function adminInspectKelas(kelasCode) {
-            window.appData.activeKelasCode = kelasCode;
-            const prof = (window.appData.allKelasProfiles || []).find(k => k.id === kelasCode);
-            if (prof) window.appData.guruProfile = prof;
-            window.appData.currentRole = 'WALI';
-            showMainApp();
-            window.syncFilteredData(true);
-            window.saveToStorage(false, true);
-            showToast(`Inspeksi kelas "${prof ? prof.kelas : ''}"!`, 'info');
-        }
-        window.adminInspectKelas = adminInspectKelas;
-
-        function handleAdminSwitchKelas() {
+        window.handleAdminSwitchKelas = function() {
             const selectedCode = document.getElementById('admin-kelas-switcher')?.value;
             window.appData.activeKelasCode = selectedCode || 'ALL';
             window.syncFilteredData(false);
             window.renderAdminDashboard();
-        }
-        window.handleAdminSwitchKelas = handleAdminSwitchKelas;
+        };
 
-        function renderDashLaporanSiswa() {
+        window.renderDashLaporanSiswa = function() {
             const container = document.getElementById('dash-laporan-siswa-container');
             if (!container) return;
 
@@ -2418,7 +2273,7 @@
                         </div>
                         <div class="text-[11px] text-amber-300 font-semibold bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20 flex items-center justify-between">
                             <span>Guru & Mapel: ${a.guruMapel || '-'}</span>
-                            <span class="font-bold text-cyan-400">Jam ${a.jamKe || '-'}</span>
+                            <span class="font-bold text-cyan-400">${a.jamKe || '-'}</span>
                         </div>
                         <p class="text-[11px] text-slate-400">${a.alasan || 'Tidak ada catatan.'}</p>
                         <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
@@ -2431,10 +2286,9 @@
                     </div>
                 `;
             }).join('');
-        }
-        window.renderDashLaporanSiswa = renderDashLaporanSiswa;
+        };
 
-        function renderDashLaporanGuru() {
+        window.renderDashLaporanGuru = function() {
             const container = document.getElementById('dash-laporan-guru-container');
             if (!container) return;
 
@@ -2459,10 +2313,9 @@
                     </div>
                 </div>
             `).join('');
-        }
-        window.renderDashLaporanGuru = renderDashLaporanGuru;
+        };
 
-        function renderBimbinganList() {
+        window.renderBimbinganList = function() {
             const container = document.getElementById('bimbingan-list-container');
             const filterSiswaId = document.getElementById('filter-bimbingan-siswa')?.value;
             if (!container) return;
@@ -2500,10 +2353,9 @@
             }).join('');
 
             if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-        window.renderBimbinganList = renderBimbinganList;
+        };
 
-        function renderAbsensiTable() {
+        window.renderAbsensiTable = function() {
             const tbody = document.getElementById('absensi-table-body');
             const periodeFilter = document.getElementById('filter-presensi-periode')?.value || 'ALL';
             if (!tbody) return;
@@ -2549,17 +2401,15 @@
             }).join('');
 
             window.updateSelectedAbsensiCount();
-        }
-        window.renderAbsensiTable = renderAbsensiTable;
+        };
 
-        function toggleSelectAllAbsensi(master) {
+        window.toggleSelectAllAbsensi = function(master) {
             const checkboxes = document.querySelectorAll('.check-absensi-item');
             checkboxes.forEach(c => { c.checked = master.checked; });
             window.updateSelectedAbsensiCount();
-        }
-        window.toggleSelectAllAbsensi = toggleSelectAllAbsensi;
+        };
 
-        function updateSelectedAbsensiCount() {
+        window.updateSelectedAbsensiCount = function() {
             const checkedItems = document.querySelectorAll('.check-absensi-item:checked');
             const btnDeleteSelected = document.getElementById('btn-delete-selected-absensi');
             const countLabel = document.getElementById('selected-absensi-count');
@@ -2570,19 +2420,18 @@
                 if (checkedItems.length > 0) btnDeleteSelected.classList.remove('hidden');
                 else btnDeleteSelected.classList.add('hidden');
             }
-        }
-        window.updateSelectedAbsensiCount = updateSelectedAbsensiCount;
+        };
 
-        function deleteSelectedAbsensi() {
+        window.deleteSelectedAbsensi = function() {
             const checkedItems = document.querySelectorAll('.check-absensi-item:checked');
             const selectedIds = Array.from(checkedItems).map(c => c.value);
 
             if (selectedIds.length === 0) {
-                showToast('Pilih setidaknya 1 log presensi untuk dihapus!', 'error');
+                window.showToast('Pilih setidaknya 1 log presensi untuk dihapus!', 'error');
                 return;
             }
 
-            showConfirmDialog(
+            window.showConfirmDialog(
                 'Hapus Presensi Terpilih',
                 `Apakah Anda yakin ingin MENGHAPUS ${selectedIds.length} ENTRI PRESENSI TERPILIH? Tindakan ini tidak dapat dibatalkan!`,
                 function() {
@@ -2590,13 +2439,12 @@
                     const masterCheck = document.getElementById('check-all-absensi');
                     if (masterCheck) masterCheck.checked = false;
                     window.saveToStorage(true, true);
-                    showToast(`${selectedIds.length} entri presensi berhasil dihapus secara massal!`, 'success');
+                    window.showToast(`${selectedIds.length} entri presensi berhasil dihapus secara massal!`, 'success');
                 }
             );
-        }
-        window.deleteSelectedAbsensi = deleteSelectedAbsensi;
+        };
 
-        function renderGuruAbsensiTable() {
+        window.renderGuruAbsensiTable = function() {
             const tbody = document.getElementById('guru-absensi-table-body');
             if (!tbody) return;
 
@@ -2616,10 +2464,9 @@
                     </td>
                 </tr>
             `).join('');
-        }
-        window.renderGuruAbsensiTable = renderGuruAbsensiTable;
+        };
 
-        function renderSiswaPortalBimbingan() {
+        window.renderSiswaPortalBimbingan = function() {
             const container = document.getElementById('siswa-portal-bimbingan-list');
             if (!container) return;
 
@@ -2640,10 +2487,9 @@
                     <p class="text-xs text-emerald-400"><strong>Rencana Tindak Lanjut:</strong> ${c.solusi}</p>
                 </div>
             `).join('');
-        }
-        window.renderSiswaPortalBimbingan = renderSiswaPortalBimbingan;
+        };
 
-        function renderSiswaTable() {
+        window.renderSiswaTable = function() {
             const tbody = document.getElementById('siswa-table-body');
             if (!tbody) return;
 
@@ -2676,17 +2522,15 @@
 
             window.updateSelectedSiswaCount();
             if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-        window.renderSiswaTable = renderSiswaTable;
+        };
 
-        function toggleSelectAllSiswa(master) {
+        window.toggleSelectAllSiswa = function(master) {
             const checkboxes = document.querySelectorAll('.check-siswa-item');
             checkboxes.forEach(c => { c.checked = master.checked; });
             window.updateSelectedSiswaCount();
-        }
-        window.toggleSelectAllSiswa = toggleSelectAllSiswa;
+        };
 
-        function updateSelectedSiswaCount() {
+        window.updateSelectedSiswaCount = function() {
             const checkedItems = document.querySelectorAll('.check-siswa-item:checked');
             const btnDeleteSelected = document.getElementById('btn-delete-selected-siswa');
             const countLabel = document.getElementById('selected-siswa-count');
@@ -2697,19 +2541,18 @@
                 if (checkedItems.length > 0) btnDeleteSelected.classList.remove('hidden');
                 else btnDeleteSelected.classList.add('hidden');
             }
-        }
-        window.updateSelectedSiswaCount = updateSelectedSiswaCount;
+        };
 
-        function deleteSelectedSiswa() {
+        window.deleteSelectedSiswa = function() {
             const checkedItems = document.querySelectorAll('.check-siswa-item:checked');
             const selectedIds = Array.from(checkedItems).map(c => c.value);
 
             if (selectedIds.length === 0) {
-                showToast('Pilih setidaknya 1 siswa untuk dihapus!', 'error');
+                window.showToast('Pilih setidaknya 1 siswa untuk dihapus!', 'error');
                 return;
             }
 
-            showConfirmDialog(
+            window.showConfirmDialog(
                 'Hapus Siswa Terpilih',
                 `Apakah Anda yakin ingin MENGHAPUS ${selectedIds.length} SISWA TERPILIH? Tindakan ini tidak dapat dibatalkan!`,
                 function() {
@@ -2717,13 +2560,12 @@
                     const masterCheck = document.getElementById('check-all-siswa');
                     if (masterCheck) masterCheck.checked = false;
                     window.saveToStorage(true, true);
-                    showToast(`${selectedIds.length} siswa berhasil dihapus secara massal!`, 'success');
+                    window.showToast(`${selectedIds.length} siswa berhasil dihapus secara massal!`, 'success');
                 }
             );
-        }
-        window.deleteSelectedSiswa = deleteSelectedSiswa;
+        };
 
-        function renderGuruMapelTable() {
+        window.renderGuruMapelTable = function() {
             const tbody = document.getElementById('guru-mapel-table-body');
             if (!tbody) return;
 
@@ -2747,10 +2589,9 @@
             `).join('');
 
             if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-        window.renderGuruMapelTable = renderGuruMapelTable;
+        };
 
-        function updateHeaderInfo() {
+        window.updateHeaderInfo = function() {
             const badgeRole = document.getElementById('badge-role-pill');
             const badgeUser = document.getElementById('badge-user-name');
             const heroGuru = document.getElementById('hero-guru-nama');
@@ -2815,10 +2656,9 @@
             if (statGuru) statGuru.innerText = (window.appData.guruAbsensiList || []).length;
             if (statCatatan) statCatatan.innerText = (window.appData.catatanList || []).length;
             if (statDetail) statDetail.innerText = `H:${hC} | S:${sC} | I:${iC} | A:${aC} | B:${bC}`;
-        }
-        window.updateHeaderInfo = updateHeaderInfo;
+        };
 
-        function openModalEditGuru() {
+        window.openModalEditGuru = function() {
             const prof = window.appData.guruProfile || { nama: '', nip: '', kelas: '', pin: '123456', siswaPin: 'siswa123' };
             document.getElementById('edit-guru-nama').value = prof.nama || '';
             document.getElementById('edit-guru-nip').value = prof.nip || '';
@@ -2826,13 +2666,11 @@
             document.getElementById('edit-guru-pin').value = prof.pin || '123456';
             document.getElementById('edit-guru-siswa-pin').value = prof.siswaPin || 'siswa123';
             document.getElementById('modal-edit-guru')?.classList.remove('hidden');
-        }
-        window.openModalEditGuru = openModalEditGuru;
+        };
 
-        function closeModalEditGuru() { document.getElementById('modal-edit-guru')?.classList.add('hidden'); }
-        window.closeModalEditGuru = closeModalEditGuru;
+        window.closeModalEditGuru = function() { document.getElementById('modal-edit-guru')?.classList.add('hidden'); };
 
-        function handleSaveGuruProfile(e) {
+        window.handleSaveGuruProfile = function(e) {
             e.preventDefault();
             const nama = document.getElementById('edit-guru-nama')?.value.trim();
             const nip = document.getElementById('edit-guru-nip')?.value.trim();
@@ -2840,7 +2678,7 @@
             let pin = document.getElementById('edit-guru-pin')?.value.trim();
             const siswaPin = document.getElementById('edit-guru-siswa-pin')?.value.trim();
 
-            if (!nama || !kelas || !siswaPin) { showToast('Nama guru, kelas, dan Password Portal Siswa wajib diisi!', 'error'); return; }
+            if (!nama || !kelas || !siswaPin) { window.showToast('Nama guru, kelas, dan Password Portal Siswa wajib diisi!', 'error'); return; }
             pin = (pin || '123456').slice(0, 6);
 
             window.appData.guruProfile.nama = nama;
@@ -2852,12 +2690,11 @@
             const pIdx = (window.appData.allKelasProfiles || []).findIndex(k => k.id === window.appData.activeKelasCode);
             if (pIdx !== -1) window.appData.allKelasProfiles[pIdx] = Object.assign({}, window.appData.allKelasProfiles[pIdx], window.appData.guruProfile);
 
-            window.saveToStorage(true, true); closeModalEditGuru();
-            showToast('Profil Guru Perwalian diperbarui!', 'success');
-        }
-        window.handleSaveGuruProfile = handleSaveGuruProfile;
+            window.saveToStorage(true, true); window.closeModalEditGuru();
+            window.showToast('Profil Guru Perwalian diperbarui!', 'success');
+        };
 
-        function openModalTambahSiswa() {
+        window.openModalTambahSiswa = function() {
             document.getElementById('edit-siswa-id').value = '';
             document.getElementById('form-siswa-nis').value = '';
             document.getElementById('form-siswa-nama').value = '';
@@ -2872,13 +2709,11 @@
 
             document.getElementById('modal-siswa')?.classList.remove('hidden');
             if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-        window.openModalTambahSiswa = openModalTambahSiswa;
+        };
 
-        function closeModalSiswa() { document.getElementById('modal-siswa')?.classList.add('hidden'); }
-        window.closeModalSiswa = closeModalSiswa;
+        window.closeModalSiswa = function() { document.getElementById('modal-siswa')?.classList.add('hidden'); };
 
-        function editSiswa(id) {
+        window.editSiswa = function(id) {
             const s = (window.appData.allSiswaList || []).find(x => x.id === id);
             if (!s) return;
 
@@ -2896,18 +2731,16 @@
 
             document.getElementById('modal-siswa')?.classList.remove('hidden');
             if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-        window.editSiswa = editSiswa;
+        };
 
-        function deleteSiswa(id) {
-            showConfirmDialog('Hapus Data Siswa', 'Apakah Anda yakin ingin menghapus data siswa ini?', () => {
+        window.deleteSiswa = function(id) {
+            window.showConfirmDialog('Hapus Data Siswa', 'Apakah Anda yakin ingin menghapus data siswa ini?', () => {
                 window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.id !== id);
-                window.saveToStorage(true, true); showToast('Data siswa dihapus.', 'info');
+                window.saveToStorage(true, true); window.showToast('Data siswa dihapus.', 'info');
             });
-        }
-        window.deleteSiswa = deleteSiswa;
+        };
 
-        function handleSaveSiswa(e) {
+        window.handleSaveSiswa = function(e) {
             e.preventDefault();
             const editId = document.getElementById('edit-siswa-id')?.value;
             const nis = document.getElementById('form-siswa-nis')?.value.trim();
@@ -2918,7 +2751,7 @@
             const ipk = document.getElementById('form-siswa-ipk')?.value.trim();
             const ortu = document.getElementById('form-siswa-ortu')?.value.trim();
 
-            if (!nama) { showToast('Nama siswa wajib diisi!', 'error'); return; }
+            if (!nama) { window.showToast('Nama siswa wajib diisi!', 'error'); return; }
 
             if (editId) {
                 const idx = (window.appData.allSiswaList || []).findIndex(s => s.id === editId);
@@ -2930,23 +2763,20 @@
             }
 
             window.saveToStorage(true, true); window.closeModalSiswa();
-            showToast('Data siswa disimpan!', 'success');
-        }
-        window.handleSaveSiswa = handleSaveSiswa;
+            window.showToast('Data siswa disimpan!', 'success');
+        };
 
-        function openModalTambahGuruMapel() {
+        window.openModalTambahGuruMapel = function() {
             document.getElementById('edit-guru-mapel-id').value = '';
             document.getElementById('form-guru-nama').value = '';
             document.getElementById('form-guru-mapel-nama').value = '';
             document.getElementById('modal-guru-mapel')?.classList.remove('hidden');
             if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-        window.openModalTambahGuruMapel = openModalTambahGuruMapel;
+        };
 
-        function closeModalGuruMapel() { document.getElementById('modal-guru-mapel')?.classList.add('hidden'); }
-        window.closeModalGuruMapel = closeModalGuruMapel;
+        window.closeModalGuruMapel = function() { document.getElementById('modal-guru-mapel')?.classList.add('hidden'); };
 
-        function editGuruMapel(id) {
+        window.editGuruMapel = function(id) {
             const g = (window.appData.allGuruMapelList || []).find(x => x.id === id);
             if (!g) return;
 
@@ -2955,24 +2785,22 @@
             document.getElementById('form-guru-mapel-nama').value = g.mapel || '';
             document.getElementById('modal-guru-mapel')?.classList.remove('hidden');
             if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-        window.editGuruMapel = editGuruMapel;
+        };
 
-        function deleteGuruMapel(id) {
-            showConfirmDialog('Hapus Guru Mapel', 'Apakah Anda yakin ingin menghapus data guru mapel ini?', () => {
+        window.deleteGuruMapel = function(id) {
+            window.showConfirmDialog('Hapus Guru Mapel', 'Apakah Anda yakin ingin menghapus data guru mapel ini?', () => {
                 window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.id !== id);
-                window.saveToStorage(true, true); showToast('Data guru mapel dihapus.', 'info');
+                window.saveToStorage(true, true); window.showToast('Data guru mapel dihapus.', 'info');
             });
-        }
-        window.deleteGuruMapel = deleteGuruMapel;
+        };
 
-        function handleSaveGuruMapel(e) {
+        window.handleSaveGuruMapel = function(e) {
             e.preventDefault();
             const editId = document.getElementById('edit-guru-mapel-id')?.value;
             const nama = document.getElementById('form-guru-nama')?.value.trim();
             const mapel = document.getElementById('form-guru-mapel-nama')?.value.trim();
 
-            if (!nama || !mapel) { showToast('Lengkapi nama guru dan mapel!', 'error'); return; }
+            if (!nama || !mapel) { window.showToast('Lengkapi nama guru dan mapel!', 'error'); return; }
 
             if (editId) {
                 const idx = (window.appData.allGuruMapelList || []).findIndex(g => g.id === editId);
@@ -2984,11 +2812,10 @@
             }
 
             window.saveToStorage(true, true); window.closeModalGuruMapel();
-            showToast('Data guru mapel disimpan!', 'success');
-        }
-        window.handleSaveGuruMapel = handleSaveGuruMapel;
+            window.showToast('Data guru mapel disimpan!', 'success');
+        };
 
-        function handleSaveCatatan(e) {
+        window.handleSaveCatatan = function(e) {
             e.preventDefault();
             const siswaId = document.getElementById('catatan-siswa-id')?.value;
             const tanggal = document.getElementById('catatan-tanggal')?.value;
@@ -2996,7 +2823,7 @@
             const topik = document.getElementById('catatan-topik')?.value.trim();
             const solusi = document.getElementById('catatan-solusi')?.value.trim();
 
-            if (!siswaId || !topik || !solusi) { showToast('Lengkapi seluruh field catatan!', 'error'); return; }
+            if (!siswaId || !topik || !solusi) { window.showToast('Lengkapi seluruh field catatan!', 'error'); return; }
 
             const newCatatan = {
                 id: 'cat-' + Date.now(), kelasCode: window.appData.activeKelasCode,
@@ -3009,51 +2836,46 @@
             window.saveToStorage(true, true);
             document.getElementById('catatan-topik').value = '';
             document.getElementById('catatan-solusi').value = '';
-            showToast('Catatan bimbingan disimpan!', 'success');
-        }
-        window.handleSaveCatatan = handleSaveCatatan;
+            window.showToast('Catatan bimbingan disimpan!', 'success');
+        };
 
-        function deleteCatatan(id) {
-            showConfirmDialog('Hapus Catatan Bimbingan', 'Hapus catatan bimbingan ini?', () => {
+        window.deleteCatatan = function(id) {
+            window.showConfirmDialog('Hapus Catatan Bimbingan', 'Hapus catatan bimbingan ini?', () => {
                 window.appData.allCatatanList = (window.appData.allCatatanList || []).filter(c => c.id !== id);
-                window.saveToStorage(true, true); showToast('Catatan bimbingan dihapus.', 'info');
+                window.saveToStorage(true, true); window.showToast('Catatan bimbingan dihapus.', 'info');
             });
-        }
-        window.deleteCatatan = deleteCatatan;
+        };
 
-        function approveAbsensi(id) {
+        window.approveAbsensi = function(id) {
             const idx = (window.appData.allAbsensiList || []).findIndex(a => a.id === id);
             if (idx !== -1) {
                 window.appData.allAbsensiList[idx].status = 'Disetujui';
-                window.saveToStorage(true, true); showToast('Status presensi disetujui!', 'success');
+                window.saveToStorage(true, true); window.showToast('Status presensi disetujui!', 'success');
             }
-        }
-        window.approveAbsensi = approveAbsensi;
+        };
 
-        function deleteAbsensi(id) {
-            showConfirmDialog('Hapus Presensi', 'Hapus entri presensi ini?', () => {
+        window.deleteAbsensi = function(id) {
+            window.showConfirmDialog('Hapus Presensi', 'Hapus entri presensi ini?', () => {
                 window.appData.allAbsensiList = (window.appData.allAbsensiList || []).filter(a => a.id !== id);
-                window.saveToStorage(true, true); showToast('Presensi dihapus.', 'info');
+                window.saveToStorage(true, true); window.showToast('Presensi dihapus.', 'info');
             });
-        }
-        window.deleteAbsensi = deleteAbsensi;
+        };
 
-        function deleteGuruAbsensi(id) {
-            showConfirmDialog('Hapus Laporan Guru', 'Hapus laporan ketidakhadiran guru ini?', () => {
+        window.deleteGuruAbsensi = function(id) {
+            window.showConfirmDialog('Hapus Laporan Guru', 'Hapus laporan ketidakhadiran guru ini?', () => {
                 window.appData.allGuruAbsensiList = (window.appData.allGuruAbsensiList || []).filter(g => g.id !== id);
-                window.saveToStorage(true, true); showToast('Laporan guru dihapus.', 'info');
+                window.saveToStorage(true, true); window.showToast('Laporan guru dihapus.', 'info');
             });
-        }
-        window.deleteGuruAbsensi = deleteGuruAbsensi;
+        };
 
-        function exportCSVLogDetail() {
+        window.exportCSVLogDetail = function() {
             const currentProf = window.appData.guruProfile || {};
             const currentKelas = currentProf.kelas || 'Kelas -';
             const list = window.appData.absensiList || [];
             const guruAbsensiList = window.appData.guruAbsensiList || [];
 
             if (list.length === 0 && guruAbsensiList.length === 0) { 
-                showToast('Tidak ada log presensi untuk diekspor!', 'error'); 
+                window.showToast('Tidak ada log presensi untuk diekspor!', 'error'); 
                 return; 
             }
 
@@ -3125,7 +2947,7 @@
                 
                 let ket = a.alasan && a.alasan !== '-' ? a.alasan : '';
                 if (a.jamKe) {
-                    ket = ket ? `Jam ${a.jamKe}: ${ket}` : `Jam ${a.jamKe}`;
+                    ket = ket ? `${a.jamKe}: ${ket}` : `${a.jamKe}`;
                 }
                 if (!ket) ket = '-';
 
@@ -3192,17 +3014,16 @@
             link.click();
             document.body.removeChild(link);
             window.closeModalExport();
-            showToast('File Excel Presensi Kehadiran berhasil diunduh!', 'success');
-        }
-        window.exportCSVLogDetail = exportCSVLogDetail;
+            window.showToast('File Excel Presensi Kehadiran berhasil diunduh!', 'success');
+        };
 
-        function exportExcelMatrixCurrent() {
+        window.exportExcelMatrixCurrent = function() {
             const currentKelas = window.appData.guruProfile?.kelas || 'Kelas';
             const siswaList = window.appData.siswaList || [];
             const absensiList = window.appData.absensiList || [];
             const guruAbsensiList = window.appData.guruAbsensiList || [];
 
-            if (siswaList.length === 0 && guruAbsensiList.length === 0) { showToast('Belum ada data siswa atau guru!', 'error'); return; }
+            if (siswaList.length === 0 && guruAbsensiList.length === 0) { window.showToast('Belum ada data siswa atau guru!', 'error'); return; }
 
             let htmlTable = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
@@ -3311,16 +3132,15 @@
             const link = document.createElement('a');
             link.href = url; link.download = `REKAP_MATRIKS_EXCEL_${currentKelas.replace(/\s+/g, '_')}_${Date.now()}.xls`;
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
-            window.closeModalExport(); showToast('Rekap Matriks Excel diunduh!', 'success');
-        }
-        window.exportExcelMatrixCurrent = exportExcelMatrixCurrent;
+            window.closeModalExport(); window.showToast('Rekap Matriks Excel diunduh!', 'success');
+        };
 
-        function exportExcelMatrixAll() {
+        window.exportExcelMatrixAll = function() {
             const profiles = window.appData.allKelasProfiles || [];
             const allSiswa = window.appData.allSiswaList || [];
             const allAbsen = window.appData.allAbsensiList || [];
 
-            if (profiles.length === 0) { showToast('Belum ada data kelas!', 'error'); return; }
+            if (profiles.length === 0) { window.showToast('Belum ada data kelas!', 'error'); return; }
 
             let htmlTable = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
@@ -3363,16 +3183,94 @@
             const link = document.createElement('a');
             link.href = url; link.download = `REKAP_GLOBAL_ADMIN_SMKN1MARISA_${Date.now()}.xls`;
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
-            showToast('Rekap Global Excel diunduh!', 'success');
-        }
-        window.exportExcelMatrixAll = exportExcelMatrixAll;
+            window.showToast('Rekap Global Excel diunduh!', 'success');
+        };
 
+        window.handleSiswaKelasChange = function() {
+            const selectedKelasCode = document.getElementById('login-siswa-kelas-select')?.value;
+            if (!selectedKelasCode) return;
+
+            window.appData.activeKelasCode = selectedKelasCode;
+            window.syncFilteredData(false);
+            window.populateSiswaDropdowns(); window.populateGuruMapelDropdowns();
+        };
+
+        window.handleOrtuKelasChange = function() {
+            const selectedKelasCode = document.getElementById('login-ortu-kelas-select')?.value;
+            if (!selectedKelasCode) return;
+
+            window.appData.activeKelasCode = selectedKelasCode;
+            window.syncFilteredData(false);
+            window.populateSiswaDropdowns();
+        };
+
+        window.openModalShareLink = function() {
+            const linkInput = document.getElementById('share-link-input');
+            const msg = document.getElementById('share-copied-msg');
+            if (msg) msg.classList.add('hidden');
+
+            const baseUrl = window.location.origin + window.location.pathname;
+            const compactPayload = {
+                c: window.appData.activeKelasCode,
+                g: window.appData.guruProfile?.nama || '',
+                k: window.appData.guruProfile?.kelas || '',
+                s: (window.appData.siswaList || []).map(s => [s.id, s.nis || '', s.nama, s.kelas || '', s.jurusan || '', s.gender || 'L', s.ipk || '0.00', s.ortu || '']),
+                m: (window.appData.guruMapelList || []).map(g => [g.id, g.nama, g.mapel])
+            };
+
+            const compressed = window.compressDataObj(compactPayload);
+            if (linkInput) linkInput.value = `${baseUrl}?code=${window.appData.activeKelasCode}&d=${compressed}`;
+            document.getElementById('modal-share-link')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        window.openModalShareOrtuLink = function() {
+            const linkInput = document.getElementById('share-ortu-link-input');
+            const msg = document.getElementById('share-ortu-copied-msg');
+            if (msg) msg.classList.add('hidden');
+
+            const baseUrl = window.location.origin + window.location.pathname;
+            const compactPayload = {
+                c: window.appData.activeKelasCode,
+                role: 'ortu',
+                g: window.appData.guruProfile?.nama || '',
+                k: window.appData.guruProfile?.kelas || '',
+                s: (window.appData.siswaList || []).map(s => [s.id, s.nis || '', s.nama, s.kelas || '', s.jurusan || '', s.gender || 'L', s.ipk || '0.00', s.ortu || ''])
+            };
+
+            const compressed = window.compressDataObj(compactPayload);
+            if (linkInput) linkInput.value = `${baseUrl}?role=ortu&code=${window.appData.activeKelasCode}&d=${compressed}`;
+            document.getElementById('modal-share-ortu-link')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        window.closeModalShareLink = function() { document.getElementById('modal-share-link')?.classList.add('hidden'); };
+        window.closeModalShareOrtuLink = function() { document.getElementById('modal-share-ortu-link')?.classList.add('hidden'); };
+        window.openModalExport = function() { document.getElementById('modal-export-excel')?.classList.remove('hidden'); if (typeof lucide !== 'undefined') lucide.createIcons(); };
+        window.closeModalExport = function() { document.getElementById('modal-export-excel')?.classList.add('hidden'); };
+
+        window.copyGeneratedLink = function(inputId, msgId) {
+            const input = document.getElementById(inputId);
+            const msg = document.getElementById(msgId);
+            if (input && input.value) {
+                input.select(); document.execCommand('copy');
+                if (msg) msg.classList.remove('hidden');
+                window.showToast('Link berhasil disalin!', 'success');
+            }
+        };
+
+        window.updateHariField = function() {
+            const dateVal = document.getElementById('siswa-self-tanggal')?.value;
+            const hariInput = document.getElementById('siswa-self-hari');
+            if (hariInput) {
+                hariInput.value = window.getHariIndo(dateVal);
+            }
+        };
+
+        // WINDOW ONLOAD LAUNCHER & PERSISTENCE ENGINE
         window.onload = function() {
             if (typeof lucide !== 'undefined') lucide.createIcons();
-            
-            if (typeof window.initMQTTWebSocket === 'function') {
-                window.initMQTTWebSocket();
-            }
+            window.initMQTTWebSocket();
 
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
@@ -3385,7 +3283,7 @@
 
             if (inputTanggal) {
                 inputTanggal.value = todayStr;
-                if (typeof window.updateHariField === 'function') window.updateHariField();
+                window.updateHariField();
             }
             if (inputWaktu) inputWaktu.value = timeStr;
             if (inputGuruTanggal) inputGuruTanggal.value = todayStr;
@@ -3396,25 +3294,19 @@
             const codeParam = urlParams.get('code') || urlParams.get('c');
             const dataParam = urlParams.get('d');
 
+            let isLinkSession = false;
+
             if (dataParam || codeParam) {
-                if (roleParam === 'ortu') {
-                    window.appData.isParentLinkMode = true;
-                    window.appData.isStudentLinkMode = false;
-                } else {
-                    window.appData.isStudentLinkMode = true;
-                    window.appData.isParentLinkMode = false;
-                }
+                isLinkSession = true;
+                let targetRole = (roleParam === 'ortu') ? 'ORTU' : 'SISWA';
+                let targetKelasCode = codeParam;
 
                 if (dataParam) {
                     const decompressed = window.decompressDataObj(dataParam);
                     if (decompressed) {
-                        const targetKelasCode = decompressed.c || decompressed.kelasCode || codeParam;
+                        targetKelasCode = decompressed.c || decompressed.kelasCode || codeParam;
+                        targetRole = (roleParam === 'ortu' || decompressed.role === 'ortu') ? 'ORTU' : 'SISWA';
                         
-                        window.appData.isLoggedIn = false; 
-                        window.appData.activeSiswaId = '';
-                        window.appData.currentRole = (roleParam === 'ortu' || decompressed.role === 'ortu') ? 'ORTU' : 'SISWA'; 
-                        window.appData.activeKelasCode = targetKelasCode;
-
                         if (decompressed.g || decompressed.profile) {
                             const profObj = decompressed.g ? { id: targetKelasCode, kelasCode: targetKelasCode, nama: decompressed.g, kelas: decompressed.k || '' } : decompressed.profile;
                             window.appData.guruProfile = profObj;
@@ -3428,7 +3320,6 @@
                             const parsedSiswa = rawSiswa.map(item => Array.isArray(item) ? {
                                 id: item[0], kelasCode: targetKelasCode, nis: item[1], nama: item[2], kelas: item[3], jurusan: item[4], gender: item[5], ipk: item[6], ortu: item[7]
                             } : item);
-
                             window.appData.allSiswaList = (window.appData.allSiswaList || []).filter(s => s.kelasCode !== targetKelasCode).concat(parsedSiswa);
                         }
 
@@ -3437,35 +3328,43 @@
                             const parsedMapel = rawMapel.map(item => Array.isArray(item) ? {
                                 id: item[0], kelasCode: targetKelasCode, nama: item[1], mapel: item[2]
                             } : item);
-
                             window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== targetKelasCode).concat(parsedMapel);
                         }
                     }
-                } else if (codeParam) {
-                    window.appData.isLoggedIn = false; 
-                    window.appData.activeSiswaId = '';
-                    window.appData.currentRole = (roleParam === 'ortu') ? 'ORTU' : 'SISWA'; 
-                    window.appData.activeKelasCode = codeParam;
                 }
 
-                window.syncFilteredData(false);
-                window.showLoginScreen();
-                if (typeof window.populateSiswaDropdowns === 'function') window.populateSiswaDropdowns();
-                if (typeof window.populateGuruMapelDropdowns === 'function') window.populateGuruMapelDropdowns();
-                showToast(`Portal Perwalian ${window.appData.guruProfile?.kelas || ''} Berhasil Dimuat.`, 'info');
-                return;
+                window.appData.isParentLinkMode = (targetRole === 'ORTU');
+                window.appData.isStudentLinkMode = (targetRole === 'SISWA');
+
+                if (window.appData.isLoggedIn) {
+                    if (window.appData.activeKelasCode !== targetKelasCode || window.appData.currentRole !== targetRole) {
+                        window.appData.isLoggedIn = false;
+                        window.appData.activeSiswaId = '';
+                    }
+                }
+
+                if (!window.appData.isLoggedIn) {
+                    window.appData.activeKelasCode = targetKelasCode;
+                    window.appData.currentRole = targetRole;
+                }
             } else {
                 window.appData.isStudentLinkMode = false;
                 window.appData.isParentLinkMode = false;
-                if (typeof window.populateWaliKelasDropdowns === 'function') window.populateWaliKelasDropdowns();
             }
 
+            // CORE PERSISTENCE & AUTO-LOGIN LAUNCHER
             if (window.appData.isLoggedIn) {
-                window.showMainApp();
                 window.syncFilteredData(true); 
-                window.saveToStorage(false, true); 
+                window.showMainApp();
+                window.saveToStorage(false, true); // Eksekusi render seluruh antarmuka secara otomatis
             } else {
                 window.showLoginScreen();
+                if (isLinkSession) {
+                    window.populateSiswaDropdowns();
+                    window.populateGuruMapelDropdowns();
+                } else {
+                    window.populateWaliKelasDropdowns();
+                }
             }
         };
     </script>
