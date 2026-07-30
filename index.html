@@ -3328,19 +3328,19 @@
                             const parsedMapel = rawMapel.map(item => Array.isArray(item) ? {
                                 id: item[0], kelasCode: targetKelasCode, nama: item[1], mapel: item[2]
                             } : item);
+
                             window.appData.allGuruMapelList = (window.appData.allGuruMapelList || []).filter(g => g.kelasCode !== targetKelasCode).concat(parsedMapel);
                         }
-                    }
-                }
 
-                window.appData.isParentLinkMode = (targetRole === 'ORTU');
-                window.appData.isStudentLinkMode = (targetRole === 'SISWA');
-
-                if (window.appData.isLoggedIn) {
-                    if (window.appData.activeKelasCode !== targetKelasCode || window.appData.currentRole !== targetRole) {
-                        window.appData.isLoggedIn = false;
-                        window.appData.activeSiswaId = '';
+                        if (Array.isArray(decompressed.ct)) {
+                            const rawCat = decompressed.ct;
+                            const parsedCat = rawCat.map(item => Array.isArray(item) ? {
+                                id: item[0], kelasCode: targetKelasCode, siswaId: item[1], tanggal: item[2], kategori: item[3], topik: item[4], solusi: item[5], timestamp: Date.now()
+                            } : item);
+                            window.appData.allCatatanList = (window.appData.allCatatanList || []).filter(c => c.kelasCode !== targetKelasCode).concat(parsedCat);
+                        }
                     }
+                } else if (codeParam) {
                 }
 
                 if (!window.appData.isLoggedIn) {
