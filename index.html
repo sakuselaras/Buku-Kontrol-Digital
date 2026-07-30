@@ -900,7 +900,7 @@
                     </div>
 
                     <div class="bg-[#0b0f19] p-3.5 rounded-xl border border-slate-800 text-center min-w-[120px]">
-                        <div class="text-[10px] font-bold text-slate-500 uppercase">STATUS KEHADIRAN TERAKHIR</div>
+                        <div class="text-[10px] font-bold text-slate-500 uppercase">STATUS HARI INI</div>
                         <div id="ortu-portal-status-today" class="text-lg font-black text-emerald-400 uppercase mt-0.5">HADIR</div>
                     </div>
                 </div>
@@ -909,7 +909,7 @@
                     <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
                         <span class="text-[10px] font-bold text-slate-500 uppercase">HADIR</span>
                         <div id="ortu-stat-hadir" class="text-2xl font-black text-emerald-400">0</div>
-                        <span class="text-[10px] text-slate-400 block font-medium">Sesi Pelajaran</span>
+                        <span class="text-[10px] text-slate-400 block font-medium">Sesi Pelajaran Hari Ini</span>
                     </div>
                     <div class="p-4 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-1">
                         <span class="text-[10px] font-bold text-slate-500 uppercase">SAKIT</span>
@@ -937,26 +937,22 @@
                     <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
                         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                             <h3 class="text-sm font-bold text-white uppercase tracking-wide flex items-center gap-2">
-                                <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i> Riwayat Kehadiran Ananda
+                                <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i> Riwayat Kehadiran Hari Ini
                             </h3>
-                            <span class="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">TERHUBUNG WEBSOCKET</span>
+                            <span class="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">RESET PUKUL 00:00</span>
                         </div>
                         <div id="ortu-presensi-list" class="space-y-3 max-h-[380px] overflow-y-auto pr-1"></div>
                     </div>
 
                     <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
-                        <div class="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider border-b border-slate-800 pb-3">
-                            <i data-lucide="user-x" class="w-4 h-4"></i> Info Guru Mapel Tidak Masuk
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <h3 class="text-sm font-bold text-white uppercase tracking-wide flex items-center gap-2">
+                                <i data-lucide="book-open" class="w-4 h-4 text-cyan-400"></i> Catatan Konseling Hari Ini
+                            </h3>
+                            <span class="text-[10px] text-cyan-400 font-mono bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">RESET PUKUL 00:00</span>
                         </div>
-                        <div id="ortu-guru-absen-list" class="space-y-3 max-h-[380px] overflow-y-auto pr-1"></div>
+                        <div id="ortu-bimbingan-list" class="space-y-3 max-h-[380px] overflow-y-auto pr-1"></div>
                     </div>
-                </div>
-
-                <div class="p-5 rounded-2xl bg-[#131b2e] border border-slate-800 space-y-4">
-                    <div class="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase tracking-wider border-b border-slate-800 pb-3">
-                        <i data-lucide="book-open" class="w-4 h-4"></i> Riwayat Keseluruhan Catatan Konseling Perwalian
-                    </div>
-                    <div id="ortu-bimbingan-list" class="space-y-3 max-h-[300px] overflow-y-auto pr-1"></div>
                 </div>
             </div>
 
@@ -2163,21 +2159,10 @@
         function handleSiswaLaporGuru(e) {
             e.preventDefault();
             const guruMapel = document.getElementById('siswa-guru-nama-mapel')?.value;
+            const jamKe = document.getElementById('siswa-guru-jam-ke')?.value;
             const tanggal = document.getElementById('siswa-guru-tanggal')?.value;
             const waktu = document.getElementById('siswa-guru-waktu')?.value || new Date().toTimeString().slice(0, 5);
             const keterangan = document.getElementById('siswa-guru-keterangan')?.value;
-
-            const jamDari = document.getElementById('siswa-guru-jam-dari')?.value;
-            const jamSampai = document.getElementById('siswa-guru-jam-sampai')?.value;
-
-            let jamKe = jamDari;
-            if (jamDari && jamSampai && jamDari !== jamSampai) {
-                const numDari = jamDari.replace('Jam Ke - ', '');
-                const numSampai = jamSampai.replace('Jam Ke - ', '');
-                jamKe = `Jam Ke - ${numDari} s/d ${numSampai}`;
-            } else if (jamDari) {
-                jamKe = jamDari;
-            }
 
             if (!guruMapel || !jamKe || !tanggal || !keterangan) { showToast('Lengkapi seluruh field laporan guru!', 'error'); return; }
 
@@ -2197,38 +2182,65 @@
             publishMQTTAction('REPORT_GURU', newGuruAbsen);
             showToast(`Laporan guru tidak hadir dikirim oleh ${reporterNama}!`, 'success');
         }
-        window.handleSiswaLaporGuru = handleSiswaLaporGuru;
 
         function renderOrtuDashboard() {
             if (window.appData.currentRole !== 'ORTU') return;
 
             const mySiswa = (window.appData.siswaList || []).find(s => s.id === window.appData.activeSiswaId) || { nama: 'Siswa', nis: '-' };
             
-            // Dapatkan seluruh riwayat tanpa difilter hari, urutkan dari yang terbaru ke terlama
-            const myAbsen = (window.appData.absensiList || []).filter(a => a.siswaId === window.appData.activeSiswaId).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-            const myCatatan = (window.appData.catatanList || []).filter(c => c.siswaId === window.appData.activeSiswaId).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-            const guruAbsen = (window.appData.guruAbsensiList || []).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            // Logika Tanggal Lokal & Filter Reset Harian 00:00
+            const localDate = new Date();
+            const year = localDate.getFullYear();
+            const month = String(localDate.getMonth() + 1).padStart(2, '0');
+            const day = String(localDate.getDate()).padStart(2, '0');
+            const todayStr = `${year}-${month}-${day}`; // Format persis input HTML Date YYYY-MM-DD
+            
+            const dayOfWeek = localDate.getDay();
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6); // 0 = Minggu, 6 = Sabtu
 
-            const hC = myAbsen.filter(a => a.kategori === 'Hadir').length;
-            const sC = myAbsen.filter(a => a.kategori === 'Sakit').length;
-            const iC = myAbsen.filter(a => a.kategori === 'Ijin').length;
-            const aC = myAbsen.filter(a => a.kategori === 'Alpa').length;
-            const bC = myAbsen.filter(a => a.kategori === 'Bolos').length;
+            // Filter data HANYA untuk aktivitas HARI INI
+            const myAbsenToday = (window.appData.absensiList || []).filter(a => a.siswaId === window.appData.activeSiswaId && a.tanggal === todayStr);
+            const myCatatanToday = (window.appData.catatanList || []).filter(c => c.siswaId === window.appData.activeSiswaId && c.tanggal === todayStr);
+
+            // Urutkan dari jam pertama ke terakhir (kronologis)
+            myAbsenToday.sort((a,b) => (a.timestamp || 0) - (b.timestamp || 0));
+            myCatatanToday.sort((a,b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+            const hC = myAbsenToday.filter(a => a.kategori === 'Hadir').length;
+            const sC = myAbsenToday.filter(a => a.kategori === 'Sakit').length;
+            const iC = myAbsenToday.filter(a => a.kategori === 'Ijin').length;
+            const aC = myAbsenToday.filter(a => a.kategori === 'Alpa').length;
+            const bC = myAbsenToday.filter(a => a.kategori === 'Bolos').length;
 
             const elNama = document.getElementById('ortu-portal-nama-siswa');
-            const elNis = document.getElementById('ortu-portal-nis');
             const elGuru = document.getElementById('ortu-portal-guru-nama');
             const elBadge = document.getElementById('ortu-portal-kelas-badge');
             const elToday = document.getElementById('ortu-portal-status-today');
+            const elBerjalan = document.getElementById('ortu-portal-guru-berjalan');
 
             if (elNama) elNama.innerText = `Siswa: ${mySiswa.nama}`;
-            if (elNis) elNis.innerText = `NIS: ${mySiswa.nis || '-'} | SMK Negeri 1 Marisa`;
             if (elGuru) elGuru.innerText = window.appData.guruProfile?.nama || 'Guru Perwalian';
             if (elBadge) elBadge.innerText = `KELAS: ${window.appData.guruProfile?.kelas || '-'}`;
 
-            const latestAbsen = myAbsen[0];
+            // Mapel berjalan (Mata pelajaran terkini pada hari ini)
+            if (elBerjalan) {
+                if (isWeekend) {
+                    elBerjalan.innerText = "LIBUR / TIDAK ADA JAM";
+                } else if (myAbsenToday.length > 0) {
+                    const latest = myAbsenToday[myAbsenToday.length - 1];
+                    elBerjalan.innerText = `${latest.guruMapel} (Jam ${latest.jamKe})`;
+                } else {
+                    elBerjalan.innerText = "Belum Ada Jam Mapel Terdata";
+                }
+            }
+
+            // Kartu Status Keseluruhan Hari Ini
             if (elToday) {
-                if (latestAbsen) {
+                if (isWeekend) {
+                    elToday.innerText = 'LIBUR';
+                    elToday.className = 'text-lg font-black text-rose-400 uppercase mt-0.5';
+                } else if (myAbsenToday.length > 0) {
+                    const latestAbsen = myAbsenToday[myAbsenToday.length - 1];
                     elToday.innerText = latestAbsen.kategori;
                     elToday.className = latestAbsen.kategori === 'Hadir' ? 'text-lg font-black text-emerald-400 uppercase mt-0.5' : (latestAbsen.kategori === 'Bolos' ? 'text-lg font-black text-purple-400 uppercase mt-0.5' : 'text-lg font-black text-rose-400 uppercase mt-0.5');
                 } else {
@@ -2243,18 +2255,20 @@
             document.getElementById('ortu-stat-alpa').innerText = aC;
             document.getElementById('ortu-stat-bolos').innerText = bC;
 
-            // Render Daftar Presensi Siswa (Seluruh Riwayat)
+            // Render Daftar Presensi HARI INI
             const presensiContainer = document.getElementById('ortu-presensi-list');
             if (presensiContainer) {
-                if (myAbsen.length === 0) {
-                    presensiContainer.innerHTML = '<div class="p-4 text-center text-slate-500 text-xs italic bg-[#0b0f19] rounded-xl border border-slate-800">Belum ada riwayat presensi tercatat untuk Ananda.</div>';
+                if (isWeekend) {
+                    presensiContainer.innerHTML = '<div class="p-5 text-center text-rose-400 font-bold text-sm bg-rose-500/10 rounded-xl border border-rose-500/20">HARI LIBUR SEKOLAH (SABTU / MINGGU)<br><span class="text-xs font-normal text-rose-300 mt-1 block">Tidak ada kegiatan pembelajaran dan presensi hari ini.</span></div>';
+                } else if (myAbsenToday.length === 0) {
+                    presensiContainer.innerHTML = '<div class="p-4 text-center text-slate-500 text-xs italic bg-[#0b0f19] rounded-xl border border-slate-800">Belum ada data kehadiran jam pelajaran yang dilaporkan untuk hari ini.</div>';
                 } else {
-                    presensiContainer.innerHTML = myAbsen.map(a => {
+                    presensiContainer.innerHTML = myAbsenToday.map(a => {
                         const colorBadge = a.kategori === 'Hadir' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : (a.kategori === 'Sakit' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : (a.kategori === 'Ijin' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' : (a.kategori === 'Bolos' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-rose-500/20 text-rose-400 border-rose-500/30')));
                         return `
                             <div class="p-3.5 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2 text-xs hover:bg-[#131b2e] transition">
                                 <div class="flex items-center justify-between">
-                                    <span class="font-bold text-slate-300">${a.hari || window.getHariIndo(a.tanggal)}, ${a.tanggal} <span class="text-emerald-400 font-mono font-bold">(${a.waktu || 'Realtime'})</span></span>
+                                    <span class="font-bold text-slate-300">${a.hari || 'Hari'}, ${a.tanggal} <span class="text-emerald-400 font-mono font-bold">(${a.waktu || 'WITA'})</span></span>
                                     <span class="px-2.5 py-0.5 rounded text-[10px] font-bold border ${colorBadge}">${a.kategori}</span>
                                 </div>
                                 <div class="text-[11px] text-amber-300 font-semibold bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20 flex items-center justify-between">
@@ -2268,34 +2282,15 @@
                 }
             }
 
-            // Render Daftar Guru Mapel Tidak Masuk
-            const guruAbsenContainer = document.getElementById('ortu-guru-absen-list');
-            if (guruAbsenContainer) {
-                if (guruAbsen.length === 0) {
-                    guruAbsenContainer.innerHTML = '<div class="p-4 text-center text-slate-500 text-xs italic bg-[#0b0f19] rounded-xl border border-slate-800">Tidak ada riwayat/laporan guru pengajar yang tidak masuk kelas.</div>';
-                } else {
-                    guruAbsenContainer.innerHTML = guruAbsen.map(g => `
-                        <div class="p-3.5 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-2 text-xs hover:bg-[#131b2e] transition">
-                            <div class="flex items-center justify-between">
-                                <span class="font-bold text-amber-400">${g.guruMapel}</span>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">${g.jamKe || '-'}</span>
-                            </div>
-                            <div class="text-[11px] text-slate-400 flex items-center justify-between border-b border-slate-800/80 pb-1.5">
-                                <span><i data-lucide="calendar" class="w-3 h-3 inline mr-1"></i>${g.tanggal} (${g.waktu})</span>
-                            </div>
-                            <p class="text-slate-300"><strong>Keterangan / Tugas:</strong> ${g.keterangan || '-'}</p>
-                        </div>
-                    `).join('');
-                }
-            }
-
-            // Render Catatan Bimbingan Perwalian
+            // Render Daftar Catatan Bimbingan HARI INI
             const bimbinganContainer = document.getElementById('ortu-bimbingan-list');
             if (bimbinganContainer) {
-                if (myCatatan.length === 0) {
-                    bimbinganContainer.innerHTML = '<div class="p-4 text-center text-slate-500 text-xs italic bg-[#0b0f19] rounded-xl border border-slate-800">Belum ada riwayat catatan bimbingan perwalian untuk Ananda.</div>';
+                if (isWeekend) {
+                    bimbinganContainer.innerHTML = '<div class="p-5 text-center text-rose-400 font-bold text-sm bg-rose-500/10 rounded-xl border border-rose-500/20">HARI LIBUR SEKOLAH (SABTU / MINGGU)</div>';
+                } else if (myCatatanToday.length === 0) {
+                    bimbinganContainer.innerHTML = '<div class="p-4 text-center text-slate-500 text-xs italic bg-[#0b0f19] rounded-xl border border-slate-800">Tidak ada catatan bimbingan/konseling dari Guru Perwalian untuk hari ini.</div>';
                 } else {
-                    bimbinganContainer.innerHTML = myCatatan.map(c => `
+                    bimbinganContainer.innerHTML = myCatatanToday.map(c => `
                         <div class="p-4 rounded-xl bg-[#0b0f19] border border-slate-800 space-y-3 text-xs hover:bg-[#131b2e] transition">
                             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                                 <span class="px-2.5 py-1 rounded text-[10px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/20">${c.kategori}</span>
@@ -2306,15 +2301,13 @@
                                 <p class="text-slate-300 leading-relaxed">${c.topik}</p>
                             </div>
                             <div class="bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20 space-y-1">
-                                <strong class="text-[10px] uppercase text-emerald-400 block mb-0.5">Solusi & Rencana Tindak Lanjut:</strong>
+                                <strong class="text-[10px] uppercase text-emerald-400 block mb-0.5">Solusi / Pesan Guru:</strong>
                                 <p class="text-emerald-300 leading-relaxed">${c.solusi}</p>
                             </div>
                         </div>
                     `).join('');
                 }
             }
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function renderAdminDashboard() {
