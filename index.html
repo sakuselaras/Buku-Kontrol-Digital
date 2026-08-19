@@ -1331,10 +1331,17 @@
         };
 
         window.logout = function() {
-            window.appData.isLoggedIn = false; window.appData.activeSiswaId = '';
-            window.appData.isStudentLinkMode = false; window.appData.isParentLinkMode = false;
-            window.saveToStorage(false, false); window.showLoginScreen();
-            window.showToast('Berhasil keluar.', 'info');
+            window.appData.isLoggedIn = false; 
+            window.appData.activeSiswaId = '';
+            
+            // PERBAIKAN: Jangan me-reset isStudentLinkMode dan isParentLinkMode.
+            // Dengan membiarkan nilainya tetap true, pengguna (Siswa/Ortu) yang 
+            // menekan tombol logout akan tetap terkunci di halaman login khusus mereka
+            // dan tidak akan kembali melihat dashboard portal utama/umum.
+
+            window.saveToStorage(false, false); 
+            window.showLoginScreen();
+            window.showToast('Berhasil keluar dari portal.', 'info');
         };
 
         window.populateWaliKelasDropdowns = function() {
